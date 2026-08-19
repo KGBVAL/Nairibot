@@ -58,51 +58,6 @@ async function handleInteraction(interaction) {
 
         const subCommand = interaction.options.getSubcommand();
 
-        if (subCommand === 'ajouter') {
-            const name = interaction.options.getString('nom');
-            const domain = interaction.options.getString('domaine');
-            const details = interaction.options.getString('details');
-            const logo = interaction.options.getString('logo') || null;
-
-            const partnerId = `partner_${Date.now()}`;
-            partnersBook.set(partnerId, {
-                id: partnerId,
-                name,
-                domain,
-                details,
-                logo
-            });
-
-            // Recherche du salon de publication DA (ex: #da, #direction-artistique ou #partenaires)[cite: 1]
-            const daChannel = guild.channels.cache.find(c => c.name.toLowerCase().includes("da") || c.name.toLowerCase().includes("direction-artistique") || c.name.toLowerCase().includes("partenaires"));
-
-            const partnerEmbed = {
-                color: 0x111111,
-                title: `PARTENARIAT OFFICIEL // ${name.toUpperCase()}`,
-                description: "Un nouveau partenariat institutionnel a été validé et scellé par la direction.",
-                fields: [
-                    { name: "ENTREPRISE", value: name, inline: true },
-                    { name: "DOMAINE D'ACTIVITÉ", value: domain, inline: true },
-                    { name: "ACCORD & DÉTAILS", value: details }
-                ],
-                footer: { text: "NAIRI CORPORATION • DIRECTION GÉNÉRALE & DA" },
-                timestamp: new Date().toISOString()
-            };
-
-            if (logo) {
-                partnerEmbed.thumbnail = { url: logo };
-            }
-
-            if (daChannel) {
-                await daChannel.send({ embeds: [partnerEmbed] });
-            }
-
-            return await interaction.reply({ 
-                content: `✅ Le partenaire **${name}** a été enregistré avec succès ${daChannel ? `et publié dans le salon ${daChannel}` : "(aucun salon DA trouvé pour la publication automatique)"}.`, 
-                flags: MessageFlags.Ephemeral 
-            });
-        }
-
         if (subCommand === 'lister') {
             if (partnersBook.size === 0) {
                 return await interaction.reply({ content: "Aucun partenaire enregistré pour le moment.", flags: MessageFlags.Ephemeral });
@@ -258,7 +213,6 @@ async function handleInteraction(interaction) {
         const isSolo = interaction.customId.startsWith('rent_solo_');
         const typeLocation = isSolo ? 'Location Seule' : 'Location avec Chauffeur';
         
-        // Correction de la gestion des remplacements de customId pour éviter les bugs de noms
         let vehiculeName = interaction.customId;
         if (interaction.customId.startsWith('rent_solo_')) {
             vehiculeName = interaction.customId.replace('rent_solo_', '');
@@ -267,7 +221,6 @@ async function handleInteraction(interaction) {
         }
         vehiculeName = vehiculeName.replace(/_/g, ' ');
 
-        // Sécurisation avec deferReply pour éviter l'expiration de l'interaction Discord lors de la création du salon[cite: 1]
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         let ticketCategory = guild.channels.cache.find(
@@ -555,7 +508,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 4. MENU DÉROULANT DU BUREAU[cite: 1]
+    // 4. MENU DÉROULANT DU BUREAU (Modifié : Registre logistique remplacé par Partenaire)
     // ==========================================
     if (interaction.isStringSelectMenu() && interaction.customId === 'bureau_management_menu') {
         if (!isDirector) return await interaction.reply({ content: "Accès restreint.", flags: MessageFlags.Ephemeral });
@@ -591,19 +544,40 @@ async function handleInteraction(interaction) {
         } 
         
         if (selected === 'nav_partners') {
-            return await interaction.reply({
-                content: "🤝 **GESTION DES PARTENAIRES // NAIRI CORP**\nUtilisez la commande dédiée :\n• `/partenaire ajouter [nom] [domaine] [details] [logo (optionnel)]`\n• `/partenaire lister`",
-                flags: MessageFlags.Ephemeral
-            });
+            // Ouverture de la modale d'ajout de partenaire directement depuis le menu du bureau
+            const modal = new ModalBuilder()
+                .setCustomId('bureau_add_partner_form')
+                .setTitle('NAIRI // AJOUTER UN PARTENAIRE');
+
+            const nameInput = new TextInputBuilder()
+                .setCustomId('partner_name')
+                .setLabel("NOM DE L'ENTREPRISE")
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder("Ex: Nairi Tech")
+                .setRequired(true);
+
+            const domainInput = new TextInputBuilder()
+                .setCustomId('partner_domain')
+                .setLabel("DOMAINE D'ACTIVITÉ")
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder("Ex: Automobile / Logistique")
+                .setRequired(true);
+
+            const logoInput = new TextInputBuilder()
+                .setCustomId('partner_logo')
+                .setLabel("LIEN DE L'IMAGE (LOGO)")
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder("Colle le lien direct de l'image uploadée")
+                .setRequired(true);
+
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(nameInput),
+                new ActionRowBuilder().addComponents(domainInput),
+                new ActionRowBuilder().addComponents(logoInput)
+            );
+
+            return await interaction.showModal(modal);
         }
-        
-        if (selected === 'nav_logistics') {
-            const logisticsChannel = guild.channels.cache.find(c => c.name === "logistique" || c.name === "registre-logistique");
-            if (!logisticsChannel) {
-                return await interaction.reply({ content: "Le salon du registre logistique est introuvable.", flags: MessageFlags.Ephemeral });
-            }
-            return await interaction.reply({ content: `Accès au registre logistique validé. Rendez-vous dans le salon ${logisticsChannel}.`, flags: MessageFlags.Ephemeral });
-        } 
         
         if (selected === 'mod_purge') {
             try {
@@ -643,6 +617,53 @@ async function handleInteraction(interaction) {
         }
         
         return;
+    }
+
+    // ==========================================
+    // 4.1 SOUMISSION DE LA MODALE PARTENAIRE -> Publication DA (1539402971614417057)
+    // ==========================================
+    if (interaction.isModalSubmit() && interaction.customId === 'bureau_add_partner_form') {
+        if (!isDirector) return;
+
+        const name = interaction.fields.getTextInputValue('partner_name');
+        const domain = interaction.fields.getTextInputValue('partner_domain');
+        const logo = interaction.fields.getTextInputValue('partner_logo');
+
+        const partnerId = `partner_${Date.now()}`;
+        partnersBook.set(partnerId, {
+            id: partnerId,
+            name,
+            domain,
+            details: "Partenariat officiel enregistré via le bureau.",
+            logo
+        });
+
+        // Récupération directe du salon DA par son ID précis
+        const daChannelId = '1539402971614417057';
+        const daChannel = guild.channels.cache.get(daChannelId) || await guild.channels.fetch(daChannelId).catch(() => null);
+
+        const partnerEmbed = {
+            color: 0x111111,
+            title: `🤝 NOUVEAU PARTENAIRE // ${name.toUpperCase()}`,
+            description: "Un nouveau partenariat institutionnel vient d'être officialisé et enregistré par la direction.",
+            fields: [
+                { name: "ENTREPRISE", value: name, inline: true },
+                { name: "DOMAINE D'ACTIVITÉ", value: domain, inline: true }
+            ],
+            footer: { text: "NAIRI CORPORATION • DIRECTION ARTISTIQUE & GÉNÉRALE" },
+            timestamp: new Date().toISOString()
+        };
+
+        if (logo) {
+            partnerEmbed.thumbnail = { url: logo };
+        }
+
+        if (daChannel) {
+            await daChannel.send({ embeds: [partnerEmbed] });
+            return await interaction.reply({ content: `✅ Le partenaire **${name}** a été enregistré et publié avec succès dans le salon de la DA !`, flags: MessageFlags.Ephemeral });
+        } else {
+            return await interaction.reply({ content: `⚠️ Partenaire enregistré en mémoire, mais le salon DA (ID: ${daChannelId}) est introuvable.`, flags: MessageFlags.Ephemeral });
+        }
     }
 
     // ==========================================
