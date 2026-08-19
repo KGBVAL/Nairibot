@@ -223,7 +223,7 @@ async function setupCorporateStructure(guild) {
             await ensurePanelExists(servicesLog, "NAIRI LOGISTICS  //  SERVICES", sendServicesLogPanel);
         }
 
-        // 4. Salon #catalogue (Panneau permanent et écriture restreinte aux rôles Directeur / Direction)
+        // 4. Salon #catalogue
         let catalogue = guild.channels.cache.find(c => c.name === "catalogue" && c.parentId === catLogistics.id);
         if (!catalogue) {
             catalogue = await guild.channels.create({
@@ -335,7 +335,6 @@ async function sendBureauPanel(channel) {
             .addOptions([
                 { label: "Carnet d'adresses", description: 'Consulter la liste des clients et dossiers', value: 'nav_finance' },
                 { label: 'Gestion des Partenaires', description: 'Consulter et gérer les alliances', value: 'nav_partners' },
-                { label: 'Registre Logistique', description: 'Accéder au suivi des opérations', value: 'nav_logistics' },
                 { label: 'Expulser un membre (Kick)', description: 'Sélectionner un membre à expulser', value: 'mod_kick_select' },
                 { label: 'Bannir un membre (Ban)', description: 'Sélectionner un membre à bannir', value: 'mod_ban_select' },
                 { label: 'Nettoyer le salon (Purge)', description: 'Effacer les messages en masse', value: 'mod_purge' },
@@ -345,8 +344,6 @@ async function sendBureauPanel(channel) {
 
     await channel.send({ embeds: [embed], components: [rowButton, rowMenu] });
 }
-
-// --- PANNEAUX DE LA CATÉGORIE LOGISTICS & AUTOMOTIVE ---
 
 async function sendLivraisonPanel(channel) {
     const embed = {
