@@ -1,12 +1,13 @@
 const { Client, GatewayIntentBits, REST, Routes, Events } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const http = require('http'); // Indispensable pour garder le Web Service Render éveillé
+const http = require('http');
 
-// Importation du gestionnaire d'interactions centralisé
-const { handleInteraction } = require('./events/interactionCreate'); // Adapte le chemin './events/' si ton fichier se trouve dans un autre dossier
+// Importation de la fonction de setup (assure-toi que le fichier s'appelle bien setup.js dans le même dossier)
+const { setupCorporateStructure } = require('./setup'); 
+const { handleInteraction } = require('./events/interactionCreate');
 
-// Création du serveur HTTP configuré pour être parfaitement détecté par Render
+// Création du serveur HTTP pour Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('Nairibot est en ligne !\n');
@@ -43,11 +44,21 @@ if (fs.existsSync(commandsPath)) {
     }
 }
 
-// Événement de démarrage (Prêt)
+// Événement de démarrage
 client.once(Events.ClientReady, async () => {
     console.log(`[NAIRI OS] Connecté en tant que ${client.user.tag}`);
 
-    // Enregistrement des commandes slash auprès de Discord
+    // --- INITIALISATION DE LA STRUCTURE CORPORATE ---
+    for (const [id, guild] of client.guilds.cache) {
+        try {
+            await setupCorporateStructure(guild);
+            console.log(`[NAIRI OS] Structure corporate vérifiée/initialisée pour : ${guild.name}`);
+        } catch (error) {
+            console.error(`[NAIRI OS] Erreur lors de l'initialisation pour ${guild.name}:`, error);
+        }
+    }
+
+    // Enregistrement des commandes slash
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     try {
         console.log('[NAIRI OS] Enregistrement des commandes slash...');
@@ -61,10 +72,9 @@ client.once(Events.ClientReady, async () => {
     }
 });
 
-// Gestionnaire central des interactions unifié
+// Gestionnaire central des interactions
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
-        // 1. Si c'est une commande slash classique
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
             if (command) {
@@ -73,7 +83,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
             }
         }
 
-        // 2. Pour TOUTES les autres interactions (Boutons, Modals, Menus déroulants, etc.)
         await handleInteraction(interaction);
 
     } catch (error) {
@@ -84,5 +93,4 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-// Connexion du bot via la variable d'environnement
 client.login(process.env.DISCORD_TOKEN);
