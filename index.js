@@ -3,6 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http'); // Indispensable pour garder le Web Service Render éveillé
 
+// Importation du gestionnaire d'interactions centralisé
+const { handleInteraction } = require('./events/interactionCreate'); // Adapte le chemin './events/' si ton fichier se trouve dans un autre dossier
+
 // Création du serveur HTTP configuré pour être parfaitement détecté par Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -58,14 +61,21 @@ client.once(Events.ClientReady, async () => {
     }
 });
 
-// Gestionnaire central des interactions
+// Gestionnaire central des interactions unifié
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
-        if (!interaction.isChatInputCommand()) return;
-        const command = client.commands.get(interaction.commandName);
-        if (command) {
-            await command.execute(interaction);
+        // 1. Si c'est une commande slash classique
+        if (interaction.isChatInputCommand()) {
+            const command = client.commands.get(interaction.commandName);
+            if (command) {
+                await command.execute(interaction);
+                return;
+            }
         }
+
+        // 2. Pour TOUTES les autres interactions (Boutons, Modals, Menus déroulants, etc.)
+        await handleInteraction(interaction);
+
     } catch (error) {
         console.error("Erreur interaction :", error);
         if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
