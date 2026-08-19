@@ -31,12 +31,12 @@ if (fs.existsSync(commandsPath)) {
     }
 }
 
-// Événement de démarrage (Prêt) corrigé avec Events.ClientReady
+// Événement de démarrage (Prêt)
 client.once(Events.ClientReady, async () => {
     console.log(`[NAIRI OS] Connecté en tant que ${client.user.tag}`);
 
     // Enregistrement des commandes slash auprès de Discord
-    const rest = new REST({ version: '10' }).setToken('MTUzOTI1MTgwMzY4MDQwNzU5Mg.GG3QRY.3qi7klhneFAp8hWdoIkEt9DYBbQFgRz2Y6Fy30');
+    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     try {
         console.log('[NAIRI OS] Enregistrement des commandes slash...');
         await rest.put(
@@ -84,5 +84,5 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-// Connexion du bot
-client.login('MTUzOTI1MTgwMzY4MDQwNzU5Mg.GG3QRY.3qi7klhneFAp8hWdoIkEt9DYBbQFgRz2Y6Fy30');
+// Connexion du bot via la variable d'environnement
+client.login(process.env.DISCORD_TOKEN);
