@@ -3,11 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-// Importation de la fonction de setup (assure-toi que le fichier s'appelle bien setup.js dans le même dossier)
-const { setupCorporateStructure } = require('./setup'); 
+// Initialisation sécurisée des modules
+let setupFuncs;
+try {
+    setupFuncs = require('./setup');
+} catch (e) {
+    console.error("[ERREUR] Impossible de charger ./setup.js :", e.message);
+    setupFuncs = { setupCorporateStructure: null, initRegisters: null };
+}
+
 const { handleInteraction } = require('./events/interactionCreate');
 
-// Création du serveur HTTP pour Render
+// Serveur Web pour Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('Nairibot est en ligne !\n');
@@ -27,7 +34,6 @@ const client = new Client({
     ]
 });
 
-// Chargement des commandes slash
 client.commands = new Map();
 const commands = [];
 const commandsPath = path.join(__dirname, 'commands');
@@ -44,52 +50,46 @@ if (fs.existsSync(commandsPath)) {
     }
 }
 
-// Événement de démarrage
 client.once(Events.ClientReady, async () => {
     console.log(`[NAIRI OS] Connecté en tant que ${client.user.tag}`);
 
-    // --- INITIALISATION DE LA STRUCTURE CORPORATE ---
+    // Initialisation de la structure et des registres
     for (const [id, guild] of client.guilds.cache) {
         try {
-            await setupCorporateStructure(guild);
-            console.log(`[NAIRI OS] Structure corporate vérifiée/initialisée pour : ${guild.name}`);
+            if (setupFuncs.setupCorporateStructure) {
+                await setupFuncs.setupCorporateStructure(guild);
+            }
+            if (setupFuncs.initRegisters) {
+                await setupFuncs.initRegisters(guild);
+            }
+            console.log(`[NAIRI OS] Initialisation terminée pour : ${guild.name}`);
         } catch (error) {
-            console.error(`[NAIRI OS] Erreur lors de l'initialisation pour ${guild.name}:`, error);
+            console.error(`[NAIRI OS] Erreur init pour ${guild.name}:`, error);
         }
     }
 
-    // Enregistrement des commandes slash
-    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
-    try {
-        console.log('[NAIRI OS] Enregistrement des commandes slash...');
-        await rest.put(
-            Routes.applicationCommands(client.user.id),
-            { body: commands },
-        );
-        console.log('[NAIRI OS] Commandes slash enregistrées avec succès !');
-    } catch (error) {
-        console.error('[NAIRI OS] Erreur enregistrement commandes :', error);
+    // Enregistrement commandes
+    if (process.env.DISCORD_TOKEN) {
+        const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+        try {
+            await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+            console.log('[NAIRI OS] Commandes slash enregistrées.');
+        } catch (error) {
+            console.error('[NAIRI OS] Erreur enregistrement :', error);
+        }
     }
 });
 
-// Gestionnaire central des interactions
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
-            if (command) {
-                await command.execute(interaction);
-                return;
-            }
+            if (command) await command.execute(interaction);
+            return;
         }
-
         await handleInteraction(interaction);
-
     } catch (error) {
         console.error("Erreur interaction :", error);
-        if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: "Une erreur est survenue lors de l'exécution.", ephemeral: true }).catch(() => {});
-        }
     }
 });
 
