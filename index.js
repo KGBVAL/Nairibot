@@ -1,9 +1,18 @@
 const { Client, GatewayIntentBits, REST, Routes, Events } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const { setupCorporateStructure } = require('./utils/corporateSetup');
-const { initRegisters } = require('./utils/corporateRegisters');
-const { handleInteraction } = require('./events/interactionCreate');
+const http = require('http'); // Indispensable pour garder le Web Service Render éveillé
+
+// Création du serveur HTTP pour répondre aux pings de Render et éviter le timeout du port
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Nairibot est en ligne !\n');
+});
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`[RENDER] Serveur web de secours actif sur le port ${PORT}`);
+});
 
 const client = new Client({
     intents: [
@@ -47,35 +56,16 @@ client.once(Events.ClientReady, async () => {
     } catch (error) {
         console.error('[NAIRI OS] Erreur enregistrement commandes :', error);
     }
-
-    const guild = client.guilds.cache.first();
-    if (!guild) {
-        console.error("[NAIRI OS] Erreur : Aucun serveur trouvé.");
-        return;
-    }
-
-    try {
-        await setupCorporateStructure(guild);
-        await initRegisters(guild);
-        console.log("[NAIRI OS] Infrastructure et registres synchronisés.");
-    } catch (error) {
-        console.error("[NAIRI OS] Erreur lors de l'initialisation :", error);
-    }
 });
 
 // Gestionnaire central des interactions
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
-        // Si c'est une commande slash, on gère l'exécution ici
-        if (interaction.isChatInputCommand()) {
-            const command = client.commands.get(interaction.commandName);
-            if (command) {
-                await command.execute(interaction);
-                return;
-            }
+        if (!interaction.isChatInputCommand()) return;
+        const command = client.commands.get(interaction.commandName);
+        if (command) {
+            await command.execute(interaction);
         }
-        // Sinon, on passe au gestionnaire global existant
-        await handleInteraction(interaction);
     } catch (error) {
         console.error("Erreur interaction :", error);
         if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
