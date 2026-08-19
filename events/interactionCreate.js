@@ -30,26 +30,26 @@ async function handleInteraction(interaction) {
     const isDirector = member.permissions.has(PermissionsBitField.Flags.Administrator) || 
                        (directorRole && member.roles.cache.has(directorRole.id));
 
-    // A. Gestion des interactions des Registres (Finance & Logistique)
+    // A. Gestion des interactions des Registres (Finance & Logistique)[cite: 1]
     if (interaction.isStringSelectMenu() && ['fin_select_action', 'log_select_action', 'log_select_item_remove', 'trans_set_status'].includes(interaction.customId)) {
         if (!isDirector) return await interaction.reply({ content: "Accès restreint à la direction.", flags: MessageFlags.Ephemeral });
         return await handleRegisterInteraction(interaction);
     }
 
-    // B. Gestion des boutons des Transports logistiques (Suppression)
+    // B. Gestion des boutons des Transports logistiques (Suppression)[cite: 1]
     if (interaction.isButton() && interaction.customId === 'trans_delete') {
         if (!isDirector) return await interaction.reply({ content: "Accès restreint à la direction.", flags: MessageFlags.Ephemeral });
         return await handleRegisterInteraction(interaction);
     }
 
-    // C. Gestion de la soumission des modaux des Registres
+    // C. Gestion de la soumission des modaux des Registres[cite: 1]
     if (interaction.isModalSubmit() && (interaction.customId.startsWith('modal_fin_') || interaction.customId.startsWith('modal_log_') || interaction.customId.startsWith('modal_remove_stock_'))) {
         if (!isDirector) return;
         return await handleRegisterModal(interaction);
     }
 
     // ==========================================
-    // 0. GESTION DES COMMANDES SLASH POUR LES PARTENAIRES
+    // 0. GESTION DES COMMANDES SLASH POUR LES PARTENAIRES[cite: 1]
     // ==========================================
     if (interaction.isChatInputCommand() && interaction.commandName === 'partenaire') {
         if (!isDirector) {
@@ -73,7 +73,7 @@ async function handleInteraction(interaction) {
                 logo
             });
 
-            // Recherche du salon de publication DA (ex: #da, #direction-artistique ou #partenaires)
+            // Recherche du salon de publication DA (ex: #da, #direction-artistique ou #partenaires)[cite: 1]
             const daChannel = guild.channels.cache.find(c => c.name.toLowerCase().includes("da") || c.name.toLowerCase().includes("direction-artistique") || c.name.toLowerCase().includes("partenaires"));
 
             const partnerEmbed = {
@@ -133,7 +133,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 1. BOUTON SECRÉTARIAT -> Formulaire client
+    // 1. BOUTON SECRÉTARIAT -> Formulaire client[cite: 1]
     // ==========================================
     if (interaction.isButton() && interaction.customId === 'open_secretariat_modal') {
         const modal = new ModalBuilder()
@@ -171,7 +171,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 1.1 BOUTONS LOGISTIQUE & AUTOMOTIVE (MODALS & CATALOGUE)
+    // 1.1 BOUTONS LOGISTIQUE & AUTOMOTIVE (MODALS & CATALOGUE)[cite: 1]
     // ==========================================
     if (interaction.isButton() && interaction.customId === 'open_livraison_modal') {
         const modal = new ModalBuilder()
@@ -235,7 +235,7 @@ async function handleInteraction(interaction) {
         return await interaction.showModal(modal);
     }
 
-    // --- CATALOGUE : Bouton d'ouverture du formulaire d'ajout de véhicule ---
+    // --- CATALOGUE : Bouton d'ouverture du formulaire d'ajout de véhicule[cite: 1] ---
     if (interaction.isButton() && interaction.customId === 'open_add_vehicle_modal') {
         if (!isDirector) {
             return await interaction.reply({ content: "❌ Accès réservé à la direction.", flags: MessageFlags.Ephemeral });
@@ -253,13 +253,21 @@ async function handleInteraction(interaction) {
         return await interaction.showModal(modal);
     }
 
-    // --- CATALOGUE : Actions de location (Seul ou Avec Chauffeur) -> Création de ticket ---
+    // --- CATALOGUE : Actions de location (Seul ou Avec Chauffeur) -> Création de ticket[cite: 1] ---
     if (interaction.isButton() && (interaction.customId.startsWith('rent_solo_') || interaction.customId.startsWith('rent_driver_'))) {
         const isSolo = interaction.customId.startsWith('rent_solo_');
         const typeLocation = isSolo ? 'Location Seule' : 'Location avec Chauffeur';
-        const vehiculeName = interaction.customId.replace('rent_solo_', '').replace('red_driver_', '').replace('rent_driver_', '').replace(/_/g, ' ');
+        
+        // Correction de la gestion des remplacements de customId pour éviter les bugs de noms
+        let vehiculeName = interaction.customId;
+        if (interaction.customId.startsWith('rent_solo_')) {
+            vehiculeName = interaction.customId.replace('rent_solo_', '');
+        } else if (interaction.customId.startsWith('rent_driver_')) {
+            vehiculeName = interaction.customId.replace('rent_driver_', '');
+        }
+        vehiculeName = vehiculeName.replace(/_/g, ' ');
 
-        // Sécurisation avec deferReply pour éviter l'expiration de l'interaction Discord lors de la création du salon
+        // Sécurisation avec deferReply pour éviter l'expiration de l'interaction Discord lors de la création du salon[cite: 1]
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         let ticketCategory = guild.channels.cache.find(
@@ -326,7 +334,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 2. SOUMISSION FORMULAIRE -> Création Ticket + Carnet d'adresses
+    // 2. SOUMISSION FORMULAIRE -> Création Ticket + Carnet d'adresses[cite: 1]
     // ==========================================
     if (interaction.isModalSubmit() && interaction.customId === 'secretariat_form') {
         const identity = interaction.fields.getTextInputValue('client_identity');
@@ -411,7 +419,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 2.1 SOUMISSION FORMULAIRES LOGISTIQUE & CATALOGUE
+    // 2.1 SOUMISSION FORMULAIRES LOGISTIQUE & CATALOGUE[cite: 1]
     // ==========================================
     if (interaction.isModalSubmit() && (interaction.customId === 'livraison_form' || interaction.customId === 'logistics_recrutement_form')) {
         const isRecrutement = interaction.customId === 'logistics_recrutement_form';
@@ -490,7 +498,7 @@ async function handleInteraction(interaction) {
         });
     }
 
-    // --- CATALOGUE : Soumission du formulaire d'ajout de véhicule ---
+    // --- CATALOGUE : Soumission du formulaire d'ajout de véhicule[cite: 1] ---
     if (interaction.isModalSubmit() && interaction.customId === 'add_vehicle_form') {
         const name = interaction.fields.getTextInputValue('vehicule_name');
         const desc = interaction.fields.getTextInputValue('vehicule_desc');
@@ -515,7 +523,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 3. BOUTON BUREAU -> Formulaire de Communiqué
+    // 3. BOUTON BUREAU -> Formulaire de Communiqué[cite: 1]
     // ==========================================
     if (interaction.isButton() && interaction.customId === 'bureau_announcement') {
         if (!isDirector) return await interaction.reply({ content: "Accès restreint.", flags: MessageFlags.Ephemeral });
@@ -547,7 +555,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 4. MENU DÉROULANT DU BUREAU
+    // 4. MENU DÉROULANT DU BUREAU[cite: 1]
     // ==========================================
     if (interaction.isStringSelectMenu() && interaction.customId === 'bureau_management_menu') {
         if (!isDirector) return await interaction.reply({ content: "Accès restreint.", flags: MessageFlags.Ephemeral });
@@ -638,7 +646,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 5. GESTION DU CARNET D'ADRESSES
+    // 5. GESTION DU CARNET D'ADRESSES[cite: 1]
     // ==========================================
     if (interaction.isStringSelectMenu() && interaction.customId === 'address_book_select') {
         if (!isDirector) return await interaction.reply({ content: "Accès restreint.", flags: MessageFlags.Ephemeral });
@@ -764,7 +772,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 5.2 GESTION DE LA LISTE DES PARTENAIRES
+    // 5.2 GESTION DE LA LISTE DES PARTENAIRES[cite: 1]
     // ==========================================
     if (interaction.isStringSelectMenu() && interaction.customId === 'partner_select_manage') {
         if (!isDirector) return await interaction.reply({ content: "Accès restreint.", flags: MessageFlags.Ephemeral });
@@ -806,7 +814,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 6. SANCTIONS
+    // 6. SANCTIONS[cite: 1]
     // ==========================================
     if (interaction.isUserSelectMenu() && interaction.customId.startsWith('target_user_')) {
         if (!isDirector) return;
@@ -857,7 +865,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 7. COMMUNIQUÉ
+    // 7. COMMUNIQUÉ[cite: 1]
     // ==========================================
     if (interaction.isModalSubmit() && interaction.customId === 'announcement_form') {
         if (!isDirector) return;
@@ -883,7 +891,7 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 8. TICKETS
+    // 8. TICKETS[cite: 1]
     // ==========================================
     if (interaction.isButton() && ['ticket_pending', 'ticket_take', 'ticket_close'].includes(interaction.customId)) {
         const channel = interaction.channel;
