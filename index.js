@@ -3,15 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-// Initialisation sécurisée des modules
-let setupFuncs;
-try {
-    setupFuncs = require('./setup');
-} catch (e) {
-    console.error("[ERREUR] Impossible de charger ./setup.js :", e.message);
-    setupFuncs = { setupCorporateStructure: null, initRegisters: null };
-}
-
+// Importation depuis le dossier utils
+const { setupCorporateStructure } = require('./utils/corporateSetup');
+const { initRegisters } = require('./utils/corporateRegisters');
 const { handleInteraction } = require('./events/interactionCreate');
 
 // Serveur Web pour Render
@@ -53,22 +47,18 @@ if (fs.existsSync(commandsPath)) {
 client.once(Events.ClientReady, async () => {
     console.log(`[NAIRI OS] Connecté en tant que ${client.user.tag}`);
 
-    // Initialisation de la structure et des registres
+    // Initialisation de la structure corporate et des registres depuis /utils
     for (const [id, guild] of client.guilds.cache) {
         try {
-            if (setupFuncs.setupCorporateStructure) {
-                await setupFuncs.setupCorporateStructure(guild);
-            }
-            if (setupFuncs.initRegisters) {
-                await setupFuncs.initRegisters(guild);
-            }
-            console.log(`[NAIRI OS] Initialisation terminée pour : ${guild.name}`);
+            await setupCorporateStructure(guild);
+            await initRegisters(guild);
+            console.log(`[NAIRI OS] Structure et registres initialisés pour : ${guild.name}`);
         } catch (error) {
             console.error(`[NAIRI OS] Erreur init pour ${guild.name}:`, error);
         }
     }
 
-    // Enregistrement commandes
+    // Enregistrement des commandes slash
     if (process.env.DISCORD_TOKEN) {
         const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
         try {
