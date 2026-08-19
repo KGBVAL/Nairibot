@@ -3,15 +3,15 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http'); // Indispensable pour garder le Web Service Render éveillé
 
-// Création du serveur HTTP pour répondre aux pings de Render et éviter le timeout du port
+// Création du serveur HTTP configuré pour être parfaitement détecté par Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('Nairibot est en ligne !\n');
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`[RENDER] Serveur web de secours actif sur le port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`[RENDER] Serveur web actif sur le port ${PORT}`);
 });
 
 const client = new Client({
