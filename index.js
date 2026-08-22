@@ -38,7 +38,7 @@ if (fs.existsSync(commandsPath)) {
         const filePath = path.join(commandsPath, file);
         const command = require(filePath);
         if ('data' in command && 'execute' in command) {
-            client.commands.set(command.data.name, command);
+            client.commands.set(command.commandName || command.data.name, command);
             commands.push(command.data.toJSON());
         }
     }
@@ -83,4 +83,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+// Connexion à Discord avec capture d'erreur détaillée
+client.login(process.env.DISCORD_TOKEN).catch(error => {
+    console.error("[NAIRI OS] Erreur fatale lors de la connexion à Discord :", error);
+});
