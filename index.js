@@ -83,7 +83,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-// Connexion à Discord avec capture d'erreur détaillée
+// Vérification du token et connexion à Discord
+console.log("[DEBUG] Tentative de connexion avec le token :", process.env.DISCORD_TOKEN ? "Token présent (longueur: " + process.env.DISCORD_TOKEN.length + ")" : "AUCUN TOKEN TROUVÉ !");
+
 client.login(process.env.DISCORD_TOKEN).catch(error => {
     console.error("[NAIRI OS] Erreur fatale lors de la connexion à Discord :", error);
 });
