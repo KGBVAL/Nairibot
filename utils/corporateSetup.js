@@ -3,7 +3,7 @@ const { ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, Butto
 const CATEGORY_NAIRI = "NAIRI CORPORATION";
 const CATEGORY_ADMIN = "ADMINISTRATION";
 const CATEGORY_COMPTA = "COMPTABILITÉ";
-const CATEGORY_LOGISTICS = "NAIRI LOGISTICS";
+const CATEGORY_LOGISTICS = "NAIRI LOGISTICS & AUTOMOTIVE";
 const ROLE_NAME = "DIRECTEUR";
 const ROLE_DIRECTION = "Direction";
 
@@ -34,32 +34,56 @@ async function setupCorporateStructure(guild) {
             catNairi = await guild.channels.create({ name: CATEGORY_NAIRI, type: ChannelType.GuildCategory });
         }
 
-        await handleUniqueChannel(guild, catNairi, "secrétariat", ChannelType.GuildText, {
-            topic: "Terminal sécurisé Nairi Corporation. Point d'entrée unique pour toutes vos requêtes.",
-            permissionOverwrites: [{
-                id: guild.roles.everyone,
-                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                deny: [PermissionsBitField.Flags.SendMessages],
-            }]
-        }, sendSecretariatPanel, "NAIRI CORPORATION — SECRÉTARIAT EXÉCUTIF");
+        let secretariat = guild.channels.cache.find(c => c.name === "secrétariat" && c.parentId === catNairi.id);
+        if (!secretariat) {
+            secretariat = await guild.channels.create({
+                name: "secrétariat",
+                type: ChannelType.GuildText,
+                parent: catNairi.id,
+                topic: "Terminal sécurisé Nairi Corporation. Initialisation des requêtes.",
+                permissionOverwrites: [{
+                    id: guild.roles.everyone,
+                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                    deny: [PermissionsBitField.Flags.SendMessages],
+                }]
+            });
+            await sendSecretariatPanel(secretariat);
+        } else {
+            await ensurePanelExists(secretariat, "NAIRI CORPORATION — SECRÉTARIAT EXÉCUTIF", sendSecretariatPanel);
+        }
 
-        await handleUniqueChannel(guild, catNairi, "annonces", ChannelType.GuildText, {
-            topic: "Flux officiel des communiqués de Nairi Corporation.",
-            permissionOverwrites: [{
-                id: guild.roles.everyone,
-                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                deny: [PermissionsBitField.Flags.SendMessages],
-            }]
-        }, null);
+        let annonces = guild.channels.cache.find(c => c.name === "annonces" && c.parentId === catNairi.id);
+        if (!annonces) {
+            annonces = await guild.channels.create({
+                name: "annonces",
+                type: ChannelType.GuildText,
+                parent: catNairi.id,
+                topic: "Flux officiel des communiqués de Nairi Corporation.",
+                permissionOverwrites: [{
+                    id: guild.roles.everyone,
+                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                    deny: [PermissionsBitField.Flags.SendMessages],
+                }]
+            });
+        }
 
-        await handleUniqueChannel(guild, catNairi, "services", ChannelType.GuildText, {
-            topic: "Catalogue des services et prestations Nairi Corporation.",
-            permissionOverwrites: [{
-                id: guild.roles.everyone,
-                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                deny: [PermissionsBitField.Flags.SendMessages],
-            }]
-        }, sendServicesPanel, "NAIRI CORPORATION  //  NOS SERVICES");
+        let services = guild.channels.cache.find(c => c.name === "services" && c.parentId === catNairi.id);
+        if (!services) {
+            services = await guild.channels.create({
+                name: "services",
+                type: ChannelType.GuildText,
+                parent: catNairi.id,
+                topic: "Catalogue des services et prestations Nairi Corporation.",
+                permissionOverwrites: [{
+                    id: guild.roles.everyone,
+                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                    deny: [PermissionsBitField.Flags.SendMessages],
+                }]
+            });
+            await sendServicesPanel(services);
+        } else {
+            await ensurePanelExists(services, "NAIRI CORPORATION  //  NOS SERVICES", sendServicesPanel);
+        }
 
         // --- SECTION 2 : ADMINISTRATION ---
         let catAdmin = guild.channels.cache.find(c => c.name === CATEGORY_ADMIN && c.type === ChannelType.GuildCategory);
@@ -67,16 +91,28 @@ async function setupCorporateStructure(guild) {
             catAdmin = await guild.channels.create({ name: CATEGORY_ADMIN, type: ChannelType.GuildCategory });
         }
 
-        await handleUniqueChannel(guild, catAdmin, "bureau", ChannelType.GuildText, {
-            topic: "Poste de commandement exécutif de la direction.",
-            permissionOverwrites: [
-                { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
-                ...(directorRole ? [{
-                    id: directorRole.id,
-                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels],
-                }] : [])
-            ]
-        }, sendBureauPanel, "NAIRI OS // POSTE DE COMMANDEMENT EXÉCUTIF");
+        let bureau = guild.channels.cache.find(c => c.name === "bureau" && c.parentId === catAdmin.id);
+        if (!bureau) {
+            bureau = await guild.channels.create({
+                name: "bureau",
+                type: ChannelType.GuildText,
+                parent: catAdmin.id,
+                topic: "Poste de commandement exécutif de la direction.",
+                permissionOverwrites: [
+                    {
+                        id: guild.roles.everyone,
+                        deny: [PermissionsBitField.Flags.ViewChannel],
+                    },
+                    ...(directorRole ? [{
+                        id: directorRole.id,
+                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels],
+                    }] : [])
+                ]
+            });
+            await sendBureauPanel(bureau);
+        } else {
+            await ensurePanelExists(bureau, "NAIRI OS // POSTE DE COMMANDEMENT EXÉCUTIF", sendBureauPanel);
+        }
 
         // --- SECTION 3 : COMPTABILITÉ ---
         let catCompta = guild.channels.cache.find(c => c.name === CATEGORY_COMPTA && c.type === ChannelType.GuildCategory);
@@ -84,99 +120,152 @@ async function setupCorporateStructure(guild) {
             catCompta = await guild.channels.create({ name: CATEGORY_COMPTA, type: ChannelType.GuildCategory });
         }
 
-        const restrictedOverwrites = [
-            { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
-            ...(directorRole ? [{
-                id: directorRole.id,
-                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory],
-            }] : [])
-        ];
+        let finance = guild.channels.cache.find(c => c.name === "finance" && c.parentId === catCompta.id);
+        if (!finance) {
+            finance = await guild.channels.create({
+                name: "finance",
+                type: ChannelType.GuildText,
+                parent: catCompta.id,
+                topic: "Registre financier et flux de trésorerie.",
+                permissionOverwrites: [
+                    {
+                        id: guild.roles.everyone,
+                        deny: [PermissionsBitField.Flags.ViewChannel],
+                    },
+                    ...(directorRole ? [{
+                        id: directorRole.id,
+                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory],
+                    }] : [])
+                ]
+            });
+        }
 
-        await handleUniqueChannel(guild, catCompta, "finance", ChannelType.GuildText, {
-            topic: "Registre financier et flux de trésorerie.",
-            permissionOverwrites: restrictedOverwrites
-        }, null);
+        let logistiqueCompta = guild.channels.cache.find(c => c.name === "logistique" && c.parentId === catCompta.id);
+        if (!logistiqueCompta) {
+            logistiqueCompta = await guild.channels.create({
+                name: "logistique",
+                type: ChannelType.GuildText,
+                parent: catCompta.id,
+                topic: "Suivi logistique et opérations de négoce.",
+                permissionOverwrites: [
+                    {
+                        id: guild.roles.everyone,
+                        deny: [PermissionsBitField.Flags.ViewChannel],
+                    },
+                    ...(directorRole ? [{
+                        id: directorRole.id,
+                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory],
+                    }] : [])
+                ]
+            });
+        }
 
-        await handleUniqueChannel(guild, catCompta, "logistique", ChannelType.GuildText, {
-            topic: "Suivi logistique et opérations de négoce.",
-            permissionOverwrites: restrictedOverwrites
-        }, null);
-
-        // --- SECTION 4 : NAIRI LOGISTICS ---
+        // --- SECTION 4 : NAIRI LOGISTICS & AUTOMOTIVE ---
         let catLogistics = guild.channels.cache.find(c => c.name === CATEGORY_LOGISTICS && c.type === ChannelType.GuildCategory);
         if (!catLogistics) {
             catLogistics = await guild.channels.create({ name: CATEGORY_LOGISTICS, type: ChannelType.GuildCategory });
         }
 
-        const logisticsOverwrites = [{
-            id: guild.roles.everyone,
-            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-            deny: [PermissionsBitField.Flags.SendMessages],
-        }];
+        // 1. Salon #livraison
+        let livraison = guild.channels.cache.find(c => c.name === "livraison" && c.parentId === catLogistics.id);
+        if (!livraison) {
+            livraison = await guild.channels.create({
+                name: "livraison",
+                type: ChannelType.GuildText,
+                parent: catLogistics.id,
+                topic: "Terminal logistique. Demandez une livraison par nos camions ou planifiez vos transports.",
+                permissionOverwrites: [{
+                    id: guild.roles.everyone,
+                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                    deny: [PermissionsBitField.Flags.SendMessages],
+                }]
+            });
+            await sendLivraisonPanel(livraison);
+        } else {
+            await ensurePanelExists(livraison, "NAIRI LOGISTICS — SERVICE DE LIVRAISON", sendLivraisonPanel);
+        }
 
-        await handleUniqueChannel(guild, catLogistics, "livraison", ChannelType.GuildText, {
-            topic: "Terminal logistique. Demandez une livraison par nos camions ou planifiez vos transports.",
-            permissionOverwrites: logisticsOverwrites
-        }, sendLivraisonPanel, "NAIRI LOGISTICS — SERVICE DE LIVRAISON");
+        // 2. Salon #recrutement
+        let recrutement = guild.channels.cache.find(c => c.name === "recrutement" && c.parentId === catLogistics.id);
+        if (!recrutement) {
+            recrutement = await guild.channels.create({
+                name: "recrutement",
+                type: ChannelType.GuildText,
+                parent: catLogistics.id,
+                topic: "Rejoignez l'équipe Nairi Logistics & Automotive.",
+                permissionOverwrites: [{
+                    id: guild.roles.everyone,
+                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                    deny: [PermissionsBitField.Flags.SendMessages],
+                }]
+            });
+            await sendRecrutementPanel(recrutement);
+        } else {
+            await ensurePanelExists(recrutement, "NAIRI LOGISTICS — RECRUTEMENT CHAUFFEURS", sendRecrutementPanel);
+        }
 
-        await handleUniqueChannel(guild, catLogistics, "recrutement", ChannelType.GuildText, {
-            topic: "Rejoignez l'équipe Nairi Logistics.",
-            permissionOverwrites: logisticsOverwrites
-        }, sendRecrutementPanel, "NAIRI LOGISTICS — RECRUTEMENT CHAUFFEURS");
+        // 3. Salon #services
+        let servicesLog = guild.channels.cache.find(c => c.name === "services" && c.parentId === catLogistics.id);
+        if (!servicesLog) {
+            servicesLog = await guild.channels.create({
+                name: "services",
+                type: ChannelType.GuildText,
+                parent: catLogistics.id,
+                topic: "Catalogue des prestations de transport et solutions logistiques.",
+                permissionOverwrites: [{
+                    id: guild.roles.everyone,
+                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                    deny: [PermissionsBitField.Flags.SendMessages],
+                }]
+            });
+            await sendServicesLogPanel(servicesLog);
+        } else {
+            await ensurePanelExists(servicesLog, "NAIRI LOGISTICS  //  SERVICES", sendServicesLogPanel);
+        }
 
-        await handleUniqueChannel(guild, catLogistics, "services", ChannelType.GuildText, {
-            topic: "Catalogue des prestations de transport et solutions logistiques.",
-            permissionOverwrites: logisticsOverwrites
-        }, sendServicesLogPanel, "NAIRI LOGISTICS  //  SERVICES");
+        // 4. Salon #catalogue
+        let catalogue = guild.channels.cache.find(c => c.name === "catalogue" && c.parentId === catLogistics.id);
+        if (!catalogue) {
+            catalogue = await guild.channels.create({
+                name: "catalogue",
+                type: ChannelType.GuildText,
+                parent: catLogistics.id,
+                topic: "Flotte de véhicules disponibles à la location (Seule ou avec chauffeur).",
+                permissionOverwrites: [
+                    {
+                        id: guild.roles.everyone,
+                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                        deny: [PermissionsBitField.Flags.SendMessages],
+                    },
+                    ...(directorRole ? [{
+                        id: directorRole.id,
+                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageMessages],
+                    }] : []),
+                    ...(directionRole ? [{
+                        id: directionRole.id,
+                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageMessages],
+                    }] : [])
+                ]
+            });
+            await sendCatalogueAdminPanel(catalogue);
+        } else {
+            await ensurePanelExists(catalogue, "NAIRI LOGISTICS — GESTION DU CATALOGUE", sendCatalogueAdminPanel);
+        }
 
     } catch (error) {
         console.error("Erreur critique d'infrastructure :", error);
     }
 }
 
-async function handleUniqueChannel(guild, category, channelName, channelType, options, sendPanelFunc, panelTitle) {
-    const existingChannels = guild.channels.cache.filter(
-        c => c.name === channelName && c.parentId === category.id && c.type === channelType
-    );
-
-    let targetChannel;
-
-    if (existingChannels.size > 0) {
-        targetChannel = existingChannels.first();
-        const duplicates = Array.from(existingChannels.values()).slice(1);
-        for (const dup of duplicates) {
-            await dup.delete("Suppression de salon en double par Nairi OS").catch(() => {});
-        }
-    } else {
-        targetChannel = await guild.channels.create({
-            name: channelName,
-            type: channelType,
-            parent: category.id,
-            ...options
-        });
-    }
-
-    if (sendPanelFunc && panelTitle) {
-        await ensureSinglePanel(targetChannel, panelTitle, sendPanelFunc);
-    }
-}
-
-async function ensureSinglePanel(channel, titleIdentifier, sendFunction) {
+async function ensurePanelExists(channel, titleIdentifier, sendFunction) {
     try {
-        const messages = await channel.messages.fetch({ limit: 15 });
-        const panels = messages.filter(m => m.embeds && m.embeds.length > 0 && m.embeds[0].title && m.embeds[0].title.includes(titleIdentifier));
-
-        if (panels.size === 0) {
+        const messages = await channel.messages.fetch({ limit: 10 });
+        const exists = messages.some(m => m.embeds && m.embeds.length > 0 && m.embeds[0].title && m.embeds[0].title.includes(titleIdentifier));
+        if (!exists) {
             await sendFunction(channel);
-        } else {
-            const sortedPanels = Array.from(panels.values()).sort((a, b) => b.createdTimestamp - a.createdTimestamp);
-            const toDelete = sortedPanels.slice(1);
-            for (const oldMsg of toDelete) {
-                await oldMsg.delete().catch(() => {});
-            }
         }
     } catch (e) {
-        console.error(`Erreur lors de la gestion du panneau dans ${channel.name}:`, e);
+        console.error(`Erreur lors de la vérification du panneau dans ${channel.name}:`, e);
     }
 }
 
@@ -184,7 +273,7 @@ async function sendSecretariatPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI CORPORATION — SECRÉTARIAT EXÉCUTIF",
-        description: "Canal de transmission officiel. Ce terminal centralisé permet l'enregistrement de vos mandats, demandes de négoce, contrats ou partenariats.\n\n*Cliquez ci-dessous pour ouvrir un dossier sécurisé.*",
+        description: "Canal de transmission officiel. Ce terminal permet l'enregistrement de mandats, d'opérations de négoce et de dossiers administratifs.\n\n*Cliquez ci-dessous pour ouvrir un dossier sécurisé.*",
         footer: { text: "NAIRI OS • SECURE PROTOCOL v5.0" },
         timestamp: new Date().toISOString()
     };
@@ -200,23 +289,23 @@ async function sendServicesPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI CORPORATION  //  NOS SERVICES",
-        description: "Bienvenue chez Nairi Corporation.\n\nMaison de négoce et de courtage, nous vous accompagnons de A à Z dans la structuration de vos projets, la gestion administrative et la mise en relation stratégique.",
+        description: "Bienvenue chez Nairi Corporation.\n\nNous sommes une maison de négoce et de courtage. Notre rôle est de vous accompagner de A à Z : que ce soit pour gérer vos papiers, trouver un client, dénicher un fournisseur ou connecter les bonnes personnes entre elles.",
         fields: [
             {
                 name: "01  •  Secrétariat & Gestion Administrative",
-                value: "Prise en charge complète de vos dossiers : rédaction de contrats, paperasse et formalités institutionnelles."
+                value: "On s'occupe de vos dossiers de A à Z : rédaction de contrats, paperasse, accords et formalités.\n\n*Pour lancer une demande, passez par le salon secrétariat.*"
             },
             {
-                name: "02  •  Négoce & Courtage",
-                value: "Recherche de produits ciblés, identification de fournisseurs fiables et négociation des meilleurs tarifs pour votre compte."
+                name: "02  •  Négoce & Recherche de Partenaires",
+                value: "Vous cherchez un produit précis, un fournisseur fiable ou un client pour écouler vos biens ? On fouille notre réseau pour vous trouver la perle rare et on négocie à votre place."
             },
             {
-                name: "03  •  Mise en Relation & Partenariats",
-                value: "Activation de notre consortium d'entreprises partenaires pour répondre à vos besoins spécifiques. Fonctionnement transparent par commission fixe sur transaction."
+                name: "03  •  Mise en Relation & Commission (%)",
+                value: "Vous avez un besoin particulier hors de notre champ direct ? On active nos entreprises partenaires pour y répondre.\n\n*Comment ça marche ? On fonctionne à la commission : on prend un pourcentage fixe sur chaque transaction réussie.*"
             },
             {
                 name: "04  •  Comptabilité & Trésorerie",
-                value: "Suivi rigoureux des flux financiers et sécurisation des règlements entre parties."
+                value: "Suivi rigoureux des comptes, vérification des règlements et sécurisation de l'argent échangé entre les différentes parties lors des transactions."
             }
         ],
         footer: { text: "NAIRI CORPORATION  •  RÉPERTOIRE DES PRESTATIONS" },
@@ -260,7 +349,7 @@ async function sendLivraisonPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI LOGISTICS — SERVICE DE LIVRAISON",
-        description: "Besoin d'acheminer du fret ou de faire appel à notre flotte de transport ? Soumettez votre demande directement via notre terminal logistique.\n\n*Cliquez ci-dessous pour initialiser une demande de livraison.*",
+        description: "Besoin d'acheminer de la marchandise ou de faire appel à nos camions ? Soumettez votre demande de transport directement via notre terminal.\n\n*Cliquez ci-dessous pour initialiser une demande de livraison.*",
         footer: { text: "NAIRI LOGISTICS • FREIGHT TERMINAL" },
         timestamp: new Date().toISOString()
     };
@@ -276,7 +365,7 @@ async function sendRecrutementPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI LOGISTICS — RECRUTEMENT CHAUFFEURS",
-        description: "Nous recherchons des **Chauffeurs-Livreurs** qualifiés pour assurer le transport de marchandises au sein de notre réseau.\n\n**Profils recherchés :**\n• Maîtrise de la conduite poids lourds et utilitaires.\n• Ponctualité, rigueur et discrétion professionnelle.\n• Respect absolu des protocoles logistiques.\n\n*Cliquez ci-dessous pour postuler.*",
+        description: "Nous recherchons des **Chauffeurs-Livreurs** qualifiés pour assurer le transport de marchandises et la conduite de notre flotte automobile.\n\n**Profils recherchés :**\n• Maîtrise de la conduite poids lourds / utilitaires.\n• Ponctualité, rigueur et discrétion.\n• Respect strict des consignes logistiques.\n\n*Cliquez ci-dessous pour postuler et ouvrir un ticket de recrutement.*",
         footer: { text: "NAIRI LOGISTICS • RECRUTEMENT" },
         timestamp: new Date().toISOString()
     };
@@ -292,19 +381,19 @@ async function sendServicesLogPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI LOGISTICS  //  SERVICES",
-        description: "Découvrez nos solutions professionnelles dédiées au transport et au transit de marchandises.",
+        description: "Découvrez l'ensemble de nos solutions de transport et de prestation automobile.",
         fields: [
             {
                 name: "01  •  Transport par Camion & Fret",
-                value: "Acheminement sécurisé de marchandises en lots complets ou partiels."
+                value: "Acheminement de marchandises en lots complets ou partiels par notre flotte de poids lourds."
             },
             {
-                name: "02  •  Logistique & Planification",
-                value: "Étude et mise en place de schémas d'approvisionnement sur-mesure pour vos entreprises."
+                name: "02  •  Location de Véhicules (Seule ou Chauffeur)",
+                value: "Mise à disposition de véhicules de notre flotte pour vos besoins personnels ou professionnels (avec ou sans chauffeur accrédité)."
             },
             {
-                name: "03  •  Escorte & Sécurisation de Convoi",
-                value: "Accompagnement et protection de vos transports sensibles à travers le réseau."
+                name: "03  •  Escorte de Convoi",
+                value: "Sécurisation et accompagnement logistique de vos transports sensibles."
             }
         ],
         footer: { text: "NAIRI LOGISTICS • PRESTATIONS" },
@@ -312,6 +401,22 @@ async function sendServicesLogPanel(channel) {
     };
 
     await channel.send({ embeds: [embed] });
+}
+
+async function sendCatalogueAdminPanel(channel) {
+    const embed = {
+        color: 0x111111,
+        title: "NAIRI LOGISTICS — GESTION DU CATALOGUE",
+        description: "Ce terminal permet d'ajouter de nouveaux véhicules à la flotte de location.\n\n*Seuls les membres de la **Direction** et les **Directeurs** peuvent utiliser le bouton ci-dessous pour enregister un véhicule.*",
+        footer: { text: "NAIRI LOGISTICS • ADMINISTRATION FLOTTE" },
+        timestamp: new Date().toISOString()
+    };
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('open_add_vehicle_modal').setLabel('➕ Ajouter un véhicule').setStyle(ButtonStyle.Secondary)
+    );
+
+    await channel.send({ embeds: [embed], components: [row] });
 }
 
 module.exports = { setupCorporateStructure };
