@@ -3,7 +3,7 @@ const { ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, Butto
 const CATEGORY_NAIRI = "NAIRI CORPORATION";
 const CATEGORY_ADMIN = "ADMINISTRATION";
 const CATEGORY_COMPTA = "COMPTABILITÉ";
-const CATEGORY_LOGISTICS = "NAIRI LOGISTICS & AUTOMOTIVE";
+const CATEGORY_LOGISTICS = "NAIRI LOGISTICS";
 const ROLE_NAME = "DIRECTEUR";
 const ROLE_DIRECTION = "Direction";
 
@@ -40,7 +40,7 @@ async function setupCorporateStructure(guild) {
                 name: "secrétariat",
                 type: ChannelType.GuildText,
                 parent: catNairi.id,
-                topic: "Terminal sécurisé Nairi Corporation. Initialisation des requêtes.",
+                topic: "Terminal sécurisé Nairi Corporation. Point d'entrée unique pour toutes vos requêtes.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -160,7 +160,7 @@ async function setupCorporateStructure(guild) {
             });
         }
 
-        // --- SECTION 4 : NAIRI LOGISTICS & AUTOMOTIVE ---
+        // --- SECTION 4 : NAIRI LOGISTICS ---
         let catLogistics = guild.channels.cache.find(c => c.name === CATEGORY_LOGISTICS && c.type === ChannelType.GuildCategory);
         if (!catLogistics) {
             catLogistics = await guild.channels.create({ name: CATEGORY_LOGISTICS, type: ChannelType.GuildCategory });
@@ -192,7 +192,7 @@ async function setupCorporateStructure(guild) {
                 name: "recrutement",
                 type: ChannelType.GuildText,
                 parent: catLogistics.id,
-                topic: "Rejoignez l'équipe Nairi Logistics & Automotive.",
+                topic: "Rejoignez l'équipe Nairi Logistics.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -223,35 +223,6 @@ async function setupCorporateStructure(guild) {
             await ensurePanelExists(servicesLog, "NAIRI LOGISTICS  //  SERVICES", sendServicesLogPanel);
         }
 
-        // 4. Salon #catalogue
-        let catalogue = guild.channels.cache.find(c => c.name === "catalogue" && c.parentId === catLogistics.id);
-        if (!catalogue) {
-            catalogue = await guild.channels.create({
-                name: "catalogue",
-                type: ChannelType.GuildText,
-                parent: catLogistics.id,
-                topic: "Flotte de véhicules disponibles à la location (Seule ou avec chauffeur).",
-                permissionOverwrites: [
-                    {
-                        id: guild.roles.everyone,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                        deny: [PermissionsBitField.Flags.SendMessages],
-                    },
-                    ...(directorRole ? [{
-                        id: directorRole.id,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageMessages],
-                    }] : []),
-                    ...(directionRole ? [{
-                        id: directionRole.id,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageMessages],
-                    }] : [])
-                ]
-            });
-            await sendCatalogueAdminPanel(catalogue);
-        } else {
-            await ensurePanelExists(catalogue, "NAIRI LOGISTICS — GESTION DU CATALOGUE", sendCatalogueAdminPanel);
-        }
-
     } catch (error) {
         console.error("Erreur critique d'infrastructure :", error);
     }
@@ -273,7 +244,7 @@ async function sendSecretariatPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI CORPORATION — SECRÉTARIAT EXÉCUTIF",
-        description: "Canal de transmission officiel. Ce terminal permet l'enregistrement de mandats, d'opérations de négoce et de dossiers administratifs.\n\n*Cliquez ci-dessous pour ouvrir un dossier sécurisé.*",
+        description: "Canal de transmission officiel. Ce terminal centralisé permet l'enregistrement de vos mandats, demandes de négoce, contrats ou partenariats.\n\n*Cliquez ci-dessous pour ouvrir un dossier sécurisé.*",
         footer: { text: "NAIRI OS • SECURE PROTOCOL v5.0" },
         timestamp: new Date().toISOString()
     };
@@ -289,23 +260,23 @@ async function sendServicesPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI CORPORATION  //  NOS SERVICES",
-        description: "Bienvenue chez Nairi Corporation.\n\nNous sommes une maison de négoce et de courtage. Notre rôle est de vous accompagner de A à Z : que ce soit pour gérer vos papiers, trouver un client, dénicher un fournisseur ou connecter les bonnes personnes entre elles.",
+        description: "Bienvenue chez Nairi Corporation.\n\nMaison de négoce et de courtage, nous vous accompagnons de A à Z dans la structuration de vos projets, la gestion administrative et la mise en relation stratégique.",
         fields: [
             {
                 name: "01  •  Secrétariat & Gestion Administrative",
-                value: "On s'occupe de vos dossiers de A à Z : rédaction de contrats, paperasse, accords et formalités.\n\n*Pour lancer une demande, passez par le salon secrétariat.*"
+                value: "Prise en charge complète de vos dossiers : rédaction de contrats, paperasse et formalités institutionnelles."
             },
             {
-                name: "02  •  Négoce & Recherche de Partenaires",
-                value: "Vous cherchez un produit précis, un fournisseur fiable ou un client pour écouler vos biens ? On fouille notre réseau pour vous trouver la perle rare et on négocie à votre place."
+                name: "02  •  Négoce & Courtage",
+                value: "Recherche de produits ciblés, identification de fournisseurs fiables et négociation des meilleurs tarifs pour votre compte."
             },
             {
-                name: "03  •  Mise en Relation & Commission (%)",
-                value: "Vous avez un besoin particulier hors de notre champ direct ? On active nos entreprises partenaires pour y répondre.\n\n*Comment ça marche ? On fonctionne à la commission : on prend un pourcentage fixe sur chaque transaction réussie.*"
+                name: "03  •  Mise en Relation & Partenariats",
+                value: "Activation de notre consortium d'entreprises partenaires pour répondre à vos besoins spécifiques. Fonctionnement transparent par commission fixe sur transaction."
             },
             {
                 name: "04  •  Comptabilité & Trésorerie",
-                value: "Suivi rigoureux des comptes, vérification des règlements et sécurisation de l'argent échangé entre les différentes parties lors des transactions."
+                value: "Suivi rigoureux des flux financiers et sécurisation des règlements entre parties."
             }
         ],
         footer: { text: "NAIRI CORPORATION  •  RÉPERTOIRE DES PRESTATIONS" },
@@ -349,7 +320,7 @@ async function sendLivraisonPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI LOGISTICS — SERVICE DE LIVRAISON",
-        description: "Besoin d'acheminer de la marchandise ou de faire appel à nos camions ? Soumettez votre demande de transport directement via notre terminal.\n\n*Cliquez ci-dessous pour initialiser une demande de livraison.*",
+        description: "Besoin d'acheminer du fret ou de faire appel à notre flotte de transport ? Soumettez votre demande directement via notre terminal logistique.\n\n*Cliquez ci-dessous pour initialiser une demande de livraison.*",
         footer: { text: "NAIRI LOGISTICS • FREIGHT TERMINAL" },
         timestamp: new Date().toISOString()
     };
@@ -365,7 +336,7 @@ async function sendRecrutementPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI LOGISTICS — RECRUTEMENT CHAUFFEURS",
-        description: "Nous recherchons des **Chauffeurs-Livreurs** qualifiés pour assurer le transport de marchandises et la conduite de notre flotte automobile.\n\n**Profils recherchés :**\n• Maîtrise de la conduite poids lourds / utilitaires.\n• Ponctualité, rigueur et discrétion.\n• Respect strict des consignes logistiques.\n\n*Cliquez ci-dessous pour postuler et ouvrir un ticket de recrutement.*",
+        description: "Nous recherchons des **Chauffeurs-Livreurs** qualifiés pour assurer le transport de marchandises au sein de notre réseau.\n\n**Profils recherchés :**\n• Maîtrise de la conduite poids lourds et utilitaires.\n• Ponctualité, rigueur et discrétion professionnelle.\n• Respect absolu des protocoles logistiques.\n\n*Cliquez ci-dessous pour postuler.*",
         footer: { text: "NAIRI LOGISTICS • RECRUTEMENT" },
         timestamp: new Date().toISOString()
     };
@@ -381,19 +352,19 @@ async function sendServicesLogPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "NAIRI LOGISTICS  //  SERVICES",
-        description: "Découvrez l'ensemble de nos solutions de transport et de prestation automobile.",
+        description: "Découvrez nos solutions professionnelles dédiées au transport et au transit de marchandises.",
         fields: [
             {
                 name: "01  •  Transport par Camion & Fret",
-                value: "Acheminement de marchandises en lots complets ou partiels par notre flotte de poids lourds."
+                value: "Acheminement sécurisé de marchandises en lots complets ou partiels."
             },
             {
-                name: "02  •  Location de Véhicules (Seule ou Chauffeur)",
-                value: "Mise à disposition de véhicules de notre flotte pour vos besoins personnels ou professionnels (avec ou sans chauffeur accrédité)."
+                name: "02  •  Logistique & Planification",
+                value: "Étude et mise en place de schémas d'approvisionnement sur-mesure pour vos entreprises."
             },
             {
-                name: "03  •  Escorte de Convoi",
-                value: "Sécurisation et accompagnement logistique de vos transports sensibles."
+                name: "03  •  Escorte & Sécurisation de Convoi",
+                value: "Accompagnement et protection de vos transports sensibles à travers le réseau."
             }
         ],
         footer: { text: "NAIRI LOGISTICS • PRESTATIONS" },
@@ -401,22 +372,6 @@ async function sendServicesLogPanel(channel) {
     };
 
     await channel.send({ embeds: [embed] });
-}
-
-async function sendCatalogueAdminPanel(channel) {
-    const embed = {
-        color: 0x111111,
-        title: "NAIRI LOGISTICS — GESTION DU CATALOGUE",
-        description: "Ce terminal permet d'ajouter de nouveaux véhicules à la flotte de location.\n\n*Seuls les membres de la **Direction** et les **Directeurs** peuvent utiliser le bouton ci-dessous pour enregister un véhicule.*",
-        footer: { text: "NAIRI LOGISTICS • ADMINISTRATION FLOTTE" },
-        timestamp: new Date().toISOString()
-    };
-
-    const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('open_add_vehicle_modal').setLabel('➕ Ajouter un véhicule').setStyle(ButtonStyle.Secondary)
-    );
-
-    await channel.send({ embeds: [embed], components: [row] });
 }
 
 module.exports = { setupCorporateStructure };
