@@ -34,56 +34,32 @@ async function setupCorporateStructure(guild) {
             catNairi = await guild.channels.create({ name: CATEGORY_NAIRI, type: ChannelType.GuildCategory });
         }
 
-        let secretariat = guild.channels.cache.find(c => c.name === "secrétariat" && c.parentId === catNairi.id);
-        if (!secretariat) {
-            secretariat = await guild.channels.create({
-                name: "secrétariat",
-                type: ChannelType.GuildText,
-                parent: catNairi.id,
-                topic: "Terminal sécurisé Nairi Corporation. Point d'entrée unique pour toutes vos requêtes.",
-                permissionOverwrites: [{
-                    id: guild.roles.everyone,
-                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                    deny: [PermissionsBitField.Flags.SendMessages],
-                }]
-            });
-            await sendSecretariatPanel(secretariat);
-        } else {
-            await ensurePanelExists(secretariat, "NAIRI CORPORATION — SECRÉTARIAT EXÉCUTIF", sendSecretariatPanel);
-        }
+        await handleUniqueChannel(guild, catNairi, "secrétariat", ChannelType.GuildText, {
+            topic: "Terminal sécurisé Nairi Corporation. Point d'entrée unique pour toutes vos requêtes.",
+            permissionOverwrites: [{
+                id: guild.roles.everyone,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                deny: [PermissionsBitField.Flags.SendMessages],
+            }]
+        }, sendSecretariatPanel, "NAIRI CORPORATION — SECRÉTARIAT EXÉCUTIF");
 
-        let annonces = guild.channels.cache.find(c => c.name === "annonces" && c.parentId === catNairi.id);
-        if (!annonces) {
-            annonces = await guild.channels.create({
-                name: "annonces",
-                type: ChannelType.GuildText,
-                parent: catNairi.id,
-                topic: "Flux officiel des communiqués de Nairi Corporation.",
-                permissionOverwrites: [{
-                    id: guild.roles.everyone,
-                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                    deny: [PermissionsBitField.Flags.SendMessages],
-                }]
-            });
-        }
+        await handleUniqueChannel(guild, catNairi, "annonces", ChannelType.GuildText, {
+            topic: "Flux officiel des communiqués de Nairi Corporation.",
+            permissionOverwrites: [{
+                id: guild.roles.everyone,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                deny: [PermissionsBitField.Flags.SendMessages],
+            }]
+        }, null);
 
-        let services = guild.channels.cache.find(c => c.name === "services" && c.parentId === catNairi.id);
-        if (!services) {
-            services = await guild.channels.create({
-                name: "services",
-                type: ChannelType.GuildText,
-                parent: catNairi.id,
-                topic: "Catalogue des services et prestations Nairi Corporation.",
-                permissionOverwrites: [{
-                    id: guild.roles.everyone,
-                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                    deny: [PermissionsBitField.Flags.SendMessages],
-                }]
-            });
-            await sendServicesPanel(services);
-        } else {
-            await ensurePanelExists(services, "NAIRI CORPORATION  //  NOS SERVICES", sendServicesPanel);
-        }
+        await handleUniqueChannel(guild, catNairi, "services", ChannelType.GuildText, {
+            topic: "Catalogue des services et prestations Nairi Corporation.",
+            permissionOverwrites: [{
+                id: guild.roles.everyone,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                deny: [PermissionsBitField.Flags.SendMessages],
+            }]
+        }, sendServicesPanel, "NAIRI CORPORATION  //  NOS SERVICES");
 
         // --- SECTION 2 : ADMINISTRATION ---
         let catAdmin = guild.channels.cache.find(c => c.name === CATEGORY_ADMIN && c.type === ChannelType.GuildCategory);
@@ -91,28 +67,16 @@ async function setupCorporateStructure(guild) {
             catAdmin = await guild.channels.create({ name: CATEGORY_ADMIN, type: ChannelType.GuildCategory });
         }
 
-        let bureau = guild.channels.cache.find(c => c.name === "bureau" && c.parentId === catAdmin.id);
-        if (!bureau) {
-            bureau = await guild.channels.create({
-                name: "bureau",
-                type: ChannelType.GuildText,
-                parent: catAdmin.id,
-                topic: "Poste de commandement exécutif de la direction.",
-                permissionOverwrites: [
-                    {
-                        id: guild.roles.everyone,
-                        deny: [PermissionsBitField.Flags.ViewChannel],
-                    },
-                    ...(directorRole ? [{
-                        id: directorRole.id,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels],
-                    }] : [])
-                ]
-            });
-            await sendBureauPanel(bureau);
-        } else {
-            await ensurePanelExists(bureau, "NAIRI OS // POSTE DE COMMANDEMENT EXÉCUTIF", sendBureauPanel);
-        }
+        await handleUniqueChannel(guild, catAdmin, "bureau", ChannelType.GuildText, {
+            topic: "Poste de commandement exécutif de la direction.",
+            permissionOverwrites: [
+                { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
+                ...(directorRole ? [{
+                    id: directorRole.id,
+                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory, PermissionsBitField.Flags.ManageChannels],
+                }] : [])
+            ]
+        }, sendBureauPanel, "NAIRI OS // POSTE DE COMMANDEMENT EXÉCUTIF");
 
         // --- SECTION 3 : COMPTABILITÉ ---
         let catCompta = guild.channels.cache.find(c => c.name === CATEGORY_COMPTA && c.type === ChannelType.GuildCategory);
@@ -120,45 +84,23 @@ async function setupCorporateStructure(guild) {
             catCompta = await guild.channels.create({ name: CATEGORY_COMPTA, type: ChannelType.GuildCategory });
         }
 
-        let finance = guild.channels.cache.find(c => c.name === "finance" && c.parentId === catCompta.id);
-        if (!finance) {
-            finance = await guild.channels.create({
-                name: "finance",
-                type: ChannelType.GuildText,
-                parent: catCompta.id,
-                topic: "Registre financier et flux de trésorerie.",
-                permissionOverwrites: [
-                    {
-                        id: guild.roles.everyone,
-                        deny: [PermissionsBitField.Flags.ViewChannel],
-                    },
-                    ...(directorRole ? [{
-                        id: directorRole.id,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory],
-                    }] : [])
-                ]
-            });
-        }
+        const restrictedOverwrites = [
+            { id: guild.roles.everyone, deny: [PermissionsBitField.Flags.ViewChannel] },
+            ...(directorRole ? [{
+                id: directorRole.id,
+                allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory],
+            }] : [])
+        ];
 
-        let logistiqueCompta = guild.channels.cache.find(c => c.name === "logistique" && c.parentId === catCompta.id);
-        if (!logistiqueCompta) {
-            logistiqueCompta = await guild.channels.create({
-                name: "logistique",
-                type: ChannelType.GuildText,
-                parent: catCompta.id,
-                topic: "Suivi logistique et opérations de négoce.",
-                permissionOverwrites: [
-                    {
-                        id: guild.roles.everyone,
-                        deny: [PermissionsBitField.Flags.ViewChannel],
-                    },
-                    ...(directorRole ? [{
-                        id: directorRole.id,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ReadMessageHistory],
-                    }] : [])
-                ]
-            });
-        }
+        await handleUniqueChannel(guild, catCompta, "finance", ChannelType.GuildText, {
+            topic: "Registre financier et flux de trésorerie.",
+            permissionOverwrites: restrictedOverwrites
+        }, null);
+
+        await handleUniqueChannel(guild, catCompta, "logistique", ChannelType.GuildText, {
+            topic: "Suivi logistique et opérations de négoce.",
+            permissionOverwrites: restrictedOverwrites
+        }, null);
 
         // --- SECTION 4 : NAIRI LOGISTICS ---
         let catLogistics = guild.channels.cache.find(c => c.name === CATEGORY_LOGISTICS && c.type === ChannelType.GuildCategory);
@@ -166,77 +108,75 @@ async function setupCorporateStructure(guild) {
             catLogistics = await guild.channels.create({ name: CATEGORY_LOGISTICS, type: ChannelType.GuildCategory });
         }
 
-        // 1. Salon #livraison
-        let livraison = guild.channels.cache.find(c => c.name === "livraison" && c.parentId === catLogistics.id);
-        if (!livraison) {
-            livraison = await guild.channels.create({
-                name: "livraison",
-                type: ChannelType.GuildText,
-                parent: catLogistics.id,
-                topic: "Terminal logistique. Demandez une livraison par nos camions ou planifiez vos transports.",
-                permissionOverwrites: [{
-                    id: guild.roles.everyone,
-                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                    deny: [PermissionsBitField.Flags.SendMessages],
-                }]
-            });
-            await sendLivraisonPanel(livraison);
-        } else {
-            await ensurePanelExists(livraison, "NAIRI LOGISTICS — SERVICE DE LIVRAISON", sendLivraisonPanel);
-        }
+        const logisticsOverwrites = [{
+            id: guild.roles.everyone,
+            allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+            deny: [PermissionsBitField.Flags.SendMessages],
+        }];
 
-        // 2. Salon #recrutement
-        let recrutement = guild.channels.cache.find(c => c.name === "recrutement" && c.parentId === catLogistics.id);
-        if (!recrutement) {
-            recrutement = await guild.channels.create({
-                name: "recrutement",
-                type: ChannelType.GuildText,
-                parent: catLogistics.id,
-                topic: "Rejoignez l'équipe Nairi Logistics.",
-                permissionOverwrites: [{
-                    id: guild.roles.everyone,
-                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                    deny: [PermissionsBitField.Flags.SendMessages],
-                }]
-            });
-            await sendRecrutementPanel(recrutement);
-        } else {
-            await ensurePanelExists(recrutement, "NAIRI LOGISTICS — RECRUTEMENT CHAUFFEURS", sendRecrutementPanel);
-        }
+        await handleUniqueChannel(guild, catLogistics, "livraison", ChannelType.GuildText, {
+            topic: "Terminal logistique. Demandez une livraison par nos camions ou planifiez vos transports.",
+            permissionOverwrites: logisticsOverwrites
+        }, sendLivraisonPanel, "NAIRI LOGISTICS — SERVICE DE LIVRAISON");
 
-        // 3. Salon #services
-        let servicesLog = guild.channels.cache.find(c => c.name === "services" && c.parentId === catLogistics.id);
-        if (!servicesLog) {
-            servicesLog = await guild.channels.create({
-                name: "services",
-                type: ChannelType.GuildText,
-                parent: catLogistics.id,
-                topic: "Catalogue des prestations de transport et solutions logistiques.",
-                permissionOverwrites: [{
-                    id: guild.roles.everyone,
-                    allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                    deny: [PermissionsBitField.Flags.SendMessages],
-                }]
-            });
-            await sendServicesLogPanel(servicesLog);
-        } else {
-            await ensurePanelExists(servicesLog, "NAIRI LOGISTICS  //  SERVICES", sendServicesLogPanel);
-        }
+        await handleUniqueChannel(guild, catLogistics, "recrutement", ChannelType.GuildText, {
+            topic: "Rejoignez l'équipe Nairi Logistics.",
+            permissionOverwrites: logisticsOverwrites
+        }, sendRecrutementPanel, "NAIRI LOGISTICS — RECRUTEMENT CHAUFFEURS");
+
+        await handleUniqueChannel(guild, catLogistics, "services", ChannelType.GuildText, {
+            topic: "Catalogue des prestations de transport et solutions logistiques.",
+            permissionOverwrites: logisticsOverwrites
+        }, sendServicesLogPanel, "NAIRI LOGISTICS  //  SERVICES");
 
     } catch (error) {
         console.error("Erreur critique d'infrastructure :", error);
     }
 }
 
-async function ensurePanelExists(channel, titleIdentifier, sendFunction) {
+async function handleUniqueChannel(guild, category, channelName, channelType, options, sendPanelFunc, panelTitle) {
+    const existingChannels = guild.channels.cache.filter(
+        c => c.name === channelName && c.parentId === category.id && c.type === channelType
+    );
+
+    let targetChannel;
+
+    if (existingChannels.size > 0) {
+        targetChannel = existingChannels.first();
+        const duplicates = Array.from(existingChannels.values()).slice(1);
+        for (const dup of duplicates) {
+            await dup.delete("Suppression de salon en double par Nairi OS").catch(() => {});
+        }
+    } else {
+        targetChannel = await guild.channels.create({
+            name: channelName,
+            type: channelType,
+            parent: category.id,
+            ...options
+        });
+    }
+
+    if (sendPanelFunc && panelTitle) {
+        await ensureSinglePanel(targetChannel, panelTitle, sendPanelFunc);
+    }
+}
+
+async function ensureSinglePanel(channel, titleIdentifier, sendFunction) {
     try {
-        const messages = await channel.messages.fetch({ limit: 10 });
-        const exists = messages.some(m => m.embeds && m.embeds.length > 0 && m.embeds[0].title && m.embeds[0].title.includes(titleIdentifier));
-        if (!exists) {
+        const messages = await channel.messages.fetch({ limit: 15 });
+        const panels = messages.filter(m => m.embeds && m.embeds.length > 0 && m.embeds[0].title && m.embeds[0].title.includes(titleIdentifier));
+
+        if (panels.size === 0) {
             await sendFunction(channel);
+        } else {
+            const sortedPanels = Array.from(panels.values()).sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+            const toDelete = sortedPanels.slice(1);
+            for (const oldMsg of toDelete) {
+                await oldMsg.delete().catch(() => {});
+            }
         }
     } catch (e) {
-        console.error(`Erreur lors de la vérification du panneau dans ${channel.name}:`, e);
+        console.error(`Erreur lors de la gestion du panneau dans ${channel.name}:`, e);
     }
 }
 
