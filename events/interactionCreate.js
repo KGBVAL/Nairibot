@@ -9,7 +9,7 @@ const {
     TextInputStyle, 
     StringSelectMenuBuilder 
 } = require('discord.js');
-const { logAction, logFinancialTransaction } = require('./corporateRegisters');
+const { logAction, logFinancialTransaction } = require('../utils/corporateRegisters');
 
 module.exports = {
     name: 'interactionCreate',
