@@ -1,6 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits, StringSelectMenuBuilder } = require('discord.js');
 
-async function setupCorporateServer(guild) {
+async function setupCorporateStructure(guild) {
     try {
         console.log(`[CorporateSetup] Initialisation de l'architecture pour ${guild.name}...`);
 
@@ -284,7 +284,7 @@ async function setupCorporateServer(guild) {
             await recrutementChannel.send({ embeds: [embedRecrutement], components: [rowRecrutement] });
         }
 
-        // Salon Services Logistiques (MODIFIÉ : SANS LA LOCATION DE VÉHICULES)
+        // Salon Services Logistiques (SANS la location de véhicules)
         let servicesLogChannel = guild.channels.cache.find(c => c.name === 'services-logistique' && c.parentId === logisticsCategory.id);
         if (!servicesLogChannel) {
             servicesLogChannel = await guild.channels.create({
@@ -348,4 +348,4 @@ async function setupCorporateServer(guild) {
     }
 }
 
-module.exports = { setupCorporateServer };
+module.exports = { setupCorporateStructure };
