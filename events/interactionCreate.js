@@ -639,7 +639,7 @@ async function handleInteraction(interaction) {
         });
 
         // Récupération directe du salon DA par son ID précis
-        const daChannelId = '1539402971614417057';
+        const daChannelId = '1541802128186802331';
         const daChannel = guild.channels.cache.get(daChannelId) || await guild.channels.fetch(daChannelId).catch(() => null);
 
         const partnerEmbed = {
