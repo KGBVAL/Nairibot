@@ -1,4 +1,4 @@
-const { ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 
 const CATEGORY_IMEX = "IMEX CORPORATION";
 const CATEGORY_ADMIN = "ADMINISTRATION";
@@ -221,7 +221,8 @@ async function setupCorporateStructure(guild) {
             await ensurePanelExists(recrutement, "IMEX TRUCKING — RECRUTEMENT CHAUFFEURS", sendRecrutementPanel);
         }
 
-        let priseService = guild.channels.cache.find(c => c.name === "prise-de-service" && c.parentId === catLogistics.id);
+        // Salon spécifique ID : 1544790338001047563 (prise-de-service)
+        let priseService = guild.channels.cache.get("1544790338001047563") || guild.channels.cache.find(c => c.name === "prise-de-service" && c.parentId === catLogistics.id);
         if (!priseService) {
             priseService = await guild.channels.create({
                 name: "prise-de-service",
@@ -236,6 +237,10 @@ async function setupCorporateStructure(guild) {
             });
             await sendPriseServicePanel(priseService);
         } else {
+            // S'assure qu'il est bien placé dans la catégorie logistique
+            if (priseService.parentId !== catLogistics.id) {
+                await priseService.setParent(catLogistics.id).catch(() => {});
+            }
             await ensurePanelExists(priseService, "IMEX TRUCKING — PRISE DE SERVICE & CAMIONS", sendPriseServicePanel);
         }
 
@@ -368,17 +373,73 @@ async function sendPriseServicePanel(channel) {
     const embed = {
         color: 0x111111,
         title: "IMEX TRUCKING — PRISE DE SERVICE & CAMIONS",
-        description: "Terminal opérateur pour la gestion de service et la flotte.\n\n• **Prendre/Quitter son service** pour enregistrer vos vacations de conduite.\n• **Verrouiller/Déverrouiller son camion** assigné pour sécuriser votre matériel.",
+        description: "Terminal opérateur pour la gestion de service et la flotte.\n\n• **Prendre / Quitter son service** pour enregistrer en temps réel votre vacation et indiquer obligatoirement le nom de votre camion.\n• **Verrouiller/Déverrouiller son camion** assigné pour sécuriser votre matériel.",
         footer: { text: "IMEX TRUCKING • FLEET & DUTY CONTROL" },
         timestamp: new Date().toISOString()
     };
 
+    // Le bouton déclenche un Modal demandant le nom du camion et le statut
     const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('toggle_duty_status').setLabel('PRENDRE / QUITTER LE SERVICE').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('open_duty_modal').setLabel('GÉRER SON SERVICE & CAMION').setStyle(ButtonStyle.Primary),
         new ButtonBuilder().setCustomId('toggle_truck_lock').setLabel('VERROUILLER / DÉVERROUILLER CAMION').setStyle(ButtonStyle.Secondary)
     );
 
     await channel.send({ embeds: [embed], components: [row] });
 }
 
-module.exports = { setupCorporateStructure };
+// --- GESTIONNAIRE D'INTERACTION ASSOCIÉ (À placer dans votre gestionnaire d'événements global interactionCreate) ---
+async function handleDutyInteractions(interaction) {
+    // 1. Clic sur le bouton de gestion de service -> Ouvre la modale
+    if (interaction.isButton() && interaction.customId === 'open_duty_modal') {
+        const modal = new ModalBuilder()
+            .setCustomId('modal_duty_submit')
+            .setTitle('IMEX TRUCKING // GESTION DE SERVICE');
+
+        modal.addComponents(
+            new ActionRowBuilder().addComponents(
+                new TextInputBuilder()
+                    .setCustomId('truck_name')
+                    .setLabel("NOM / NUMÉRO DU CAMION")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("Ex: Mack Anthem #04, Kenworth W900...")
+                    .setRequired(true)
+            ),
+            new ActionRowBuilder().addComponents(
+                new TextInputBuilder()
+                    .setCustomId('duty_action')
+                    .setLabel("STATUT (EN SERVICE ou FIN DE SERVICE)")
+                    .setStyle(TextInputStyle.Short)
+                    .setPlaceholder("Tapez 'EN SERVICE' ou 'FIN DE SERVICE'")
+                    .setRequired(true)
+            )
+        );
+
+        return await interaction.showModal(modal);
+    }
+
+    // 2. Validation de la modale de service -> Enregistrement en temps réel dans le salon
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_duty_submit') {
+        const truckName = interaction.fields.getTextInputValue('truck_name');
+        const dutyAction = interaction.fields.getTextInputValue('duty_action').toUpperCase();
+        const user = interaction.user;
+
+        const isOnDuty = dutyAction.includes('ENTRER') || dutyAction.includes('EN SERVICE') || dutyAction.includes('ON') || dutyAction.includes('DEBUT');
+        const statusText = isOnDuty ? "🟢 EN SERVICE" : "🔴 FIN DE SERVICE";
+
+        // Publication en temps réel dans le salon "prise-de-service" (ID: 1544790338001047563 ou par nom)
+        const dutyChannel = interaction.guild.channels.cache.get("1544790338001047563") || interaction.guild.channels.cache.find(c => c.name === "prise-de-service");
+        
+        if (dutyChannel) {
+            await dutyChannel.send({
+                content: `Mise à jour flotte & service : L'opérateur **${user}** passe **${statusText}** à bord du véhicule désigné : \`${truckName}\`.`
+            }).catch(() => {});
+        }
+
+        return await interaction.reply({
+            content: `Votre statut a bien été pris en compte : **${statusText}** avec le camion **${truckName}**.`,
+            flags: MessageFlags.Ephemeral
+        });
+    }
+}
+
+module.exports = { setupCorporateStructure, handleDutyInteractions };
