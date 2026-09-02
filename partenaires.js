@@ -20,9 +20,9 @@ module.exports = {
 
         const embed = new EmbedBuilder()
             .setColor(0x111111)
-            .setTitle("NAIRI CORPORATION  //  RÉSEAU DE PARTENAIRES")
-            .setDescription("Gestion des alliances stratégiques et du consortium d'entreprises partenaires.\n\n**Ce que l'on cherche :** Des entreprises ou prestataires fiables capables de répondre rapidement à des besoins spécifiques (logistique, technique, approvisionnement, services ciblés) que nous ne couvrons pas en interne.\n\n**Pourquoi devenir partenaire ?**\n• Apport d'affaires régulier via notre réseau de clients.\n• Rémunération claire sur chaque transaction.\n• Synergie et interconnexion professionnelle sécurisée.")
-            .setFooter({ text: "NAIRI CORPORATION  •  MODULE PARTENARIAT" })
+            .setTitle("IMEX  //  RÉSEAU DE PARTENAIRES & LOGISTIQUE")
+            .setDescription("Gestion des alliances stratégiques et du consortium d'entreprises partenaires dans le secteur du transport et du fret.\n\n**Ce que l'on cherche :** Des prestataires fiables, des entreprises de transport ou des sous-traitants capables de répondre rapidement à des surcharges de fret, des besoins de maintenance ou des lignes de transport spécifiques.\n\n**Pourquoi devenir partenaire ?**\n• Apport de contrats de transport réguliers.\n• Synergie et interconnexion professionnelle sécurisée pour le fret.\n• Partage de lignes logistiques optimisées.")
+            .setFooter({ text: "IMEX  •  MODULE PARTENARIAT TRUCKING" })
             .setTimestamp();
 
         const row = new ActionRowBuilder().addComponents(
