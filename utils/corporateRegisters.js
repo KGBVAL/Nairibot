@@ -276,10 +276,10 @@ async function handleRegisterModal(interaction) {
             const panel = messages.find(m => m.author.id === financeChannel.client.user.id && m.embeds.length > 0);
             if (panel) {
                 const embed = panel.embeds[0];
-                const updated = { ...embed, fields: [
+                const updated = EmbedBuilder.from(embed).setFields([
                     { name: "TRÉSORERIE DISPONIBLE", value: `**$${financialLedger.cashFlow.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD**`, inline: false },
                     { name: "DERNIÈRES TRANSACTIONS", value: formatTransactions(), inline: false }
-                ]};
+                ]);
                 await panel.edit({ embeds: [updated] });
             }
         }
