@@ -29,7 +29,7 @@ async function setupCorporateStructure(guild) {
         }
 
         // --- NETTOYAGE DES ANCIENS SALONS / DOUBLONS OBSOLÈTES ---
-        const obsoleteChannelsIds = ["1541800519918690314", "1541800535181758615", "1544789313731170305"];
+        const obsoleteChannelsIds = ["1544794833321857146", "1541800519918690314", "1541800535181758615", "1544789313731170305"];
         for (const chId of obsoleteChannelsIds) {
             const ch = guild.channels.cache.get(chId);
             if (ch) {
@@ -37,13 +37,9 @@ async function setupCorporateStructure(guild) {
             }
         }
         
-        const oldCatNairi = guild.channels.cache.find(c => c.name === "NAIRI CORPORATION" && c.type === ChannelType.GuildCategory);
-        if (oldCatNairi) {
-            await oldCatNairi.delete("Mise à jour vers IMEX Corporation").catch(() => {});
-        }
-        const oldCatLog = guild.channels.cache.find(c => c.name === "NAIRI LOGISTICS & AUTOMOTIVE" && c.type === ChannelType.GuildCategory);
-        if (oldCatLog) {
-            await oldCatLog.delete("Mise à jour vers IMEX Trucking").catch(() => {});
+        const oldCategories = guild.channels.cache.filter(c => c.type === ChannelType.GuildCategory && (c.name.includes("NAIRI") || c.name.includes("ANCIEN")));
+        for (const cat of oldCategories.values()) {
+            await cat.delete("Mise à jour vers IMEX Corporation").catch(() => {});
         }
 
         // --- SECTION 1 : IMEX CORPORATION ---
@@ -52,7 +48,8 @@ async function setupCorporateStructure(guild) {
             catImex = await guild.channels.create({ name: CATEGORY_IMEX, type: ChannelType.GuildCategory });
         }
 
-        let secretariat = guild.channels.cache.find(c => c.name === "secrétariat" && c.parentId === catImex.id);
+        // Utilisation de l'ID cible (1541800525761093683) pour éviter les doublons du secrétariat
+        let secretariat = guild.channels.cache.get("1541800525761093683") || guild.channels.cache.find(c => c.name === "secrétariat" && c.parentId === catImex.id);
         if (!secretariat) {
             secretariat = await guild.channels.create({
                 name: "secrétariat",
@@ -67,6 +64,7 @@ async function setupCorporateStructure(guild) {
             });
             await sendSecretariatPanel(secretariat);
         } else {
+            if (secretariat.parentId !== catImex.id) await secretariat.setParent(catImex.id).catch(() => {});
             await ensurePanelExists(secretariat, "IMEX CORPORATION — SECRÉTARIAT EXÉCUTIF", sendSecretariatPanel);
         }
 
@@ -179,10 +177,12 @@ async function setupCorporateStructure(guild) {
             });
         }
 
-        // --- SECTION 4 : IMEX TRUCKING & LOGISTICS ---
-        let catLogistics = guild.channels.cache.find(c => c.name === CATEGORY_LOGISTICS && c.type === ChannelType.GuildCategory);
+        // --- SECTION 4 : IMEX TRUCKING & LOGISTICS (Utilisation de l'ID 1541800526709002330) ---
+        let catLogistics = guild.channels.cache.get("1541800526709002330") || guild.channels.cache.find(c => c.name === CATEGORY_LOGISTICS && c.type === ChannelType.GuildCategory);
         if (!catLogistics) {
             catLogistics = await guild.channels.create({ name: CATEGORY_LOGISTICS, type: ChannelType.GuildCategory });
+        } else if (catLogistics.name !== CATEGORY_LOGISTICS) {
+            await catLogistics.setName(CATEGORY_LOGISTICS).catch(() => {});
         }
 
         let livraison = guild.channels.cache.find(c => c.name === "livraison" && c.parentId === catLogistics.id);
@@ -209,7 +209,7 @@ async function setupCorporateStructure(guild) {
                 name: "recrutement",
                 type: ChannelType.GuildText,
                 parent: catLogistics.id,
-                topic: "Rejoignez l'équipe IMEX Trucking en tant que chauffeur routier.",
+                topic: "Rejoignez l'équipe IMEX Trucking en tant que chauffeur-livreur.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -228,7 +228,7 @@ async function setupCorporateStructure(guild) {
                 name: "prise-de-service",
                 type: ChannelType.GuildText,
                 parent: catLogistics.id,
-                topic: "Prise de service des chauffeurs et verrouillage/gestion des camions de la flotte.",
+                topic: "Prise de service des chauffeurs-livreurs et gestion en temps réel de la flotte de camions.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -237,7 +237,6 @@ async function setupCorporateStructure(guild) {
             });
             await sendPriseServicePanel(priseService);
         } else {
-            // S'assure qu'il est bien placé dans la catégorie logistique
             if (priseService.parentId !== catLogistics.id) {
                 await priseService.setParent(catLogistics.id).catch(() => {});
             }
@@ -288,8 +287,8 @@ async function sendServicesPanel(channel) {
                 value: "Acheminement sécurisé de marchandises en lots complets ou partiels à travers tout le réseau."
             },
             {
-                name: "02  •  Logistique & Gestion de Flotte",
-                value: "Mise à disposition de véhicules industriels et gestion rigoureuse des plannings de livraison."
+                name: "02  •  Logistique & Flotte de Livraison",
+                value: "Mise à disposition de véhicules industriels et gestion rigoureuse des plannings de chauffeurs-livreurs."
             },
             {
                 name: "03  •  Partenariats & Sous-traitance",
@@ -311,7 +310,7 @@ async function sendBureauPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "IMEX OS // POSTE DE COMMANDEMENT EXÉCUTIF",
-        description: "Terminal de gestion centralisé de la direction.\n\nUtilisez l'interface ci-dessous pour administrer les flux de communication vers le salon direction (`1544638192618307644`), les registres et la sécurité globale de l'infrastructure.",
+        description: "Terminal de gestion centralisé de la direction.\n\nUtilisez l'interface ci-dessous pour administrer les flux de communication vers le salon direction, les registres et la sécurité globale de l'infrastructure.",
         footer: { text: "RESTREINT • DIRECTION" },
         timestamp: new Date().toISOString()
     };
@@ -357,7 +356,7 @@ async function sendRecrutementPanel(channel) {
     const embed = {
         color: 0x111111,
         title: "IMEX TRUCKING — RECRUTEMENT CHAUFFEURS",
-        description: "Nous recherchons des **Chauffeurs Routiers** qualifiés pour assurer le transport de fret et piloter notre flotte de camions.\n\n**Profils recherchés :**\n• Maîtrise de la conduite de poids lourds.\n• Ponctualité, rigueur et respect des délais de livraison.\n• Respect strict des consignes de sécurité routière.\n\n*Cliquez ci-dessous pour postuler et ouvrir un ticket de recrutement.*",
+        description: "Nous recherchons des **Chauffeurs-Livreurs** qualifiés pour assurer le transport de fret et piloter notre flotte de camions.\n\n**Profils recherchés :**\n• Maîtrise de la conduite de poids lourds.\n• Ponctualité, rigueur et respect des délais de livraison.\n• Respect strict des consignes de sécurité routière.\n\n*Cliquez ci-dessous pour postuler en tant que chauffeur professionnel.*",
         footer: { text: "IMEX TRUCKING • RECRUTEMENT" },
         timestamp: new Date().toISOString()
     };
@@ -373,21 +372,19 @@ async function sendPriseServicePanel(channel) {
     const embed = {
         color: 0x111111,
         title: "IMEX TRUCKING — PRISE DE SERVICE & CAMIONS",
-        description: "Terminal opérateur pour la gestion de service et la flotte.\n\n• **Prendre / Quitter son service** pour enregistrer en temps réel votre vacation et indiquer obligatoirement le nom de votre camion.\n• **Verrouiller/Déverrouiller son camion** assigné pour sécuriser votre matériel.",
+        description: "Terminal opérateur pour les chauffeurs-livreurs.\n\n• Cliquez sur le bouton ci-dessous pour **Prendre ou Quitter votre service** en indiquant le nom et le numéro officiel de votre camion.",
         footer: { text: "IMEX TRUCKING • FLEET & DUTY CONTROL" },
         timestamp: new Date().toISOString()
     };
 
-    // Le bouton déclenche un Modal demandant le nom du camion et le statut
     const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('open_duty_modal').setLabel('GÉRER SON SERVICE & CAMION').setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId('toggle_truck_lock').setLabel('VERROUILLER / DÉVERROUILLER CAMION').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId('open_duty_modal').setLabel('GÉRER SON SERVICE & CAMION').setStyle(ButtonStyle.Primary)
     );
 
     await channel.send({ embeds: [embed], components: [row] });
 }
 
-// --- GESTIONNAIRE D'INTERACTION ASSOCIÉ (À placer dans votre gestionnaire d'événements global interactionCreate) ---
+// --- GESTIONNAIRE D'INTERACTION ASSOCIÉ ---
 async function handleDutyInteractions(interaction) {
     // 1. Clic sur le bouton de gestion de service -> Ouvre la modale
     if (interaction.isButton() && interaction.customId === 'open_duty_modal') {
@@ -426,7 +423,6 @@ async function handleDutyInteractions(interaction) {
         const isOnDuty = dutyAction.includes('ENTRER') || dutyAction.includes('EN SERVICE') || dutyAction.includes('ON') || dutyAction.includes('DEBUT');
         const statusText = isOnDuty ? "🟢 EN SERVICE" : "🔴 FIN DE SERVICE";
 
-        // Publication en temps réel dans le salon "prise-de-service" (ID: 1544790338001047563 ou par nom)
         const dutyChannel = interaction.guild.channels.cache.get("1544790338001047563") || interaction.guild.channels.cache.find(c => c.name === "prise-de-service");
         
         if (dutyChannel) {
