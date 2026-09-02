@@ -32,13 +32,13 @@ async function initRegisters(guild) {
 async function sendFinancePanel(channel) {
     const embed = {
         color: 0x111111,
-        title: "NAIRI OS // REGISTRE FINANCIER & TRÉSORERIE",
+        title: "IMEX OS // REGISTRE FINANCIER & TRÉSORERIE",
         description: "Suivi comptable de l'entreprise.",
         fields: [
             { name: "TRÉSORERIE DISPONIBLE", value: `**$${financialLedger.cashFlow.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD**`, inline: false },
             { name: "DERNIÈRES TRANSACTIONS", value: formatTransactions(), inline: false }
         ],
-        footer: { text: "COMPTABILITÉ • NAIRI CORPORATION" },
+        footer: { text: "COMPTABILITÉ • IMEX CORPORATION" },
         timestamp: new Date().toISOString()
     };
 
@@ -57,12 +57,12 @@ async function sendFinancePanel(channel) {
 async function sendLogisticsPanel(channel) {
     const embed = {
         color: 0x111111,
-        title: "NAIRI OS // REGISTRE LOGISTIQUE & FRET",
+        title: "IMEX OS // REGISTRE LOGISTIQUE & FRET",
         description: "Gestion des stocks et des statuts de transport.",
         fields: [
             { name: "INVENTAIRE DISPONIBLE", value: formatInventory(), inline: false }
         ],
-        footer: { text: "LOGISTIQUE • NAIRI CORPORATION" },
+        footer: { text: "LOGISTIQUE • IMEX CORPORATION" },
         timestamp: new Date().toISOString()
     };
 
@@ -98,7 +98,7 @@ async function updateChannelPanel(guild, channelName) {
     if (!channel) return;
 
     const messages = await channel.messages.fetch({ limit: 15 });
-    const panelMessage = messages.find(m => m.author.id === channel.client.user.id && m.embeds.length > 0 && m.embeds[0].title && m.embeds[0].title.includes("NAIRI OS // REGISTRE LOGISTIQUE"));
+    const panelMessage = messages.find(m => m.author.id === channel.client.user.id && m.embeds.length > 0 && m.embeds[0].title && m.embeds[0].title.includes("IMEX OS // REGISTRE LOGISTIQUE"));
     if (!panelMessage) return;
 
     const embed = panelMessage.embeds[0];
@@ -341,7 +341,7 @@ async function handleRegisterModal(interaction) {
                     { name: "DESTINATION", value: destination, inline: true },
                     { name: "ÉTAT DU TRANSPORT", value: "Pas commencé", inline: true }
                 )
-                .setFooter({ text: "NAIRI CORPORATION • SYSTÈME LOGISTIQUE" })
+                .setFooter({ text: "IMEX CORPORATION • SYSTÈME LOGISTIQUE" })
                 .setTimestamp();
 
             const statusSelect = new StringSelectMenuBuilder()
