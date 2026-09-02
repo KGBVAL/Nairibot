@@ -1,9 +1,9 @@
 const { ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
-const CATEGORY_NAIRI = "NAIRI CORPORATION";
+const CATEGORY_IMEX = "IMEX CORPORATION";
 const CATEGORY_ADMIN = "ADMINISTRATION";
 const CATEGORY_COMPTA = "COMPTABILITÉ";
-const CATEGORY_LOGISTICS = "NAIRI LOGISTICS & AUTOMOTIVE";
+const CATEGORY_LOGISTICS = "IMEX TRUCKING & LOGISTICS";
 const ROLE_NAME = "DIRECTEUR";
 const ROLE_DIRECTION = "Direction";
 
@@ -15,7 +15,7 @@ async function setupCorporateStructure(guild) {
                 name: ROLE_NAME,
                 color: 0x111111,
                 permissions: [PermissionsBitField.Flags.Administrator],
-                reason: "Rôle exécutif requis pour le pilotage de l'OS Nairi."
+                reason: "Rôle exécutif requis pour le pilotage de l'OS IMEX."
             });
         }
 
@@ -28,19 +28,37 @@ async function setupCorporateStructure(guild) {
             });
         }
 
-        // --- SECTION 1 : NAIRI CORPORATION ---
-        let catNairi = guild.channels.cache.find(c => c.name === CATEGORY_NAIRI && c.type === ChannelType.GuildCategory);
-        if (!catNairi) {
-            catNairi = await guild.channels.create({ name: CATEGORY_NAIRI, type: ChannelType.GuildCategory });
+        // --- NETTOYAGE DES ANCIENS SALONS / DOUBLONS OBSOLÈTES ---
+        const obsoleteChannelsIds = ["1541800519918690314", "1541800535181758615", "1544789313731170305"];
+        for (const chId of obsoleteChannelsIds) {
+            const ch = guild.channels.cache.get(chId);
+            if (ch) {
+                await ch.delete("Suppression de l'ancienne infrastructure / doublons obsolètes").catch(() => {});
+            }
+        }
+        
+        const oldCatNairi = guild.channels.cache.find(c => c.name === "NAIRI CORPORATION" && c.type === ChannelType.GuildCategory);
+        if (oldCatNairi) {
+            await oldCatNairi.delete("Mise à jour vers IMEX Corporation").catch(() => {});
+        }
+        const oldCatLog = guild.channels.cache.find(c => c.name === "NAIRI LOGISTICS & AUTOMOTIVE" && c.type === ChannelType.GuildCategory);
+        if (oldCatLog) {
+            await oldCatLog.delete("Mise à jour vers IMEX Trucking").catch(() => {});
         }
 
-        let secretariat = guild.channels.cache.find(c => c.name === "secrétariat" && c.parentId === catNairi.id);
+        // --- SECTION 1 : IMEX CORPORATION ---
+        let catImex = guild.channels.cache.find(c => c.name === CATEGORY_IMEX && c.type === ChannelType.GuildCategory);
+        if (!catImex) {
+            catImex = await guild.channels.create({ name: CATEGORY_IMEX, type: ChannelType.GuildCategory });
+        }
+
+        let secretariat = guild.channels.cache.find(c => c.name === "secrétariat" && c.parentId === catImex.id);
         if (!secretariat) {
             secretariat = await guild.channels.create({
                 name: "secrétariat",
                 type: ChannelType.GuildText,
-                parent: catNairi.id,
-                topic: "Terminal sécurisé Nairi Corporation. Initialisation des requêtes.",
+                parent: catImex.id,
+                topic: "Terminal sécurisé IMEX Corporation. Initialisation des requêtes de transport.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -49,16 +67,16 @@ async function setupCorporateStructure(guild) {
             });
             await sendSecretariatPanel(secretariat);
         } else {
-            await ensurePanelExists(secretariat, "NAIRI CORPORATION — SECRÉTARIAT EXÉCUTIF", sendSecretariatPanel);
+            await ensurePanelExists(secretariat, "IMEX CORPORATION — SECRÉTARIAT EXÉCUTIF", sendSecretariatPanel);
         }
 
-        let annonces = guild.channels.cache.find(c => c.name === "annonces" && c.parentId === catNairi.id);
+        let annonces = guild.channels.cache.find(c => c.name === "annonces" && c.parentId === catImex.id);
         if (!annonces) {
             annonces = await guild.channels.create({
                 name: "annonces",
                 type: ChannelType.GuildText,
-                parent: catNairi.id,
-                topic: "Flux officiel des communiqués de Nairi Corporation.",
+                parent: catImex.id,
+                topic: "Flux officiel des communiqués d'IMEX Corporation.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -67,22 +85,23 @@ async function setupCorporateStructure(guild) {
             });
         }
 
-        let services = guild.channels.cache.find(c => c.name === "services" && c.parentId === catNairi.id);
-        if (!services) {
-            services = await guild.channels.create({
+        let allServicesChannels = guild.channels.cache.filter(c => c.name === "services" && c.type === ChannelType.GuildText);
+        let servicesImex = allServicesChannels.find(c => c.parentId === catImex.id);
+        if (!servicesImex) {
+            servicesImex = await guild.channels.create({
                 name: "services",
                 type: ChannelType.GuildText,
-                parent: catNairi.id,
-                topic: "Catalogue des services et prestations Nairi Corporation.",
+                parent: catImex.id,
+                topic: "Catalogue des services et prestations de transport IMEX.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
                     deny: [PermissionsBitField.Flags.SendMessages],
                 }]
             });
-            await sendServicesPanel(services);
+            await sendServicesPanel(servicesImex);
         } else {
-            await ensurePanelExists(services, "NAIRI CORPORATION  //  NOS SERVICES", sendServicesPanel);
+            await ensurePanelExists(servicesImex, "IMEX CORPORATION  //  NOS SERVICES", sendServicesPanel);
         }
 
         // --- SECTION 2 : ADMINISTRATION ---
@@ -97,7 +116,7 @@ async function setupCorporateStructure(guild) {
                 name: "bureau",
                 type: ChannelType.GuildText,
                 parent: catAdmin.id,
-                topic: "Poste de commandement exécutif de la direction.",
+                topic: "Poste de commandement exécutif de la direction IMEX.",
                 permissionOverwrites: [
                     {
                         id: guild.roles.everyone,
@@ -111,7 +130,7 @@ async function setupCorporateStructure(guild) {
             });
             await sendBureauPanel(bureau);
         } else {
-            await ensurePanelExists(bureau, "NAIRI OS // POSTE DE COMMANDEMENT EXÉCUTIF", sendBureauPanel);
+            await ensurePanelExists(bureau, "IMEX OS // POSTE DE COMMANDEMENT EXÉCUTIF", sendBureauPanel);
         }
 
         // --- SECTION 3 : COMPTABILITÉ ---
@@ -126,7 +145,7 @@ async function setupCorporateStructure(guild) {
                 name: "finance",
                 type: ChannelType.GuildText,
                 parent: catCompta.id,
-                topic: "Registre financier et flux de trésorerie.",
+                topic: "Registre financier, bilans de fret et flux de trésorerie.",
                 permissionOverwrites: [
                     {
                         id: guild.roles.everyone,
@@ -146,7 +165,7 @@ async function setupCorporateStructure(guild) {
                 name: "logistique",
                 type: ChannelType.GuildText,
                 parent: catCompta.id,
-                topic: "Suivi logistique et opérations de négoce.",
+                topic: "Suivi comptable des lignes de transport et contrats de fret.",
                 permissionOverwrites: [
                     {
                         id: guild.roles.everyone,
@@ -160,20 +179,19 @@ async function setupCorporateStructure(guild) {
             });
         }
 
-        // --- SECTION 4 : NAIRI LOGISTICS & AUTOMOTIVE ---
+        // --- SECTION 4 : IMEX TRUCKING & LOGISTICS ---
         let catLogistics = guild.channels.cache.find(c => c.name === CATEGORY_LOGISTICS && c.type === ChannelType.GuildCategory);
         if (!catLogistics) {
             catLogistics = await guild.channels.create({ name: CATEGORY_LOGISTICS, type: ChannelType.GuildCategory });
         }
 
-        // 1. Salon #livraison
         let livraison = guild.channels.cache.find(c => c.name === "livraison" && c.parentId === catLogistics.id);
         if (!livraison) {
             livraison = await guild.channels.create({
                 name: "livraison",
                 type: ChannelType.GuildText,
                 parent: catLogistics.id,
-                topic: "Terminal logistique. Demandez une livraison par nos camions ou planifiez vos transports.",
+                topic: "Terminal logistique transport. Planifiez vos livraisons par nos semi-remorques et camions.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -182,17 +200,16 @@ async function setupCorporateStructure(guild) {
             });
             await sendLivraisonPanel(livraison);
         } else {
-            await ensurePanelExists(livraison, "NAIRI LOGISTICS — SERVICE DE LIVRAISON", sendLivraisonPanel);
+            await ensurePanelExists(livraison, "IMEX TRUCKING — SERVICE DE LIVRAISON", sendLivraisonPanel);
         }
 
-        // 2. Salon #recrutement
         let recrutement = guild.channels.cache.find(c => c.name === "recrutement" && c.parentId === catLogistics.id);
         if (!recrutement) {
             recrutement = await guild.channels.create({
                 name: "recrutement",
                 type: ChannelType.GuildText,
                 parent: catLogistics.id,
-                topic: "Rejoignez l'équipe Nairi Logistics & Automotive.",
+                topic: "Rejoignez l'équipe IMEX Trucking en tant que chauffeur routier.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -201,55 +218,25 @@ async function setupCorporateStructure(guild) {
             });
             await sendRecrutementPanel(recrutement);
         } else {
-            await ensurePanelExists(recrutement, "NAIRI LOGISTICS — RECRUTEMENT CHAUFFEURS", sendRecrutementPanel);
+            await ensurePanelExists(recrutement, "IMEX TRUCKING — RECRUTEMENT CHAUFFEURS", sendRecrutementPanel);
         }
 
-        // 3. Salon #services
-        let servicesLog = guild.channels.cache.find(c => c.name === "services" && c.parentId === catLogistics.id);
-        if (!servicesLog) {
-            servicesLog = await guild.channels.create({
-                name: "services",
+        let priseService = guild.channels.cache.find(c => c.name === "prise-de-service" && c.parentId === catLogistics.id);
+        if (!priseService) {
+            priseService = await guild.channels.create({
+                name: "prise-de-service",
                 type: ChannelType.GuildText,
                 parent: catLogistics.id,
-                topic: "Catalogue des prestations de transport et solutions logistiques.",
+                topic: "Prise de service des chauffeurs et verrouillage/gestion des camions de la flotte.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
                     deny: [PermissionsBitField.Flags.SendMessages],
                 }]
             });
-            await sendServicesLogPanel(servicesLog);
+            await sendPriseServicePanel(priseService);
         } else {
-            await ensurePanelExists(servicesLog, "NAIRI LOGISTICS  //  SERVICES", sendServicesLogPanel);
-        }
-
-        // 4. Salon #catalogue
-        let catalogue = guild.channels.cache.find(c => c.name === "catalogue" && c.parentId === catLogistics.id);
-        if (!catalogue) {
-            catalogue = await guild.channels.create({
-                name: "catalogue",
-                type: ChannelType.GuildText,
-                parent: catLogistics.id,
-                topic: "Flotte de véhicules disponibles à la location (Seule ou avec chauffeur).",
-                permissionOverwrites: [
-                    {
-                        id: guild.roles.everyone,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
-                        deny: [PermissionsBitField.Flags.SendMessages],
-                    },
-                    ...(directorRole ? [{
-                        id: directorRole.id,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageMessages],
-                    }] : []),
-                    ...(directionRole ? [{
-                        id: directionRole.id,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageMessages],
-                    }] : [])
-                ]
-            });
-            await sendCatalogueAdminPanel(catalogue);
-        } else {
-            await ensurePanelExists(catalogue, "NAIRI LOGISTICS — GESTION DU CATALOGUE", sendCatalogueAdminPanel);
+            await ensurePanelExists(priseService, "IMEX TRUCKING — PRISE DE SERVICE & CAMIONS", sendPriseServicePanel);
         }
 
     } catch (error) {
@@ -272,9 +259,9 @@ async function ensurePanelExists(channel, titleIdentifier, sendFunction) {
 async function sendSecretariatPanel(channel) {
     const embed = {
         color: 0x111111,
-        title: "NAIRI CORPORATION — SECRÉTARIAT EXÉCUTIF",
-        description: "Canal de transmission officiel. Ce terminal permet l'enregistrement de mandats, d'opérations de négoce et de dossiers administratifs.\n\n*Cliquez ci-dessous pour ouvrir un dossier sécurisé.*",
-        footer: { text: "NAIRI OS • SECURE PROTOCOL v5.0" },
+        title: "IMEX CORPORATION — SECRÉTARIAT EXÉCUTIF",
+        description: "Canal de transmission officiel. Ce terminal permet l'enregistrement de contrats de fret, de mandats logistiques et de dossiers administratifs.\n\n*Cliquez ci-dessous pour ouvrir un dossier sécurisé.*",
+        footer: { text: "IMEX OS • SECURE PROTOCOL v5.0" },
         timestamp: new Date().toISOString()
     };
 
@@ -288,27 +275,27 @@ async function sendSecretariatPanel(channel) {
 async function sendServicesPanel(channel) {
     const embed = {
         color: 0x111111,
-        title: "NAIRI CORPORATION  //  NOS SERVICES",
-        description: "Bienvenue chez Nairi Corporation.\n\nNous sommes une maison de négoce et de courtage. Notre rôle est de vous accompagner de A à Z : que ce soit pour gérer vos papiers, trouver un client, dénicher un fournisseur ou connecter les bonnes personnes entre elles.",
+        title: "IMEX CORPORATION  //  NOS SERVICES",
+        description: "Bienvenue chez IMEX Corporation, expert en transport routier et logistique de fret.\n\nNous assurons l'acheminement de vos marchandises et connectons les acteurs du transport.",
         fields: [
             {
-                name: "01  •  Secrétariat & Gestion Administrative",
-                value: "On s'occupe de vos dossiers de A à Z : rédaction de contrats, paperasse, accords et formalités.\n\n*Pour lancer une demande, passez par le salon secrétariat.*"
+                name: "01  •  Transport Routier & Fret",
+                value: "Acheminement sécurisé de marchandises en lots complets ou partiels à travers tout le réseau."
             },
             {
-                name: "02  •  Négoce & Recherche de Partenaires",
-                value: "Vous cherchez un produit précis, un fournisseur fiable ou un client pour écouler vos biens ? On fouille notre réseau pour vous trouver la perle rare et on négocie à votre place."
+                name: "02  •  Logistique & Gestion de Flotte",
+                value: "Mise à disposition de véhicules industriels et gestion rigoureuse des plannings de livraison."
             },
             {
-                name: "03  •  Mise en Relation & Commission (%)",
-                value: "Vous avez un besoin particulier hors de notre champ direct ? On active nos entreprises partenaires pour y répondre.\n\n*Comment ça marche ? On fonctionne à la commission : on prend un pourcentage fixe sur chaque transaction réussie.*"
+                name: "03  •  Partenariats & Sous-traitance",
+                value: "Interconnexion avec des transporteurs agréés pour absorber les pics de fret.\n\n*Fonctionnement en synergie professionnelle sécurisée.*"
             },
             {
-                name: "04  •  Comptabilité & Trésorerie",
-                value: "Suivi rigoureux des comptes, vérification des règlements et sécurisation de l'argent échangé entre les différentes parties lors des transactions."
+                name: "04  •  Comptabilité & Facturation",
+                value: "Suivi financier précis des missions de transport et des règlements de fret."
             }
         ],
-        footer: { text: "NAIRI CORPORATION  •  RÉPERTOIRE DES PRESTATIONS" },
+        footer: { text: "IMEX CORPORATION  •  RÉPERTOIRE DES PRESTATIONS" },
         timestamp: new Date().toISOString()
     };
 
@@ -318,14 +305,14 @@ async function sendServicesPanel(channel) {
 async function sendBureauPanel(channel) {
     const embed = {
         color: 0x111111,
-        title: "NAIRI OS // POSTE DE COMMANDEMENT EXÉCUTIF",
-        description: "Terminal de gestion centralisé de la direction.\n\nUtilisez l'interface ci-dessous pour administrer les flux de communication, les registres et la sécurité globale de l'infrastructure.",
+        title: "IMEX OS // POSTE DE COMMANDEMENT EXÉCUTIF",
+        description: "Terminal de gestion centralisé de la direction.\n\nUtilisez l'interface ci-dessous pour administrer les flux de communication vers le salon direction (`1544638192618307644`), les registres et la sécurité globale de l'infrastructure.",
         footer: { text: "RESTREINT • DIRECTION" },
         timestamp: new Date().toISOString()
     };
 
     const rowButton = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('bureau_announcement').setLabel('Publier un Communiqué Officiel').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId('bureau_announcement').setLabel('Publier un Communiqué Interne').setStyle(ButtonStyle.Secondary)
     );
 
     const rowMenu = new ActionRowBuilder().addComponents(
@@ -333,8 +320,8 @@ async function sendBureauPanel(channel) {
             .setCustomId('bureau_management_menu')
             .setPlaceholder('Sélectionner un protocole de gestion...')
             .addOptions([
-                { label: "Carnet d'adresses", description: 'Consulter la liste des clients et dossiers', value: 'nav_finance' },
-                { label: 'Gestion des Partenaires', description: 'Consulter et gérer les alliances', value: 'nav_partners' },
+                { label: "Registre des Transports", description: 'Consulter la liste des missions et dossiers', value: 'nav_finance' },
+                { label: 'Gestion des Partenaires', description: 'Consulter et gérer les alliances de transport', value: 'nav_partners' },
                 { label: 'Expulser un membre (Kick)', description: 'Sélectionner un membre à expulser', value: 'mod_kick_select' },
                 { label: 'Bannir un membre (Ban)', description: 'Sélectionner un membre à bannir', value: 'mod_ban_select' },
                 { label: 'Nettoyer le salon (Purge)', description: 'Effacer les messages en masse', value: 'mod_purge' },
@@ -348,9 +335,9 @@ async function sendBureauPanel(channel) {
 async function sendLivraisonPanel(channel) {
     const embed = {
         color: 0x111111,
-        title: "NAIRI LOGISTICS — SERVICE DE LIVRAISON",
-        description: "Besoin d'acheminer de la marchandise ou de faire appel à nos camions ? Soumettez votre demande de transport directement via notre terminal.\n\n*Cliquez ci-dessous pour initialiser une demande de livraison.*",
-        footer: { text: "NAIRI LOGISTICS • FREIGHT TERMINAL" },
+        title: "IMEX TRUCKING — SERVICE DE LIVRAISON",
+        description: "Besoin d'acheminer du fret ou de planifier un transport par semi-remorque ? Soumettez votre demande directement via notre terminal.\n\n*Cliquez ci-dessous pour initialiser une demande de livraison.*",
+        footer: { text: "IMEX TRUCKING • FREIGHT TERMINAL" },
         timestamp: new Date().toISOString()
     };
 
@@ -364,9 +351,9 @@ async function sendLivraisonPanel(channel) {
 async function sendRecrutementPanel(channel) {
     const embed = {
         color: 0x111111,
-        title: "NAIRI LOGISTICS — RECRUTEMENT CHAUFFEURS",
-        description: "Nous recherchons des **Chauffeurs-Livreurs** qualifiés pour assurer le transport de marchandises et la conduite de notre flotte automobile.\n\n**Profils recherchés :**\n• Maîtrise de la conduite poids lourds / utilitaires.\n• Ponctualité, rigueur et discrétion.\n• Respect strict des consignes logistiques.\n\n*Cliquez ci-dessous pour postuler et ouvrir un ticket de recrutement.*",
-        footer: { text: "NAIRI LOGISTICS • RECRUTEMENT" },
+        title: "IMEX TRUCKING — RECRUTEMENT CHAUFFEURS",
+        description: "Nous recherchons des **Chauffeurs Routiers** qualifiés pour assurer le transport de fret et piloter notre flotte de camions.\n\n**Profils recherchés :**\n• Maîtrise de la conduite de poids lourds.\n• Ponctualité, rigueur et respect des délais de livraison.\n• Respect strict des consignes de sécurité routière.\n\n*Cliquez ci-dessous pour postuler et ouvrir un ticket de recrutement.*",
+        footer: { text: "IMEX TRUCKING • RECRUTEMENT" },
         timestamp: new Date().toISOString()
     };
 
@@ -377,43 +364,18 @@ async function sendRecrutementPanel(channel) {
     await channel.send({ embeds: [embed], components: [row] });
 }
 
-async function sendServicesLogPanel(channel) {
+async function sendPriseServicePanel(channel) {
     const embed = {
         color: 0x111111,
-        title: "NAIRI LOGISTICS  //  SERVICES",
-        description: "Découvrez l'ensemble de nos solutions de transport et de prestation automobile.",
-        fields: [
-            {
-                name: "01  •  Transport par Camion & Fret",
-                value: "Acheminement de marchandises en lots complets ou partiels par notre flotte de poids lourds."
-            },
-            {
-                name: "02  •  Location de Véhicules (Seule ou Chauffeur)",
-                value: "Mise à disposition de véhicules de notre flotte pour vos besoins personnels ou professionnels (avec ou sans chauffeur accrédité)."
-            },
-            {
-                name: "03  •  Escorte de Convoi",
-                value: "Sécurisation et accompagnement logistique de vos transports sensibles."
-            }
-        ],
-        footer: { text: "NAIRI LOGISTICS • PRESTATIONS" },
-        timestamp: new Date().toISOString()
-    };
-
-    await channel.send({ embeds: [embed] });
-}
-
-async function sendCatalogueAdminPanel(channel) {
-    const embed = {
-        color: 0x111111,
-        title: "NAIRI LOGISTICS — GESTION DU CATALOGUE",
-        description: "Ce terminal permet d'ajouter de nouveaux véhicules à la flotte de location.\n\n*Seuls les membres de la **Direction** et les **Directeurs** peuvent utiliser le bouton ci-dessous pour enregister un véhicule.*",
-        footer: { text: "NAIRI LOGISTICS • ADMINISTRATION FLOTTE" },
+        title: "IMEX TRUCKING — PRISE DE SERVICE & CAMIONS",
+        description: "Terminal opérateur pour la gestion de service et la flotte.\n\n• **Prendre/Quitter son service** pour enregistrer vos vacations de conduite.\n• **Verrouiller/Déverrouiller son camion** assigné pour sécuriser votre matériel.",
+        footer: { text: "IMEX TRUCKING • FLEET & DUTY CONTROL" },
         timestamp: new Date().toISOString()
     };
 
     const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('open_add_vehicle_modal').setLabel('➕ Ajouter un véhicule').setStyle(ButtonStyle.Secondary)
+        new ButtonBuilder().setCustomId('toggle_duty_status').setLabel('PRENDRE / QUITTER LE SERVICE').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('toggle_truck_lock').setLabel('VERROUILLER / DÉVERROUILLER CAMION').setStyle(ButtonStyle.Secondary)
     );
 
     await channel.send({ embeds: [embed], components: [row] });
