@@ -10,6 +10,9 @@ const logisticsLedger = {
     shipments: []
 };
 
+// Couleur Marron / Or de la nouvelle DA (0xC5A059)
+const BRAND_COLOR = 0xC5A059;
+
 async function initRegisters(guild) {
     const financeChannel = guild.channels.cache.find(c => c.name === "finance");
     const logisticsChannel = guild.channels.cache.find(c => c.name === "logistique");
@@ -31,14 +34,14 @@ async function initRegisters(guild) {
 
 async function sendFinancePanel(channel) {
     const embed = {
-        color: 0x111111,
-        title: "IMEX OS // REGISTRE FINANCIER & TRÉSORERIE",
+        color: BRAND_COLOR,
+        title: "POST OP LOGISTICS // REGISTRE FINANCIER & TRÉSORERIE",
         description: "Suivi comptable de l'entreprise.",
         fields: [
             { name: "TRÉSORERIE DISPONIBLE", value: `**$${financialLedger.cashFlow.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD**`, inline: false },
             { name: "DERNIÈRES TRANSACTIONS", value: formatTransactions(), inline: false }
         ],
-        footer: { text: "COMPTABILITÉ • IMEX CORPORATION" },
+        footer: { text: "COMPTABILITÉ • POST OP LOGISTICS" },
         timestamp: new Date().toISOString()
     };
 
@@ -56,13 +59,13 @@ async function sendFinancePanel(channel) {
 
 async function sendLogisticsPanel(channel) {
     const embed = {
-        color: 0x111111,
-        title: "IMEX OS // REGISTRE LOGISTIQUE & FRET",
+        color: BRAND_COLOR,
+        title: "POST OP LOGISTICS // REGISTRE LOGISTIQUE & FRET",
         description: "Gestion des stocks et des statuts de transport.",
         fields: [
             { name: "INVENTAIRE DISPONIBLE", value: formatInventory(), inline: false }
         ],
-        footer: { text: "LOGISTIQUE • IMEX CORPORATION" },
+        footer: { text: "LOGISTIQUE • POST OP LOGISTICS" },
         timestamp: new Date().toISOString()
     };
 
@@ -98,7 +101,7 @@ async function updateChannelPanel(guild, channelName) {
     if (!channel) return;
 
     const messages = await channel.messages.fetch({ limit: 15 });
-    const panelMessage = messages.find(m => m.author.id === channel.client.user.id && m.embeds.length > 0 && m.embeds[0].title && m.embeds[0].title.includes("IMEX OS // REGISTRE LOGISTIQUE"));
+    const panelMessage = messages.find(m => m.author.id === channel.client.user.id && m.embeds.length > 0 && m.embeds[0].title && (m.embeds[0].title.includes("REGISTRE LOGISTIQUE") || m.embeds[0].title.includes("IMEX OS")));
     if (!panelMessage) return;
 
     const embed = panelMessage.embeds[0];
@@ -334,14 +337,14 @@ async function handleRegisterModal(interaction) {
             logisticsLedger.shipments.push({ id: logId, item: desc, destination: destination, status: "Pas commencé" });
 
             const transportEmbed = new EmbedBuilder()
-                .setColor(0x111111)
-                .setTitle(`LOGISTIQUE // TRANSPORT [${logId}]`)
+                .setColor(BRAND_COLOR)
+                .setTitle(`POST OP LOGISTICS // TRANSPORT [${logId}]`)
                 .addFields(
                     { name: "CHARGEMENT", value: desc, inline: false },
                     { name: "DESTINATION", value: destination, inline: true },
                     { name: "ÉTAT DU TRANSPORT", value: "Pas commencé", inline: true }
                 )
-                .setFooter({ text: "IMEX CORPORATION • SYSTÈME LOGISTIQUE" })
+                .setFooter({ text: "POST OP LOGISTICS • SYSTÈME LOGISTIQUE" })
                 .setTimestamp();
 
             const statusSelect = new StringSelectMenuBuilder()
