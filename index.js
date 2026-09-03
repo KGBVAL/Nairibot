@@ -11,7 +11,7 @@ const { handleInteraction } = require('./events/interactionCreate');
 // Serveur Web pour Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('IMEX Bot est en ligne !\n');
+    res.end('Post OP Logistics Bot est en ligne !\n');
 });
 
 const PORT = process.env.PORT || 3000;
@@ -45,16 +45,16 @@ if (fs.existsSync(commandsPath)) {
 }
 
 client.once(Events.ClientReady, async () => {
-    console.log(`[IMEX OS] Connecté en tant que ${client.user.tag}`);
+    console.log(`[POST OP OS] Connecté en tant que ${client.user.tag}`);
 
     // Initialisation de la structure corporate et des registres depuis /utils
     for (const [id, guild] of client.guilds.cache) {
         try {
             await setupCorporateStructure(guild);
             await initRegisters(guild);
-            console.log(`[IMEX OS] Structure et registres initialisés pour : ${guild.name}`);
+            console.log(`[POST OP OS] Structure et registres initialisés pour : ${guild.name}`);
         } catch (error) {
-            console.error(`[IMEX OS] Erreur init pour ${guild.name}:`, error);
+            console.error(`[POST OP OS] Erreur init pour ${guild.name}:`, error);
         }
     }
 
@@ -63,9 +63,9 @@ client.once(Events.ClientReady, async () => {
         const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
         try {
             await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
-            console.log('[IMEX OS] Commandes slash enregistrées.');
+            console.log('[POST OP OS] Commandes slash enregistrées.');
         } catch (error) {
-            console.error('[IMEX OS] Erreur enregistrement :', error);
+            console.error('[POST OP OS] Erreur enregistrement :', error);
         }
     }
 });
@@ -87,5 +87,5 @@ client.on(Events.InteractionCreate, async (interaction) => {
 console.log("[DEBUG] Tentative de connexion avec le token :", process.env.DISCORD_TOKEN ? "Token présent (longueur: " + process.env.DISCORD_TOKEN.length + ")" : "AUCUN TOKEN TROUVÉ !");
 
 client.login(process.env.DISCORD_TOKEN).catch(error => {
-    console.error("[IMEX OS] Erreur fatale lors de la connexion à Discord :", error);
+    console.error("[POST OP OS] Erreur fatale lors de la connexion à Discord :", error);
 });
