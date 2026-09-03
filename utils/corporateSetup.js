@@ -1,11 +1,14 @@
 const { ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 
-const CATEGORY_IMEX = "IMEX CORPORATION";
+const CATEGORY_IMEX = "POST OP LOGISTICS";
 const CATEGORY_ADMIN = "ADMINISTRATION";
 const CATEGORY_COMPTA = "COMPTABILITÉ";
-const CATEGORY_LOGISTICS = "IMEX TRUCKING & LOGISTICS";
+const CATEGORY_LOGISTICS = "POST OP LOGISTICS";
 const ROLE_NAME = "DIRECTEUR";
 const ROLE_DIRECTION = "Direction";
+
+// Couleur Marron / Or (code hexadécimal converti en entier : #C5A059 - Or/Bronze raffiné)
+const BRAND_COLOR = 0xC5A059;
 
 async function setupCorporateStructure(guild) {
     try {
@@ -13,9 +16,9 @@ async function setupCorporateStructure(guild) {
         if (!directorRole) {
             directorRole = await guild.roles.create({
                 name: ROLE_NAME,
-                color: 0x111111,
+                color: BRAND_COLOR,
                 permissions: [PermissionsBitField.Flags.Administrator],
-                reason: "Rôle exécutif requis pour le pilotage de l'OS IMEX."
+                reason: "Rôle exécutif requis pour le pilotage de Post OP Logistics."
             });
         }
 
@@ -23,7 +26,7 @@ async function setupCorporateStructure(guild) {
         if (!directionRole) {
             directionRole = await guild.roles.create({
                 name: ROLE_DIRECTION,
-                color: 0x111111,
+                color: BRAND_COLOR,
                 reason: "Rôle de direction opérationnelle."
             });
         }
@@ -37,12 +40,12 @@ async function setupCorporateStructure(guild) {
             }
         }
         
-        const oldCategories = guild.channels.cache.filter(c => c.type === ChannelType.GuildCategory && (c.name.includes("NAIRI") || c.name.includes("ANCIEN")));
+        const oldCategories = guild.channels.cache.filter(c => c.type === ChannelType.GuildCategory && (c.name.includes("NAIRI") || c.name.includes("ANCIEN") || c.name.includes("IMEX CORPORATION")));
         for (const cat of oldCategories.values()) {
-            await cat.delete("Mise à jour vers IMEX Corporation").catch(() => {});
+            await cat.delete("Mise à jour vers Post OP Logistics").catch(() => {});
         }
 
-        // --- SECTION 1 : IMEX CORPORATION ---
+        // --- SECTION 1 : POST OP LOGISTICS ---
         let catImex = guild.channels.cache.find(c => c.name === CATEGORY_IMEX && c.type === ChannelType.GuildCategory);
         if (!catImex) {
             catImex = await guild.channels.create({ name: CATEGORY_IMEX, type: ChannelType.GuildCategory });
@@ -55,7 +58,7 @@ async function setupCorporateStructure(guild) {
                 name: "secrétariat",
                 type: ChannelType.GuildText,
                 parent: catImex.id,
-                topic: "Terminal sécurisé IMEX Corporation. Initialisation des requêtes de transport.",
+                topic: "Terminal sécurisé Post OP Logistics. Initialisation des requêtes de transport.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -65,7 +68,7 @@ async function setupCorporateStructure(guild) {
             await sendSecretariatPanel(secretariat);
         } else {
             if (secretariat.parentId !== catImex.id) await secretariat.setParent(catImex.id).catch(() => {});
-            await ensurePanelExists(secretariat, "IMEX CORPORATION — SECRÉTARIAT EXÉCUTIF", sendSecretariatPanel);
+            await ensurePanelExists(secretariat, "POST OP LOGISTICS — SECRÉTARIAT EXÉCUTIF", sendSecretariatPanel);
         }
 
         let annonces = guild.channels.cache.find(c => c.name === "annonces" && c.parentId === catImex.id);
@@ -74,7 +77,7 @@ async function setupCorporateStructure(guild) {
                 name: "annonces",
                 type: ChannelType.GuildText,
                 parent: catImex.id,
-                topic: "Flux officiel des communiqués d'IMEX Corporation.",
+                topic: "Flux officiel des communiqués de Post OP Logistics.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -90,7 +93,7 @@ async function setupCorporateStructure(guild) {
                 name: "services",
                 type: ChannelType.GuildText,
                 parent: catImex.id,
-                topic: "Catalogue des services et prestations de transport IMEX.",
+                topic: "Catalogue des services et prestations de transport Post OP.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -99,7 +102,7 @@ async function setupCorporateStructure(guild) {
             });
             await sendServicesPanel(servicesImex);
         } else {
-            await ensurePanelExists(servicesImex, "IMEX CORPORATION  //  NOS SERVICES", sendServicesPanel);
+            await ensurePanelExists(servicesImex, "POST OP LOGISTICS  //  NOS SERVICES", sendServicesPanel);
         }
 
         // --- SECTION 2 : ADMINISTRATION ---
@@ -114,7 +117,7 @@ async function setupCorporateStructure(guild) {
                 name: "bureau",
                 type: ChannelType.GuildText,
                 parent: catAdmin.id,
-                topic: "Poste de commandement exécutif de la direction IMEX.",
+                topic: "Poste de commandement exécutif de la direction Post OP.",
                 permissionOverwrites: [
                     {
                         id: guild.roles.everyone,
@@ -128,7 +131,7 @@ async function setupCorporateStructure(guild) {
             });
             await sendBureauPanel(bureau);
         } else {
-            await ensurePanelExists(bureau, "IMEX OS // POSTE DE COMMANDEMENT EXÉCUTIF", sendBureauPanel);
+            await ensurePanelExists(bureau, "POST OP LOGISTICS // POSTE DE COMMANDEMENT EXÉCUTIF", sendBureauPanel);
         }
 
         // --- SECTION 3 : COMPTABILITÉ ---
@@ -177,8 +180,8 @@ async function setupCorporateStructure(guild) {
             });
         }
 
-        // --- SECTION 4 : IMEX TRUCKING & LOGISTICS (Utilisation de l'ID 1541800526709002330) ---
-        let catLogistics = guild.channels.cache.get("1541800526709002330") || guild.channels.cache.find(c => c.name === CATEGORY_LOGISTICS && c.type === ChannelType.GuildCategory);
+        // --- SECTION 4 : POST OP LOGISTICS (Utilisation de l'ID 1541800526709002330) ---
+        let catLogistics = guild.channels.cache.get("1541800526709002330") || guild.channels.cache.find(c => c.name === CATEGORY_LOGISTICS && c.type === ChannelType.GuildCategory) || guild.channels.cache.find(c => c.name === "IMEX TRUCKING & LOGISTICS" && c.type === ChannelType.GuildCategory);
         if (!catLogistics) {
             catLogistics = await guild.channels.create({ name: CATEGORY_LOGISTICS, type: ChannelType.GuildCategory });
         } else if (catLogistics.name !== CATEGORY_LOGISTICS) {
@@ -200,7 +203,7 @@ async function setupCorporateStructure(guild) {
             });
             await sendLivraisonPanel(livraison);
         } else {
-            await ensurePanelExists(livraison, "IMEX TRUCKING — SERVICE DE LIVRAISON", sendLivraisonPanel);
+            await ensurePanelExists(livraison, "POST OP LOGISTICS — SERVICE DE LIVRAISON", sendLivraisonPanel);
         }
 
         let recrutement = guild.channels.cache.find(c => c.name === "recrutement" && c.parentId === catLogistics.id);
@@ -209,7 +212,7 @@ async function setupCorporateStructure(guild) {
                 name: "recrutement",
                 type: ChannelType.GuildText,
                 parent: catLogistics.id,
-                topic: "Rejoignez l'équipe IMEX Trucking en tant que chauffeur-livreur.",
+                topic: "Rejoignez l'équipe Post OP Logistics en tant que chauffeur-livreur.",
                 permissionOverwrites: [{
                     id: guild.roles.everyone,
                     allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
@@ -218,7 +221,7 @@ async function setupCorporateStructure(guild) {
             });
             await sendRecrutementPanel(recrutement);
         } else {
-            await ensurePanelExists(recrutement, "IMEX TRUCKING — RECRUTEMENT CHAUFFEURS", sendRecrutementPanel);
+            await ensurePanelExists(recrutement, "POST OP LOGISTICS — RECRUTEMENT CHAUFFEURS", sendRecrutementPanel);
         }
 
         // Salon spécifique ID : 1544790338001047563 (prise-de-service)
@@ -240,7 +243,7 @@ async function setupCorporateStructure(guild) {
             if (priseService.parentId !== catLogistics.id) {
                 await priseService.setParent(catLogistics.id).catch(() => {});
             }
-            await ensurePanelExists(priseService, "IMEX TRUCKING — PRISE DE SERVICE & CAMIONS", sendPriseServicePanel);
+            await ensurePanelExists(priseService, "POST OP LOGISTICS — PRISE DE SERVICE & CAMIONS", sendPriseServicePanel);
         }
 
     } catch (error) {
@@ -251,7 +254,7 @@ async function setupCorporateStructure(guild) {
 async function ensurePanelExists(channel, titleIdentifier, sendFunction) {
     try {
         const messages = await channel.messages.fetch({ limit: 10 });
-        const exists = messages.some(m => m.embeds && m.embeds.length > 0 && m.embeds[0].title && m.embeds[0].title.includes(titleIdentifier));
+        const exists = messages.some(m => m.embeds && m.embeds.length > 0 && m.embeds[0].title && (m.embeds[0].title.includes(titleIdentifier) || m.embeds[0].title.includes("IMEX") || m.embeds[0].title.includes("TRUCKING")));
         if (!exists) {
             await sendFunction(channel);
         }
@@ -262,10 +265,10 @@ async function ensurePanelExists(channel, titleIdentifier, sendFunction) {
 
 async function sendSecretariatPanel(channel) {
     const embed = {
-        color: 0x111111,
-        title: "IMEX CORPORATION — SECRÉTARIAT EXÉCUTIF",
+        color: BRAND_COLOR,
+        title: "POST OP LOGISTICS — SECRÉTARIAT EXÉCUTIF",
         description: "Canal de transmission officiel. Ce terminal permet l'enregistrement de contrats de fret, de mandats logistiques et de dossiers administratifs.\n\n*Cliquez ci-dessous pour ouvrir un dossier sécurisé.*",
-        footer: { text: "IMEX OS • SECURE PROTOCOL v5.0" },
+        footer: { text: "POST OP LOGISTICS • SECURE PROTOCOL v5.0" },
         timestamp: new Date().toISOString()
     };
 
@@ -278,9 +281,9 @@ async function sendSecretariatPanel(channel) {
 
 async function sendServicesPanel(channel) {
     const embed = {
-        color: 0x111111,
-        title: "IMEX CORPORATION  //  NOS SERVICES",
-        description: "Bienvenue chez IMEX Corporation, expert en transport routier et logistique de fret.\n\nNous assurons l'acheminement de vos marchandises et connectons les acteurs du transport.",
+        color: BRAND_COLOR,
+        title: "POST OP LOGISTICS  //  NOS SERVICES",
+        description: "Bienvenue chez Post OP Logistics, expert en transport routier et logistique de fret.\n\nNous assurons l'acheminement de vos marchandises et connectons les acteurs du transport.",
         fields: [
             {
                 name: "01  •  Transport Routier & Fret",
@@ -299,7 +302,7 @@ async function sendServicesPanel(channel) {
                 value: "Suivi financier précis des missions de transport et des règlements de fret."
             }
         ],
-        footer: { text: "IMEX CORPORATION  •  RÉPERTOIRE DES PRESTATIONS" },
+        footer: { text: "POST OP LOGISTICS  •  RÉPERTOIRE DES PRESTATIONS" },
         timestamp: new Date().toISOString()
     };
 
@@ -308,8 +311,8 @@ async function sendServicesPanel(channel) {
 
 async function sendBureauPanel(channel) {
     const embed = {
-        color: 0x111111,
-        title: "IMEX OS // POSTE DE COMMANDEMENT EXÉCUTIF",
+        color: BRAND_COLOR,
+        title: "POST OP LOGISTICS // POSTE DE COMMANDEMENT EXÉCUTIF",
         description: "Terminal de gestion centralisé de la direction.\n\nUtilisez l'interface ci-dessous pour administrer les flux de communication vers le salon direction, les registres et la sécurité globale de l'infrastructure.",
         footer: { text: "RESTREINT • DIRECTION" },
         timestamp: new Date().toISOString()
@@ -338,10 +341,10 @@ async function sendBureauPanel(channel) {
 
 async function sendLivraisonPanel(channel) {
     const embed = {
-        color: 0x111111,
-        title: "IMEX TRUCKING — SERVICE DE LIVRAISON",
+        color: BRAND_COLOR,
+        title: "POST OP LOGISTICS — SERVICE DE LIVRAISON",
         description: "Besoin d'acheminer du fret ou de planifier un transport par semi-remorque ? Soumettez votre demande directement via notre terminal.\n\n*Cliquez ci-dessous pour initialiser une demande de livraison.*",
-        footer: { text: "IMEX TRUCKING • FREIGHT TERMINAL" },
+        footer: { text: "POST OP LOGISTICS • FREIGHT TERMINAL" },
         timestamp: new Date().toISOString()
     };
 
@@ -354,10 +357,10 @@ async function sendLivraisonPanel(channel) {
 
 async function sendRecrutementPanel(channel) {
     const embed = {
-        color: 0x111111,
-        title: "IMEX TRUCKING — RECRUTEMENT CHAUFFEURS",
+        color: BRAND_COLOR,
+        title: "POST OP LOGISTICS — RECRUTEMENT CHAUFFEURS",
         description: "Nous recherchons des **Chauffeurs-Livreurs** qualifiés pour assurer le transport de fret et piloter notre flotte de camions.\n\n**Profils recherchés :**\n• Maîtrise de la conduite de poids lourds.\n• Ponctualité, rigueur et respect des délais de livraison.\n• Respect strict des consignes de sécurité routière.\n\n*Cliquez ci-dessous pour postuler en tant que chauffeur professionnel.*",
-        footer: { text: "IMEX TRUCKING • RECRUTEMENT" },
+        footer: { text: "POST OP LOGISTICS • RECRUTEMENT" },
         timestamp: new Date().toISOString()
     };
 
@@ -370,10 +373,10 @@ async function sendRecrutementPanel(channel) {
 
 async function sendPriseServicePanel(channel) {
     const embed = {
-        color: 0x111111,
-        title: "IMEX TRUCKING — PRISE DE SERVICE & CAMIONS",
+        color: BRAND_COLOR,
+        title: "POST OP LOGISTICS — PRISE DE SERVICE & CAMIONS",
         description: "Terminal opérateur pour les chauffeurs-livreurs.\n\n• Cliquez sur le bouton ci-dessous pour **Prendre ou Quitter votre service** en indiquant le nom et le numéro officiel de votre camion.",
-        footer: { text: "IMEX TRUCKING • FLEET & DUTY CONTROL" },
+        footer: { text: "POST OP LOGISTICS • FLEET & DUTY CONTROL" },
         timestamp: new Date().toISOString()
     };
 
@@ -390,7 +393,7 @@ async function handleDutyInteractions(interaction) {
     if (interaction.isButton() && interaction.customId === 'open_duty_modal') {
         const modal = new ModalBuilder()
             .setCustomId('modal_duty_submit')
-            .setTitle('IMEX TRUCKING // GESTION DE SERVICE');
+            .setTitle('POST OP LOGISTICS // GESTION DE SERVICE');
 
         modal.addComponents(
             new ActionRowBuilder().addComponents(
