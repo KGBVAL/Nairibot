@@ -22,6 +22,9 @@ const partnersBook = new Map(); // Système de gestion des partenaires
 const activeDutyUsers = new Set();
 const lockedTrucks = new Set();
 
+// Couleur Marron / Or de la nouvelle DA (0xC5A059)
+const BRAND_COLOR = 0xC5A059;
+
 async function handleInteraction(interaction) {
     const guild = interaction.guild;
     const member = interaction.member;
@@ -97,7 +100,7 @@ async function handleInteraction(interaction) {
     if (interaction.isButton() && interaction.customId === 'open_secretariat_modal') {
         const modal = new ModalBuilder()
             .setCustomId('secretariat_form')
-            .setTitle('IMEX CORPORATION // CONTACT');
+            .setTitle('POST OP LOGISTICS // CONTACT');
 
         const identityInput = new TextInputBuilder()
             .setCustomId('client_identity')
@@ -130,12 +133,12 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
-    // 1.1 BOUTONS IMEX TRUCKING & LOGISTICS (MODALS, CATALOGUE & SERVICE)[cite: 1]
+    // 1.1 BOUTONS POST OP LOGISTICS (MODALS, CATALOGUE & SERVICE)[cite: 1]
     // ==========================================
     if (interaction.isButton() && interaction.customId === 'open_livraison_modal') {
         const modal = new ModalBuilder()
             .setCustomId('livraison_form')
-            .setTitle('IMEX TRUCKING // DEMANDE DE LIVRAISON');
+            .setTitle('POST OP LOGISTICS // LIVRAISON');
 
         const identityInput = new TextInputBuilder()
             .setCustomId('client_identity')
@@ -170,7 +173,7 @@ async function handleInteraction(interaction) {
     if (interaction.isButton() && interaction.customId === 'open_logistics_recrutement_modal') {
         const modal = new ModalBuilder()
             .setCustomId('logistics_recrutement_form')
-            .setTitle('IMEX TRUCKING // CANDIDATURE');
+            .setTitle('POST OP LOGISTICS // CANDIDATURE');
 
         const identityInput = new TextInputBuilder()
             .setCustomId('candidate_identity')
@@ -281,16 +284,16 @@ async function handleInteraction(interaction) {
         });
 
         const ticketEmbed = {
-            color: 0x111111,
+            color: BRAND_COLOR,
             title: `LOCATION DE VÉHICULE // ${vehiculeName.toUpperCase()}`,
-            description: "Canal de location établi. La direction trucking prend en charge votre demande ci-dessous.",
+            description: "Canal de location établi. La direction Post OP Logistics prend en charge votre demande ci-dessous.",
             fields: [
                 { name: "CLIENT", value: `${member} (${member.user.tag})`, inline: true },
                 { name: "TYPE DE FORMULE", value: typeLocation, inline: true },
                 { name: "VÉHICULE SÉLECTIONNÉ", value: vehiculeName },
                 { name: "STATUT DU DOSSIER", value: "EN ATTENTE DE PRISE EN CHARGE" }
             ],
-            footer: { text: "IMEX TRUCKING & LOGISTICS" },
+            footer: { text: "POST OP LOGISTICS" },
             timestamp: new Date().toISOString()
         };
 
@@ -370,7 +373,7 @@ async function handleInteraction(interaction) {
         });
 
         const ticketEmbed = {
-            color: 0x111111,
+            color: BRAND_COLOR,
             title: `DOSSIER INSTITUTIONNEL // ${identity.toUpperCase()}`,
             description: "Canal de négociation sécurisé établi. La direction examine votre requête ci-dessous.",
             fields: [
@@ -379,7 +382,7 @@ async function handleInteraction(interaction) {
                 { name: "CONTENU DE LA REQUÊTE", value: request },
                 { name: "STATUT DU DOSSIER", value: "EN ATTENTE DE PRISE EN CHARGE" }
             ],
-            footer: { text: "IMEX CORPORATION • SYSTÈMES UNIFIÉS" },
+            footer: { text: "POST OP LOGISTICS • SYSTÈMES UNIFIÉS" },
             timestamp: new Date().toISOString()
         };
 
@@ -446,9 +449,9 @@ async function handleInteraction(interaction) {
         });
 
         const ticketEmbed = {
-            color: 0x111111,
+            color: BRAND_COLOR,
             title: isRecrutement ? `CANDIDATURE CHAUFFEUR // ${identity.toUpperCase()}` : `LIVRAISON FREIGHT // ${identity.toUpperCase()}`,
-            description: "Canal opérationnel établi. La direction trucking examine votre dossier ci-dessous.",
+            description: "Canal opérationnel établi. La direction Post OP Logistics examine votre dossier ci-dessous.",
             fields: isRecrutement ? [
                 { name: "CANDIDAT", value: identity, inline: true },
                 { name: "EXPÉRIENCE & COMPÉTENCES", value: phoneOrExp },
@@ -459,7 +462,7 @@ async function handleInteraction(interaction) {
                 { name: "DÉTAILS DU FRET", value: request },
                 { name: "STATUT DU DOSSIER", value: "EN ATTENTE DE PRISE EN CHARGE" }
             ],
-            footer: { text: "IMEX TRUCKING & LOGISTICS" },
+            footer: { text: "POST OP LOGISTICS" },
             timestamp: new Date().toISOString()
         };
 
@@ -483,11 +486,11 @@ async function handleInteraction(interaction) {
         const price = interaction.fields.getTextInputValue('vehicule_price');
 
         const embed = {
-            color: 0x111111,
+            color: BRAND_COLOR,
             title: `🚗 ${name}`,
             description: desc,
             fields: [{ name: "💰 Tarif de location", value: price, inline: true }],
-            footer: { text: "IMEX TRUCKING • CATALOGUE FLOTTE" },
+            footer: { text: "POST OP LOGISTICS • CATALOGUE FLOTTE" },
             timestamp: new Date().toISOString()
         };
 
@@ -508,7 +511,7 @@ async function handleInteraction(interaction) {
 
         const modal = new ModalBuilder()
             .setCustomId('announcement_form')
-            .setTitle('IMEX OS // PUBLICATION COMMUNIQUÉ');
+            .setTitle('POST OP OS // PUBLICATION COMMUNIQUÉ');
 
         const titleInput = new TextInputBuilder()
             .setCustomId('ann_title')
@@ -571,13 +574,13 @@ async function handleInteraction(interaction) {
         if (selected === 'nav_partners') {
             const modal = new ModalBuilder()
                 .setCustomId('bureau_add_partner_form')
-                .setTitle('IMEX // AJOUTER UN PARTENAIRE');
+                .setTitle('POST OP // AJOUTER UN PARTENAIRE');
 
             const nameInput = new TextInputBuilder()
                 .setCustomId('partner_name')
                 .setLabel("NOM DE L'ENTREPRISE")
                 .setStyle(TextInputStyle.Short)
-                .setPlaceholder("Ex: IMEX Logistics Partenaire")
+                .setPlaceholder("Ex: Post OP Logistics Partenaire")
                 .setRequired(true);
 
             const domainInput = new TextInputBuilder()
@@ -666,14 +669,14 @@ async function handleInteraction(interaction) {
         const daChannel = guild.channels.cache.get(daChannelId) || await guild.channels.fetch(daChannelId).catch(() => null);
 
         const partnerEmbed = {
-            color: 0x111111,
+            color: BRAND_COLOR,
             title: `🤝 NOUVEAU PARTENAIRE // ${name.toUpperCase()}`,
             description: "Un nouveau partenariat institutionnel vient d'être officialisé et enregistré par la direction.",
             fields: [
                 { name: "ENTREPRISE", value: name, inline: true },
                 { name: "DOMAINE D'ACTIVITÉ", value: domain, inline: true }
             ],
-            footer: { text: "IMEX CORPORATION • DIRECTION GÉNÉRALE" },
+            footer: { text: "POST OP LOGISTICS • DIRECTION GÉNÉRALE" },
             timestamp: new Date().toISOString()
         };
 
@@ -868,7 +871,7 @@ async function handleInteraction(interaction) {
 
         const modal = new ModalBuilder()
             .setCustomId(`modal_exec_${actionType}_${targetId}`)
-            .setTitle(`IMEX OS // MOTIF DE LA SANCTION`);
+            .setTitle('POST OP OS // MOTIF DE LA SANCTION');
 
         const reasonInput = new TextInputBuilder()
             .setCustomId('sanction_reason')
@@ -923,10 +926,10 @@ async function handleInteraction(interaction) {
         }
 
         const embed = {
-            color: 0x111111,
+            color: BRAND_COLOR,
             title: `COMMUNIQUÉ OFFICIEL // ${title.toUpperCase()}`,
             description: content,
-            footer: { text: "IMEX CORPORATION • DIRECTION GÉNÉRALE" },
+            footer: { text: "POST OP LOGISTICS • DIRECTION GÉNÉRALE" },
             timestamp: new Date().toISOString()
         };
 
