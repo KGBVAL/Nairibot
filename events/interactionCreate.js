@@ -544,10 +544,6 @@ async function handleInteraction(interaction) {
         const selected = interaction.values[0];
 
         if (selected === 'nav_finance') {
-            if (addressBook.size === 0) {
-                return await interaction.reply({ content: "Le carnet d'adresses est actuellement vide (aucun dossier enregistré).", flags: MessageFlags.Ephemeral });
-            }
-
             const options = [];
             for (const [id, data] of addressBook.entries()) {
                 options.push({
@@ -557,16 +553,28 @@ async function handleInteraction(interaction) {
                 });
             }
 
-            const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId('address_book_select')
-                .setPlaceholder('Sélectionner un dossier dans le carnet d’adresses...')
-                .addOptions(options.slice(0, 25));
+            const rows = [];
+            
+            if (options.length > 0) {
+                const selectMenu = new StringSelectMenuBuilder()
+                    .setCustomId('address_book_select')
+                    .setPlaceholder('Sélectionner un dossier dans le carnet d’adresses...')
+                    .addOptions(options.slice(0, 25));
+                rows.push(new ActionRowBuilder().addComponents(selectMenu));
+            }
 
-            const row = new ActionRowBuilder().addComponents(selectMenu);
+            // Bouton pour ajouter manuellement un membre / dossier
+            const addButtonRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('open_add_member_modal')
+                    .setLabel('➕ Ajouter un membre manuellement')
+                    .setStyle(ButtonStyle.Success)
+            );
+            rows.push(addButtonRow);
 
             return await interaction.reply({ 
-                content: "📖 **CARNET D'ADRESSES & DOSSIERS CLIENTS**\nSélectionnez un membre ci-dessous pour consulter son dossier, modifier ses informations, ajouter des notes ou supprimer la fiche :", 
-                components: [row], 
+                content: "📖 **CARNET D'ADRESSES & DOSSIERS CLIENTS**\nSélectionnez un membre ci-dessous pour consulter son dossier, ou ajoutez-en un nouveau :", 
+                components: rows, 
                 flags: MessageFlags.Ephemeral 
             });
         } 
@@ -647,6 +655,73 @@ async function handleInteraction(interaction) {
     }
 
     // ==========================================
+    // 4.0.1 OUVERTURE DU MODAL D'AJOUT MANUEL DE MEMBRE
+    // ==========================================
+    if (interaction.isButton() && interaction.customId === 'open_add_member_modal') {
+        if (!isDirector) return await interaction.reply({ content: "Accès restreint.", flags: MessageFlags.Ephemeral });
+
+        const modal = new ModalBuilder()
+            .setCustomId('modal_add_manual_member')
+            .setTitle('CARNET // AJOUTER UN MEMBRE');
+
+        const identityInput = new TextInputBuilder()
+            .setCustomId('manual_identity')
+            .setLabel("NOM & PRÉNOM")
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder("John Doe")
+            .setRequired(true);
+
+        const phoneInput = new TextInputBuilder()
+            .setCustomId('manual_phone')
+            .setLabel("TÉLÉPHONE")
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder("+1 (555) 019-2834")
+            .setRequired(true);
+
+        const descInput = new TextInputBuilder()
+            .setCustomId('manual_description')
+            .setLabel("DESCRIPTION / NOTES")
+            .setStyle(TextInputStyle.Paragraph)
+            .setPlaceholder("Détails ou description du dossier...")
+            .setRequired(true);
+
+        modal.addComponents(
+            new ActionRowBuilder().addComponents(identityInput),
+            new ActionRowBuilder().addComponents(phoneInput),
+            new ActionRowBuilder().addComponents(descInput)
+        );
+
+        return await interaction.showModal(modal);
+    }
+
+    // ==========================================
+    // 4.0.2 SOUMISSION DU MODAL D'AJOUT MANUEL DE MEMBRE
+    // ==========================================
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_add_manual_member') {
+        if (!isDirector) return;
+
+        const identity = interaction.fields.getTextInputValue('manual_identity');
+        const phone = interaction.fields.getTextInputValue('manual_phone');
+        const description = interaction.fields.getTextInputValue('manual_description');
+
+        const contactId = `contact_${Date.now()}`;
+        addressBook.set(contactId, {
+            id: contactId,
+            identity,
+            phone,
+            request: description,
+            notes: "Ajouté manuellement par la direction.",
+            channelId: null,
+            userId: interaction.user.id
+        });
+
+        return await interaction.reply({ 
+            content: `✅ Le membre **${identity}** a été ajouté avec succès au carnet d'adresses !`, 
+            flags: MessageFlags.Ephemeral 
+        });
+    }
+
+    // ==========================================
     // 4.1 SOUMISSION DE LA MODALE PARTENAIRE
     // ==========================================
     if (interaction.isModalSubmit() && interaction.customId === 'bureau_add_partner_form') {
@@ -665,7 +740,7 @@ async function handleInteraction(interaction) {
             logo
         });
 
-        const daChannelId = '1541802128186802331';
+        const daChannelId = '1545881352979882145';
         const daChannel = guild.channels.cache.get(daChannelId) || await guild.channels.fetch(daChannelId).catch(() => null);
 
         const partnerEmbed = {
@@ -705,17 +780,22 @@ async function handleInteraction(interaction) {
             return await interaction.reply({ content: "Ce dossier n'existe plus ou a été supprimé.", flags: MessageFlags.Ephemeral });
         }
 
-        const actionRow = new ActionRowBuilder().addComponents(
+        const actionRowComponents = [
             new ButtonBuilder().setCustomId(`addr_notes_${contactId}`).setLabel('📝 Inscrire des notes').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId(`addr_goto_${contactId}`).setLabel('📂 Consulter le salon').setStyle(ButtonStyle.Secondary),
             new ButtonBuilder().setCustomId(`addr_edit_${contactId}`).setLabel('✏️ Modifier').setStyle(ButtonStyle.Secondary),
             new ButtonBuilder().setCustomId(`addr_delete_${contactId}`).setLabel('🗑️ Supprimer').setStyle(ButtonStyle.Danger)
-        );
+        ];
+
+        if (contact.channelId) {
+            actionRowComponents.splice(1, 0, new ButtonBuilder().setCustomId(`addr_goto_${contactId}`).setLabel('📂 Consulter le salon').setStyle(ButtonStyle.Secondary));
+        }
+
+        const actionRow = new ActionRowBuilder().addComponents(actionRowComponents);
 
         return await interaction.update({
             content: `📄 **DOSSIER DE : ${contact.identity.toUpperCase()}**\n\n` +
                      `📞 **Téléphone :** ${contact.phone}\n` +
-                     `💬 **Demande initiale :** ${contact.request}\n` +
+                     `💬 **Description / Demande :** ${contact.request}\n` +
                      `📌 **Notes internes :** ${contact.notes}`,
             components: [actionRow]
         });
