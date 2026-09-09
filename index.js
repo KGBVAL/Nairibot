@@ -3,14 +3,15 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-// Importation des gestionnaires (avec le bon chemin pour postop)
+// Importation des gestionnaires
 const { initAllPanels, handleManagersInteraction } = require('./utils/Manager');
 const { initPostOpPanels, handlePostOpInteraction } = require('./utils/postop');
+const { initAssociationPanels, handleAssociationInteraction } = require('./utils/association');
 
 // Serveur Web pour Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Little Armenia & Post Op Bot est en ligne !\n');
+    res.end('Little Armenia, Post Op & Association Bot est en ligne !\n');
 });
 
 const PORT = process.env.PORT || 3000;
@@ -120,7 +121,8 @@ async function setupCommunityStructure(guild) {
         setTimeout(async () => {
             await initAllPanels(guild);
             await initPostOpPanels(guild);
-            console.log(`[LITTLE ARMENIA & POST OP] Panneaux initialisés avec succès pour ${guild.name}`);
+            await initAssociationPanels(guild);
+            console.log(`[LITTLE ARMENIA, POST OP & ASSOCIATION] Panneaux initialisés avec succès pour ${guild.name}`);
         }, 4000);
 
     } catch (error) {
@@ -150,7 +152,7 @@ client.once(Events.ClientReady, async () => {
     }
 });
 
-// Routeur central des interactions (gestionnaires unifiés + postop + commandes slash)
+// Routeur central des interactions
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
         // Routeur Manager existant
@@ -160,7 +162,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 interaction.customId.startsWith('ctrl_') || 
                 interaction.customId.startsWith('acc_') || 
                 interaction.customId.startsWith('mod_')
-            )
+            ) &&
+            !interaction.customId.startsWith('mod_assoc_') &&
+            !interaction.customId.startsWith('mod_prop_')
         ) {
             await handleManagersInteraction(interaction);
             return;
@@ -178,6 +182,24 @@ client.on(Events.InteractionCreate, async (interaction) => {
             )
         ) {
             await handlePostOpInteraction(interaction);
+            return;
+        }
+
+        // Routeur Association (`association.js`)
+        if (
+            interaction.customId &&
+            (
+                interaction.customId === 'menu_ticket_proposition' ||
+                interaction.customId === 'menu_ticket_benevolat' ||
+                interaction.customId.startsWith('mod_assoc_') ||
+                interaction.customId.startsWith('btn_assoc_claim_') ||
+                interaction.customId.startsWith('btn_assoc_close_') ||
+                interaction.customId.startsWith('btn_prop_validate_') ||
+                interaction.customId.startsWith('btn_prop_modify_') ||
+                interaction.customId.startsWith('mod_prop_edit_')
+            )
+        ) {
+            await handleAssociationInteraction(interaction);
             return;
         }
 
