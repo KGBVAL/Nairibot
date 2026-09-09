@@ -272,7 +272,7 @@ async function handlePostOpInteraction(interaction) {
                             const embed = EmbedBuilder.from(oldEmbed);
                             let desc = oldEmbed.description;
                             
-                            desc = desc.replace(/(📄 \*\*DÉTAILS DE LA REQUÊTE\*\*)\n[\s\S]*?(?=\n\n────────────────────────────────────────)/, `$1\n${nouveauContenu}`);
+                            desc = desc.replace(/(📄 \*\*DÉTAILS DE LA REQUÊTE\*\*)\n[\s\S]*?(?=\n\n🏢|$)/, `$1\n${nouveauContenu}\n`);
                             
                             embed.setDescription(desc);
                             await targetMsg.edit({ embeds: [embed] });
@@ -342,14 +342,12 @@ async function handlePostOpInteraction(interaction) {
                 .setTitle(`POST-OP LOGISTICS — DOSSIER #${ticketChannel.name.toUpperCase()}`)
                 .setDescription(
                     `**RÉFÉRENCE :** ${typeLabel.toUpperCase()} (${subType})\n\n` +
-                    `────────────────────────────────────────\n` +
                     `🏢 **IDENTIFICATION DU DEMANDEUR**\n` +
                     `• **Titulaire :** ${prenom} ${nom}\n` +
-                    `• **Ligne directe :** ${telephone}\n` +
-                    `────────────────────────────────────────\n` +
+                    `• **Ligne directe :** ${telephone}\n\n` +
                     `📄 **DÉTAILS DE LA REQUÊTE**\n` +
                     `${champPrincipal}\n\n` +
-                    `────────────────────────────────────────\n` +
+                    `📋 **STATUT DU DOSSIER**\n` +
                     `*Statut : En attente d'instruction.*`
                 )
                 .setColor(0x2B2D31)
