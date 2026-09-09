@@ -128,6 +128,7 @@ async function handleManagersInteraction(interaction) {
     const id = interaction.customId;
     if (!id) return;
     
+    // É largissement de la condition pour intercepter tous les menus et modals gérés ici
     const isManaged = id === 'menu_assoc' || id === 'menu_postop' || id.startsWith('menu_acc_') || id.startsWith('mod_ann_') || id.startsWith('mod_pub_') || id.startsWith('mod_acc_');
     if (!isManaged) return;
 
@@ -236,7 +237,7 @@ async function handleManagersInteraction(interaction) {
             const desc = interaction.fields.getTextInputValue('desc');
             const logo = interaction.fields.getTextInputValue('logo');
 
-            // Ciblage direct par l'ID exact fourni
+            // Ciblage direct et unique par l'ID exact de ton salon (1547194694163894337)
             let chan = interaction.guild.channels.cache.get('1547194694163894337');
             if (!chan) {
                 chan = interaction.guild.channels.cache.find(c => c.name === 'calendrier-2026');
