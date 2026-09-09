@@ -1,17 +1,15 @@
-const { Client, GatewayIntentBits, REST, Routes, Events } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, Events, ChannelType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
 // Importation depuis le dossier utils
-const { setupCorporateStructure } = require('./utils/corporateSetup');
-const { initRegisters } = require('./utils/corporateRegisters');
 const { handleInteraction } = require('./events/interactionCreate');
 
 // Serveur Web pour Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Post OP Logistics Bot est en ligne !\n');
+    res.end('Little Armenia Bot est en ligne !\n');
 });
 
 const PORT = process.env.PORT || 3000;
@@ -44,17 +42,88 @@ if (fs.existsSync(commandsPath)) {
     }
 }
 
-client.once(Events.ClientReady, async () => {
-    console.log(`[POST OP OS] Connecté en tant que ${client.user.tag}`);
+// Fonction pour créer automatiquement l'arborescence du projet Little Armenia & Post Op
+async function setupCommunityStructure(guild) {
+    try {
+        console.log(`[LITTLE ARMENIA] Vérification de la structure pour : ${guild.name}`);
 
-    // Initialisation de la structure corporate et des registres depuis /utils
+        // Définition de l'arborescence souhaitée
+        const structure = [
+            {
+                categoryName: '📌 ┆ INFORMATIONS',
+                channels: [
+                    { name: 'annonces', type: ChannelType.GuildText },
+                    { name: 'calendrier-2026', type: ChannelType.GuildText },
+                    { name: 'presse-et-medias', type: ChannelType.GuildText }
+                ]
+            },
+            {
+                categoryName: '🏛️ ┆ L\'ASSOCIATION',
+                channels: [
+                    { name: 'discussions', type: ChannelType.GuildText },
+                    { name: 'propositions-citoyennes', type: ChannelType.GuildText },
+                    { name: 'commerces-et-partenariats', type: ChannelType.GuildText },
+                    { name: 'recrutement', type: ChannelType.GuildText }
+                ]
+            },
+            {
+                categoryName: '📦 ┆ POST OP LOGISTICS',
+                channels: [
+                    { name: 'annonces-post-op', type: ChannelType.GuildText },
+                    { name: 'commandes', type: ChannelType.GuildText },
+                    { name: 'services', type: ChannelType.GuildText },
+                    { name: 'recrutement-interne', type: ChannelType.GuildText },
+                    { name: 'salle-de-pause', type: ChannelType.GuildText }
+                ]
+            }
+        ];
+
+        for (const catData of structure) {
+            // Cherche si la catégorie existe déjà
+            let category = guild.channels.cache.find(
+                c => c.type === ChannelType.GuildCategory && c.name.toLowerCase() === catData.categoryName.toLowerCase()
+            );
+
+            // Si elle n'existe pas, on la crée
+            if (!category) {
+                category = await guild.channels.create({
+                    name: catData.categoryName,
+                    type: ChannelType.GuildCategory,
+                });
+                console.log(`[LITTLE ARMENIA] Catégorie créée : ${catData.categoryName}`);
+            }
+
+            // Vérifie et crée les salons associés dans cette catégorie
+            for (const chanData of catData.channels) {
+                const existingChan = guild.channels.cache.find(
+                    c => c.parentId === category.id && c.name === chanData.name
+                );
+
+                if (!existingChan) {
+                    await guild.channels.create({
+                        name: chanData.name,
+                        type: chanData.type,
+                        parent: category.id,
+                    });
+                    console.log(`[LITTLE ARMENIA] Salon créé : #${chanData.name} dans ${catData.categoryName}`);
+                }
+            }
+        }
+        console.log(`[LITTLE ARMENIA] Structure initialisée avec succès pour ${guild.name}`);
+    } catch (error) {
+        console.error(`[LITTLE ARMENIA] Erreur lors de la configuration de la structure :`, error);
+    }
+}
+
+client.once(Events.ClientReady, async () => {
+    console.log(`[LITTLE ARMENIA BOT] Connecté en tant que ${client.user.tag}`);
+
+    // Initialisation de la structure sur chaque serveur où est le bot
     for (const [id, guild] of client.guilds.cache) {
         try {
-            await setupCorporateStructure(guild);
-            await initRegisters(guild);
-            console.log(`[POST OP OS] Structure et registres initialisés pour : ${guild.name}`);
+            await setupCommunityStructure(guild);
         } catch (error) {
-            console.error(`[POST OP OS] Erreur init pour ${guild.name}:`, error);
+            console.error(`[LITTLE ARMENIA BOT] Erreur init structure pour ${guild.name}:`, error);
         }
     }
 
@@ -63,9 +132,9 @@ client.once(Events.ClientReady, async () => {
         const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
         try {
             await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
-            console.log('[POST OP OS] Commandes slash enregistrées.');
+            console.log('[LITTLE ARMENIA BOT] Commandes slash enregistrées.');
         } catch (error) {
-            console.error('[POST OP OS] Erreur enregistrement :', error);
+            console.error('[LITTLE ARMENIA BOT] Erreur enregistrement commandes :', error);
         }
     }
 });
@@ -87,5 +156,5 @@ client.on(Events.InteractionCreate, async (interaction) => {
 console.log("[DEBUG] Tentative de connexion avec le token :", process.env.DISCORD_TOKEN ? "Token présent (longueur: " + process.env.DISCORD_TOKEN.length + ")" : "AUCUN TOKEN TROUVÉ !");
 
 client.login(process.env.DISCORD_TOKEN).catch(error => {
-    console.error("[POST OP OS] Erreur fatale lors de la connexion à Discord :", error);
+    console.error("[LITTLE ARMENIA BOT] Erreur fatale lors de la connexion à Discord :", error);
 });
