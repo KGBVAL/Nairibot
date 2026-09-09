@@ -12,7 +12,7 @@ const CONFIG_POSTOP = {
 function getCommandesEmbed() {
     return new EmbedBuilder()
         .setTitle('POST-OP LOGISTICS — COMMANDES & LIVRAISONS')
-        .setDescription('Bienvenue sur le portail de commande de Post-Op Logistics. Utilisez le sélecteur ci-dessous pour initier une demande de livraison, de fret ou de ravitaillement sécurisé.\n\nChaque dossier est traité par notre équipe commerciale et logistique.')
+        .setDescription('Bienvenue sur le portail de commande de Post-Op Logistics. Utilisez le sélecteur ci-dessous pour initier une demande de livraison, de fret ou de ravitaillement sécurisé.\n\nChaque dossier fait l\'objet d\'une instruction rigoureuse par notre département opérationnel.')
         .setColor(0x2B2D31)
         .setFooter({ text: 'Post-Op Logistics • Département Commandes' })
         .setTimestamp();
@@ -206,14 +206,14 @@ async function handlePostOpInteraction(interaction) {
 
             if (actionVal === 'claim') {
                 if (oldEmbed.description.includes('Pris en charge par')) {
-                    return await interaction.reply({ content: 'Ce dossier a déjà été pris en charge par un autre membre. Impossible de le reprendre.', flags: [MessageFlags.Ephemeral] });
+                    return await interaction.reply({ content: 'Ce dossier a déjà été pris en charge par un autre opérateur.', flags: [MessageFlags.Ephemeral] });
                 }
 
                 const embed = EmbedBuilder.from(oldEmbed);
-                embed.setDescription(oldEmbed.description.replace('*Statut : En attente de prise en charge.*', `*Statut : Dossier pris en charge par **${member.user.tag}***`));
+                embed.setDescription(oldEmbed.description.replace('*Statut : En attente d\'instruction.*', `*Statut : Dossier pris en charge par **${member.user.tag}***`));
 
                 await message.edit({ embeds: [embed], components: message.components });
-                return await interaction.reply({ content: 'Vous avez pris en charge ce dossier avec succès.', flags: [MessageFlags.Ephemeral] });
+                return await interaction.reply({ content: 'Dossier assigné à votre profil avec succès.', flags: [MessageFlags.Ephemeral] });
             }
 
             if (actionVal === 'modify') {
@@ -221,7 +221,7 @@ async function handlePostOpInteraction(interaction) {
                     .setCustomId(`mod_postop_edit_${ticketId}`)
                     .setTitle('Mise à jour du dossier')
                     .addComponents(
-                        new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nouveau_contenu').setLabel('Nouvelles informations / Consignes').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                        new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nouveau_contenu').setLabel('Informations complémentaires / Consignes').setStyle(TextInputStyle.Paragraph).setRequired(true))
                     );
                 return await interaction.showModal(modal);
             }
@@ -272,7 +272,7 @@ async function handlePostOpInteraction(interaction) {
                             const embed = EmbedBuilder.from(oldEmbed);
                             let desc = oldEmbed.description;
                             
-                            desc = desc.replace(/(📄 \*\*CONTENU DU DOSSIER\*\*)\n[\s\S]*?(?=\n\n────────────────────────────────────────)/, `$1\n${nouveauContenu}`);
+                            desc = desc.replace(/(📄 \*\*DÉTAILS DE LA REQUÊTE\*\*)\n[\s\S]*?(?=\n\n────────────────────────────────────────)/, `$1\n${nouveauContenu}`);
                             
                             embed.setDescription(desc);
                             await targetMsg.edit({ embeds: [embed] });
@@ -281,7 +281,7 @@ async function handlePostOpInteraction(interaction) {
                         console.error("Erreur MAJ message postop :", err);
                     }
                 }
-                return await interaction.reply({ content: 'Le contenu du dossier a été mis à jour avec succès.', flags: [MessageFlags.Ephemeral] });
+                return await interaction.reply({ content: 'Les éléments du dossier ont été actualisés avec succès.', flags: [MessageFlags.Ephemeral] });
             }
 
             await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
@@ -291,7 +291,7 @@ async function handlePostOpInteraction(interaction) {
             let champPrincipal = '';
 
             if (modId.startsWith('mod_postop_commande_')) {
-                typeLabel = 'commande & livraison';
+                typeLabel = 'commandes & livraisons';
                 subType = modId.replace('mod_postop_commande_', '');
                 champPrincipal = interaction.fields.getTextInputValue('details');
             } else if (modId.startsWith('mod_postop_recrutement_')) {
@@ -299,7 +299,7 @@ async function handlePostOpInteraction(interaction) {
                 subType = modId.replace('mod_postop_recrutement_', '');
                 champPrincipal = interaction.fields.getTextInputValue('motivations');
             } else if (modId.startsWith('mod_postop_service_')) {
-                typeLabel = 'support & service';
+                typeLabel = 'support & services';
                 subType = modId.replace('mod_postop_service_', '');
                 champPrincipal = interaction.fields.getTextInputValue('requete');
             }
@@ -328,7 +328,7 @@ async function handlePostOpInteraction(interaction) {
                 permissionOverwrites.push({ id: roleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] });
             }
 
-            const prefixMap = { 'commande': 'cmd', 'recrutement': 'rec', 'support & service': 'srv' };
+            const prefixMap = { 'commandes & livraisons': 'cmd', 'recrutement': 'rec', 'support & services': 'srv' };
             const cleanChannelName = `${prefixMap[typeLabel] || 'ticket'}-${user.username}`.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 90);
             
             const ticketChannel = await guild.channels.create({
@@ -339,32 +339,30 @@ async function handlePostOpInteraction(interaction) {
             });
 
             const embedTicket = new EmbedBuilder()
-                .setTitle(`📋 DOSSIER OPÉRATIONNEL — ${typeLabel.toUpperCase()}`)
+                .setTitle(`POST-OP LOGISTICS — DOSSIER #${ticketChannel.name.toUpperCase()}`)
                 .setDescription(
-                    `L'ouverture de ce dossier fait suite à une requête enregistrée auprès des services de Post-Op Logistics.\n\n` +
+                    `**RÉFÉRENCE :** ${typeLabel.toUpperCase()} (${subType})\n\n` +
                     `────────────────────────────────────────\n` +
-                    `👤 **INFORMATIONS DU DEMANDEUR**\n` +
-                    `• **Identité :** ${prenom} ${nom}\n` +
-                    `• **Contact Téléphonique :** ${telephone}\n` +
-                    `• **Compte Discord :** <@${user.id}>\n` +
-                    `• **Filière / Type :** ${subType}\n` +
+                    `🏢 **IDENTIFICATION DU DEMANDEUR**\n` +
+                    `• **Titulaire :** ${prenom} ${nom}\n` +
+                    `• **Ligne directe :** ${telephone}\n` +
                     `────────────────────────────────────────\n` +
-                    `📄 **CONTENU DU DOSSIER**\n` +
+                    `📄 **DÉTAILS DE LA REQUÊTE**\n` +
                     `${champPrincipal}\n\n` +
                     `────────────────────────────────────────\n` +
-                    `*Statut : En attente de prise en charge.*`
+                    `*Statut : En attente d'instruction.*`
                 )
                 .setColor(0x2B2D31)
-                .setFooter({ text: 'Post-Op Logistics • Centre de Traitement' })
+                .setFooter({ text: 'Post-Op Logistics • Département Opérationnel' })
                 .setTimestamp();
 
             const staffSelectMenu = new StringSelectMenuBuilder()
                 .setCustomId(`menu_staff_postop_${ticketChannel.id}`)
-                .setPlaceholder('⚙️ Gestion opérationnelle du dossier...')
+                .setPlaceholder('Gestion administrative du dossier...')
                 .addOptions([
-                    { label: 'Prendre en charge le dossier', value: 'claim', description: 'Assigner la responsabilité de la mission à votre profil' },
-                    { label: 'Modifier les informations', value: 'modify', description: 'Actualiser ou compléter le contenu du dossier' },
-                    { label: 'Clôturer le dossier', value: 'close', description: 'Archiver et fermer définitivement le dossier' }
+                    { label: 'Prendre en charge', value: 'claim', description: 'Assumer la responsabilité opérationnelle du dossier' },
+                    { label: 'Modifier les informations', value: 'modify', description: 'Ajouter des notes ou mettre à jour le contenu' },
+                    { label: 'Clôturer le dossier', value: 'close', description: 'Archiver et clore définitivement la procédure' }
                 ]);
 
             const componentsList = [
@@ -377,7 +375,7 @@ async function handlePostOpInteraction(interaction) {
                 components: componentsList
             });
 
-            return await interaction.editReply({ content: `Votre dossier officiel a été ouvert avec succès : <#${ticketChannel.id}>` });
+            return await interaction.editReply({ content: `Votre dossier a été enregistré avec succès : <#${ticketChannel.id}>` });
         }
     }
 }
