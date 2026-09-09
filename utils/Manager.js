@@ -1,13 +1,13 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
-// Stockage centralisé
+// Stockage centralisé en mémoire
 const db = {
     association: { solde: 0, factures: [] },
     postop: { solde: 0, factures: [] }
 };
 
 // ==========================================
-// AFFICHAGES CORPORATE AVEC MENU DÉROULANT
+// EMBEDS & COMPOSANTS
 // ==========================================
 function getBureauAssociationEmbed() {
     return new EmbedBuilder()
@@ -81,13 +81,26 @@ function getAccountingComponents(entity) {
 }
 
 // ==========================================
-// INITIALISATION DES SALONS
+// INITIALISATION DES SALONS & ECOUTEUR AUTONOME
 // ==========================================
 async function initAllPanels(guild) {
+    // S'assure que l'écouteur global des interactions est actif sur le client Discord
+    const client = guild.client;
+    if (!client._managerListenerRegistered) {
+        client._managerListenerRegistered = true;
+        client.on('interactionCreate', async (interaction) => {
+            try {
+                await handleManagersInteraction(interaction);
+            } catch (err) {
+                console.error("Erreur dans le gestionnaire d'interaction Manager:", err);
+            }
+        });
+    }
+
     const bureauChan = guild.channels.cache.find(c => c.name === 'bureau');
     if (bureauChan) {
         const msgs = await bureauChan.messages.fetch({ limit: 10 });
-        if (!msgs.some(m => m.author.id === guild.client.user.id)) {
+        if (!msgs.some(m => m.author.id === client.user.id)) {
             await bureauChan.send({ embeds: [getBureauAssociationEmbed()], components: [getBureauAssociationComponents()] });
             await bureauChan.send({ embeds: [getBureauPostOpEmbed()], components: [getBureauPostOpComponents()] });
         }
@@ -96,7 +109,7 @@ async function initAllPanels(guild) {
     const comptaChan = guild.channels.cache.find(c => c.name === 'comptabilite');
     if (comptaChan) {
         const msgs = await comptaChan.messages.fetch({ limit: 10 });
-        if (!msgs.some(m => m.author.id === guild.client.user.id)) {
+        if (!msgs.some(m => m.author.id === client.user.id)) {
             await comptaChan.send({ embeds: [getAccountingEmbed('association')], components: [getAccountingComponents('association')] });
             await comptaChan.send({ embeds: [getAccountingEmbed('postop')], components: [getAccountingComponents('postop')] });
         }
@@ -104,15 +117,19 @@ async function initAllPanels(guild) {
 }
 
 // ==========================================
-// GESTION DES INTERACTIONS
+// GESTION DES INTERACTIONS (AUTONOME)
 // ==========================================
 async function handleManagersInteraction(interaction) {
+    // Filtrer uniquement les interactions gérées par ce module
+    const id = interaction.customId;
+    if (!id) return;
+    const isManaged = id === 'menu_assoc' || id === 'menu_postop' || id.startsWith('menu_acc_') || id.startsWith('mod_ann_') || id.startsWith('mod_pub_') || id.startsWith('mod_acc_');
+    if (!isManaged) return;
+
     // 1. Gestion des sélections dans les menus déroulants
     if (interaction.isStringSelectMenu()) {
-        const id = interaction.customId;
         const val = interaction.values[0];
 
-        // Bureau Association ou Post Op
         if (id === 'menu_assoc' || id === 'menu_postop') {
             if (val === 'ann_assoc' || val === 'ann_postop') {
                 const type = val === 'ann_assoc' ? 'association' : 'postop';
@@ -144,7 +161,6 @@ async function handleManagersInteraction(interaction) {
             }
         }
 
-        // Menu Comptabilité (Ouverture des modals financiers)
         if (id.startsWith('menu_acc_')) {
             const entity = id.replace('menu_acc_', '');
 
@@ -173,7 +189,6 @@ async function handleManagersInteraction(interaction) {
     if (interaction.isModalSubmit()) {
         const modId = interaction.customId;
 
-        // Annonces
         if (modId.startsWith('mod_ann_')) {
             const type = modId.replace('mod_ann_', '');
             const text = interaction.fields.getTextInputValue('text');
@@ -192,7 +207,6 @@ async function handleManagersInteraction(interaction) {
             return await interaction.reply({ content: 'Salon cible introuvable.', ephemeral: true });
         }
 
-        // Commerces & Partenaires
         if (modId.startsWith('mod_pub_commerce') || modId.startsWith('mod_pub_partenaire')) {
             const type = modId.includes('commerce') ? 'Commerce Local' : 'Partenaire Officiel';
             const nom = interaction.fields.getTextInputValue('nom');
@@ -218,7 +232,6 @@ async function handleManagersInteraction(interaction) {
             return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
         }
 
-        // Calendrier
         if (modId === 'mod_pub_evenement') {
             const date = interaction.fields.getTextInputValue('date');
             const titre = interaction.fields.getTextInputValue('titre');
@@ -244,7 +257,7 @@ async function handleManagersInteraction(interaction) {
             return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
         }
 
-        // Comptabilité (Mise à jour immédiate de l'embed d'origine)
+        // Comptabilité en temps réel
         if (modId.startsWith('mod_acc_')) {
             const parts = modId.split('_');
             const subType = parts[2]; 
@@ -266,10 +279,8 @@ async function handleManagersInteraction(interaction) {
                 if (!isNaN(index) && db[entity].factures[index]) db[entity].factures.splice(index, 1);
             }
 
-            // Répond d'abord à l'interaction du modal pour la valider proprement
             await interaction.reply({ content: 'Registre mis à jour.', ephemeral: true });
 
-            // Met à jour le message d'origine dans le salon comptabilité en temps réel
             try {
                 const chan = interaction.guild.channels.cache.find(c => c.name === 'comptabilite');
                 if (chan) {
