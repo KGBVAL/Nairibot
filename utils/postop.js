@@ -1,222 +1,293 @@
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, MessageFlags } = require('discord.js');
 
-const CONFIG_POSTOP = {
+const CONFIG_ASSOCIATION = {
     staffRoles: ['1539267928762097770', '1539400476536217690'],
     channels: {
-        commandes: '1547194706671308860',
-        services: '1547194707799703563',
-        recrutement: '1547194709049479178'
+        propositions: '1547194699125760020',
+        recrutementBenevoles: '1547194702674001942'
     }
 };
 
-function getCommandesEmbed() {
+function getPropositionsEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS — DIVISION COMMANDE & FRET')
-        .setDescription('Bienvenue au département centralisé de Post Op Logistics.\n\nNos équipes assurent l\'acheminement de vos marchandises et la gestion de vos flux logistiques avec rigueur et discrétion. Veuillez initier votre demande via le sélecteur ci-dessous.')
+        .setTitle('ASSOCIATION — PROPOSITIONS CITOYENNES')
+        .setDescription('Cet espace institutionnel permet aux concitoyens de soumettre des initiatives, des projets ou des doléances relatifs à la vie du quartier.\n\nChaque proposition fait l\'objet d\'une instruction rigoureuse par notre conseil avant éventuelle publication publique.')
         .setColor(0x2B2D31)
-        .setFooter({ text: 'Post Op Logistics • Division Commerciale' })
+        .setFooter({ text: 'Association • Commission Citoyenne' })
         .setTimestamp();
 }
 
-function getCommandesComponents() {
+function getPropositionsComponents() {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-            .setCustomId('menu_ticket_commande')
-            .setPlaceholder('Sélectionner une typologie de commande...')
+            .setCustomId('menu_ticket_proposition')
+            .setPlaceholder('Déposer une proposition citoyenne...')
             .addOptions([
-                { label: 'Ouverture de dossier de commande', value: 'cmd_standard', description: 'Initier une demande de transport ou d\'approvisionnement' }
+                { label: 'Soumettre un projet ou une idée', value: 'prop_standard', description: 'Ouvrir un dossier d\'instruction confidentiel' }
             ])
     );
 }
 
-function getServiceEmbed() {
+function getBenevolatEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS — CATALOGUE DES PRESTATIONS')
-        .setDescription('Infrastructure logistique de référence dédiée aux professionnels, aux entreprises et aux acteurs institutionnels.')
+        .setTitle('ASSOCIATION — ENGAGEMENT BÉNÉVOLE')
+        .setDescription('Participez activement au développement de nos actions associatives et intégrez nos équipes de terrain selon vos compétences et vos disponibilités.\n\nSélectionnez le pôle d\'engagement souhaité via le sélecteur ci-dessous.')
         .setColor(0x2B2D31)
-        .addFields(
-            {
-                name: '📦 Transport & Fret Sécurisé',
-                value: 'Acheminement terrestre de marchandises en volume, adapté à tous types de cargaisons et planifié selon vos exigences opérationnelles.',
-                false: true
-            },
-            {
-                name: '🏢 Logistique d\'Entreprise',
-                value: 'Gestion optimisée des stocks, inventaires rigoureux et réapprovisionnement régulier de structures commerciales et points de vente.',
-                false: true
-            },
-            {
-                name: '🔒 Convoi Protégé',
-                value: 'Transfert sécurisé sous haute surveillance et escorte armée pour les actifs sensibles ou à forte valeur ajoutée.',
-                false: true
-            },
-            {
-                name: '📑 Affrètement Contractuel',
-                value: 'Mise en place de partenariats logistiques à long terme, contrats-cadres et solutions de sous-traitance sur-mesure.',
-                false: true
-            }
-        )
-        .setFooter({ text: 'Post Op Logistics • Services Professionnels' })
+        .setFooter({ text: 'Association • Ressources Bénévoles' })
         .setTimestamp();
 }
 
-function getRecrutementEmbed() {
-    return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS — RECRUTEMENT INSTITUTIONNEL')
-        .setDescription('L\'expansion constante de nos activités logistiques requiert l\'intégration de profils qualifiés, disciplinés et investis.\n\nConsultez les postes vacants et soumettez votre dossier de candidature par l\'intermédiaire du module ci-dessous.')
-        .setColor(0x2B2D31)
-        .setFooter({ text: 'Post Op Logistics • Ressources Humaines' })
-        .setTimestamp();
-}
-
-function getRecrutementComponents() {
+function getBenevolatComponents() {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-            .setCustomId('menu_ticket_recrutement')
-            .setPlaceholder('Sélectionner un poste à pourvoir...')
+            .setCustomId('menu_ticket_benevolat')
+            .setPlaceholder('Sélectionner un pôle d\'engagement...')
             .addOptions([
-                { label: 'Chauffeur / Livreur', value: 'rec_chauffeur', description: 'Affectation aux lignes de transport et tournées' },
-                { label: 'Logisticien / Gestionnaire', value: 'rec_logisticien', description: 'Supervision des stocks et centralisation' },
-                { label: 'Sécurité / Escorte', value: 'rec_securite', description: 'Protection des convois et sécurisation des actifs' }
+                { label: 'Action Sociale & Solidarité', value: 'ben_social', description: 'Soutien aux permanences et aide de terrain' },
+                { label: 'Animation & Événementiel', value: 'ben_animation', description: 'Organisation des initiatives et manifestations du quartier' },
+                { label: 'Logistique & Technique', value: 'ben_logistique', description: 'Appui opérationnel et gestion des équipements' }
             ])
     );
 }
 
-async function initPostOpPanels(guild) {
+async function initAssociationPanels(guild) {
     const client = guild.client;
 
-    if (!client._postOpListenerRegistered) {
-        client._postOpListenerRegistered = true;
+    if (!client._assocListenerRegistered) {
+        client._assocListenerRegistered = true;
         client.on('interactionCreate', async (interaction) => {
             try {
-                await handlePostOpInteraction(interaction);
+                await handleAssociationInteraction(interaction);
             } catch (err) {
-                console.error("Erreur critique interaction PostOp:", err);
+                console.error("Erreur critique interaction Association:", err);
             }
         });
     }
 
     await guild.channels.fetch();
 
-    const cmdChan = guild.channels.cache.get(CONFIG_POSTOP.channels.commandes) || guild.channels.cache.find(c => c.name === 'commandes' && c.type === ChannelType.GuildText);
-    const srvChan = guild.channels.cache.get(CONFIG_POSTOP.channels.services) || guild.channels.cache.find(c => c.name === 'services' && c.type === ChannelType.GuildText);
-    const recChan = guild.channels.cache.get(CONFIG_POSTOP.channels.recrutement) || guild.channels.cache.find(c => (c.name === 'recrutement-interne' || c.name === 'recrutement') && c.type === ChannelType.GuildText);
+    const propChan = guild.channels.cache.get(CONFIG_ASSOCIATION.channels.propositions);
+    const benChan = guild.channels.cache.get(CONFIG_ASSOCIATION.channels.recrutementBenevoles);
 
-    if (cmdChan) {
+    if (propChan) {
         try {
-            const msgs = await cmdChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('DIVISION COMMANDE'));
+            const msgs = await propChan.messages.fetch({ limit: 10 });
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('PROPOSITIONS CITOYENNES'));
             if (!botMsg) {
-                await cmdChan.send({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
-                console.log(`[POSTOP] Panel Commandes envoyé dans #${cmdChan.name}`);
+                await propChan.send({ embeds: [getPropositionsEmbed()], components: [getPropositionsComponents()] });
             } else {
-                await botMsg.edit({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
-                console.log(`[POSTOP] Panel Commandes mis à jour dans #${cmdChan.name}`);
+                await botMsg.edit({ embeds: [getPropositionsEmbed()], components: [getPropositionsComponents()] });
             }
         } catch (e) {
-            console.error("[POSTOP] Erreur salon Commandes :", e);
+            console.error("[ASSOCIATION] Erreur salon Propositions :", e);
         }
     }
 
-    if (srvChan) {
+    if (benChan) {
         try {
-            const msgs = await srvChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CATALOGUE DES PRESTATIONS'));
+            const msgs = await benChan.messages.fetch({ limit: 10 });
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('ENGAGEMENT BÉNÉVOLE'));
             if (!botMsg) {
-                await srvChan.send({ embeds: [getServiceEmbed()] });
-                console.log(`[POSTOP] Panel Services envoyé dans #${srvChan.name}`);
+                await benChan.send({ embeds: [getBenevolatEmbed()], components: [getBenevolatComponents()] });
             } else {
-                await botMsg.edit({ embeds: [getServiceEmbed()] });
-                console.log(`[POSTOP] Panel Services mis à jour dans #${srvChan.name}`);
+                await botMsg.edit({ embeds: [getBenevolatEmbed()], components: [getBenevolatComponents()] });
             }
         } catch (e) {
-            console.error("[POSTOP] Erreur salon Services :", e);
-        }
-    }
-
-    if (recChan) {
-        try {
-            const msgs = await recChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('RECRUTEMENT INSTITUTIONNEL'));
-            if (!botMsg) {
-                await recChan.send({ embeds: [getRecrutementEmbed()], components: [getRecrutementComponents()] });
-                console.log(`[POSTOP] Panel Recrutement envoyé dans #${recChan.name}`);
-            } else {
-                await botMsg.edit({ embeds: [getRecrutementEmbed()], components: [getRecrutementComponents()] });
-                console.log(`[POSTOP] Panel Recrutement mis à jour dans #${recChan.name}`);
-            }
-        } catch (e) {
-            console.error("[POSTOP] Erreur salon Recrutement :", e);
+            console.error("[ASSOCIATION] Erreur salon Bénévolat :", e);
         }
     }
 }
 
-async function handlePostOpInteraction(interaction) {
+async function handleAssociationInteraction(interaction) {
     const id = interaction.customId;
     if (!id) return;
 
-    const isPostOpAction = id === 'menu_ticket_commande' || id === 'menu_ticket_recrutement' || id.startsWith('mod_ticket_') || id.startsWith('btn_claim_') || id.startsWith('btn_close_');
-    if (!isPostOpAction) return;
+    const isAssocAction = id === 'menu_ticket_proposition' || id === 'menu_ticket_benevolat' || id.startsWith('mod_assoc_') || id.startsWith('menu_staff_action_') || id.startsWith('mod_prop_edit_');
+    if (!isAssocAction) return;
 
-    if (interaction.handledByPostOp) return;
-    interaction.handledByPostOp = true;
+    if (interaction.handledByAssociation) return;
+    interaction.handledByAssociation = true;
 
     if (interaction.isStringSelectMenu()) {
         const val = interaction.values[0];
 
-        if (id === 'menu_ticket_commande') {
+        if (id === 'menu_ticket_proposition') {
             const modal = new ModalBuilder()
-                .setCustomId('mod_ticket_commande')
-                .setTitle('Dossier de Commande')
+                .setCustomId('mod_assoc_proposition')
+                .setTitle('Instruction — Proposition Citoyenne')
                 .addComponents(
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('telephone').setLabel('Téléphone').setStyle(TextInputStyle.Short).setRequired(true)),
-                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description de la demande').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('sujet').setLabel('Sujet de la proposition').setStyle(TextInputStyle.Paragraph).setRequired(true))
                 );
             return await interaction.showModal(modal);
         }
 
-        if (id === 'menu_ticket_recrutement') {
-            const posteNames = { 'rec_chauffeur': 'Chauffeur / Livreur', 'rec_logisticien': 'Logisticien', 'rec_securite': 'Sécurité / Escorte' };
+        if (id === 'menu_ticket_benevolat') {
+            const poleNames = { 'ben_social': 'Action Sociale & Solidarité', 'ben_animation': 'Animation & Événementiel', 'ben_logistique': 'Logistique & Technique' };
             const modal = new ModalBuilder()
-                .setCustomId(`mod_ticket_rec_${val}`)
-                .setTitle(`Candidature — ${posteNames[val] || 'Poste'}`)
+                .setCustomId(`mod_assoc_benevolat_${val}`)
+                .setTitle(`Candidature — ${poleNames[val] || 'Bénévole'}`)
                 .addComponents(
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('telephone').setLabel('Téléphone').setStyle(TextInputStyle.Short).setRequired(true)),
-                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('experience').setLabel('Expérience').setStyle(TextInputStyle.Paragraph).setRequired(true)),
-                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('motivations').setLabel('Motivations').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('motivations').setLabel('Pourquoi souhaitez-vous vous engager ?').setStyle(TextInputStyle.Paragraph).setRequired(true))
                 );
             return await interaction.showModal(modal);
+        }
+
+        if (id.startsWith('menu_staff_action_')) {
+            const member = interaction.member;
+            const hasStaffRole = member.roles.cache.some(role => CONFIG_ASSOCIATION.staffRoles.includes(role.id));
+
+            if (!hasStaffRole) {
+                return await interaction.reply({ content: 'Accès restreint aux membres habilités de l\'association.', flags: [MessageFlags.Ephemeral] });
+            }
+
+            const ticketId = id.replace('menu_staff_action_', '');
+            const actionVal = interaction.values[0];
+            const message = interaction.message;
+            const oldEmbed = message.embeds[0];
+
+            if (actionVal === 'claim') {
+                if (oldEmbed.description.includes('Pris en charge par')) {
+                    return await interaction.reply({ content: 'Ce dossier a déjà été pris en charge par un autre membre. Impossible de le reprendre.', flags: [MessageFlags.Ephemeral] });
+                }
+
+                const embed = EmbedBuilder.from(oldEmbed);
+                embed.setDescription(oldEmbed.description.replace('*Statut : En attente de prise en charge.*', `*Statut : Dossier pris en charge par **${member.user.tag}***`));
+
+                await message.edit({ embeds: [embed], components: message.components });
+                return await interaction.reply({ content: 'Vous avez pris en charge ce dossier avec succès.', flags: [MessageFlags.Ephemeral] });
+            }
+
+            if (actionVal === 'validate') {
+                const embedDesc = oldEmbed.description;
+                const matchNom = embedDesc.match(/• Nom : (.*?) (.*?)\n/);
+                const prenom = matchNom ? matchNom[1] : 'A.';
+                const nom = matchNom ? matchNom[2] : 'C.';
+                const initiales = `${prenom.charAt(0).toUpperCase()}. ${nom.charAt(0).toUpperCase()}.`;
+
+                const matchSujet = embedDesc.match(/📄 \*\*CONTENU DE LA REQUÊTE\*\*([\s\S]*?)(?=\n\n────────────────────────────────────────|\n\n\*Statut|$)/);
+                const sujetTexte = matchSujet ? matchSujet[1].trim() : 'Proposition validée.';
+
+                const publicChannel = interaction.guild.channels.cache.get(CONFIG_ASSOCIATION.channels.propositions);
+                if (publicChannel) {
+                    const publicEmbed = new EmbedBuilder()
+                        .setTitle('PROPOSITION CITOYENNE VALIDÉE')
+                        .setDescription(`> "${sujetTexte}"\n\n— *${initiales}*`)
+                        .setColor(0x2B2D31)
+                        .setTimestamp();
+                    await publicChannel.send({ embeds: [publicEmbed] });
+                }
+
+                await interaction.reply({ content: 'La proposition a été officiellement validée et publiée.', flags: [MessageFlags.Ephemeral] });
+
+                setTimeout(async () => {
+                    try {
+                        const channel = interaction.channel;
+                        const closedCategory = channel.guild.channels.cache.find(c => c.name.toLowerCase().includes('dossier traité') || c.name.toLowerCase().includes('archives'));
+                        if (closedCategory) {
+                            await channel.setParent(closedCategory.id);
+                            await channel.permissionOverwrites.set([
+                                { id: channel.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+                                ...CONFIG_ASSOCIATION.staffRoles.map(rId => ({ id: rId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory] }))
+                            ]);
+                            await channel.setName(`archive-${channel.name}`.substring(0, 100));
+                        } else {
+                            await channel.delete('Proposition validée et archivée.');
+                        }
+                    } catch (err) {
+                        console.error("Erreur archivage :", err);
+                    }
+                }, 5000);
+                return;
+            }
+
+            if (actionVal === 'modify') {
+                const modal = new ModalBuilder()
+                    .setCustomId(`mod_prop_edit_${ticketId}`)
+                    .setTitle('Demande de modification')
+                    .addComponents(
+                        new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nouveau_sujet').setLabel('Nouveau contenu actualisé').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                    );
+                return await interaction.showModal(modal);
+            }
+
+            if (actionVal === 'close') {
+                await interaction.reply({ content: 'Clôture administrative du dossier en cours...', flags: [MessageFlags.Ephemeral] });
+                setTimeout(async () => {
+                    try {
+                        const channel = interaction.channel;
+                        const closedCategory = channel.guild.channels.cache.find(c => c.name.toLowerCase().includes('dossier traité') || c.name.toLowerCase().includes('archives'));
+                        if (closedCategory) {
+                            await channel.setParent(closedCategory.id);
+                            await channel.permissionOverwrites.set([
+                                { id: channel.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+                                ...CONFIG_ASSOCIATION.staffRoles.map(rId => ({ id: rId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory] }))
+                            ]);
+                            await channel.setName(`archive-${channel.name}`.substring(0, 100));
+                        } else {
+                            await channel.delete('Dossier clôturé.');
+                        }
+                    } catch (err) {
+                        console.error("Erreur clôture :", err);
+                    }
+                }, 5000);
+                return;
+            }
         }
     }
 
     if (interaction.isModalSubmit()) {
         const modId = interaction.customId;
 
-        if (modId === 'mod_ticket_commande' || modId.startsWith('mod_ticket_rec_')) {
+        if (modId === 'mod_assoc_proposition' || modId.startsWith('mod_assoc_benevolat_') || modId.startsWith('mod_prop_edit_')) {
             const guild = interaction.guild;
             const user = interaction.user;
-            const isRecrutement = modId.startsWith('mod_ticket_rec_');
-            const ticketType = isRecrutement ? 'recrutement' : 'commande';
+
+            if (modId.startsWith('mod_prop_edit_')) {
+                const ticketId = modId.replace('mod_prop_edit_', '');
+                const nouveauSujet = interaction.fields.getTextInputValue('nouveau_sujet');
+                const channel = guild.channels.cache.get(ticketId);
+
+                if (channel) {
+                    try {
+                        const fetchedMsg = await channel.messages.fetch({ limit: 10 });
+                        const targetMsg = fetchedMsg.find(m => m.embeds.length > 0 && m.embeds[0].title?.includes('DOSSIER ADMINISTRATIF'));
+                        if (targetMsg) {
+                            const oldEmbed = targetMsg.embeds[0];
+                            const embed = EmbedBuilder.from(oldEmbed);
+                            let desc = oldEmbed.description;
+                            
+                            // Remplacement du contenu de la requête dans l'embed corporate
+                            desc = desc.replace(/(📄 \*\*CONTENU DE LA REQUÊTE\*\*)\n[\s\S]*?(?=\n\n────────────────────────────────────────)/, `$1\n${nouveauSujet}`);
+                            
+                            embed.setDescription(desc);
+                            await targetMsg.edit({ embeds: [embed] });
+                        }
+                    } catch (err) {
+                        console.error("Erreur MAJ message :", err);
+                    }
+                }
+                return await interaction.reply({ content: 'Le contenu du dossier a été mis à jour avec succès.', flags: [MessageFlags.Ephemeral] });
+            }
+
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
+            const isBenevolat = modId.startsWith('mod_assoc_benevolat_');
+            const ticketType = isBenevolat ? 'candidature bénévole' : 'proposition citoyenne';
+            const poleType = isBenevolat ? modId.replace('mod_assoc_benevolat_', '') : null;
 
             const prenom = interaction.fields.getTextInputValue('prenom');
             const nom = interaction.fields.getTextInputValue('nom');
             const telephone = interaction.fields.getTextInputValue('telephone');
-
-            let descriptionField = '';
-            if (isRecrutement) {
-                const experience = interaction.fields.getTextInputValue('experience');
-                const motivations = interaction.fields.getTextInputValue('motivations');
-                descriptionField = `**Expérience :**\n${experience}\n\n**Motivations :**\n${motivations}`;
-            } else {
-                descriptionField = `**Description de la demande :**\n${interaction.fields.getTextInputValue('description')}`;
-            }
+            const champPrincipal = isBenevolat ? interaction.fields.getTextInputValue('motivations') : interaction.fields.getTextInputValue('sujet');
 
             let dossierCategory = guild.channels.cache.find(
-                c => c.type === ChannelType.GuildCategory && (c.name.toLowerCase().includes('dossier') || c.name.toLowerCase().includes('en cours'))
+                c => c.type === ChannelType.GuildCategory && c.name.toLowerCase().includes('dossier en cours')
             );
 
             if (!dossierCategory) {
@@ -231,83 +302,67 @@ async function handlePostOpInteraction(interaction) {
                 { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] }
             ];
 
-            for (const roleId of CONFIG_POSTOP.staffRoles) {
+            for (const roleId of CONFIG_ASSOCIATION.staffRoles) {
                 permissionOverwrites.push({ id: roleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] });
             }
 
+            const cleanChannelName = `${isBenevolat ? ' benevole' : ' prop'}-${user.username}`.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 90);
             const ticketChannel = await guild.channels.create({
-                name: `${ticketType}-${user.username}`,
+                name: cleanChannelName,
                 type: ChannelType.GuildText,
                 parent: dossierCategory.id,
                 permissionOverwrites: permissionOverwrites
             });
 
             const embedTicket = new EmbedBuilder()
-                .setTitle(`DOSSIER ADMINISTRATIF — ${ticketType.toUpperCase()}`)
-                .setDescription(`Demandeur : <@${user.id}>\n\n**État civil & Contact :**\n• Identité : ${prenom} ${nom}\n• Téléphone : ${telephone}\n\n${descriptionField}\n\n*Statut : En attente de prise en charge.*`)
+                .setTitle(`📋 DOSSIER ADMINISTRATIF — ${ticketType.toUpperCase()}`)
+                .setDescription(
+                    `L'ouverture de ce dossier fait suite à une démarche officielle enregistrée auprès de l'administration.\n\n` +
+                    `────────────────────────────────────────\n` +
+                    `👤 **INFORMATIONS DU DEMANDEUR**\n` +
+                    `• **Identité :** ${prenom} ${nom}\n` +
+                    `• **Contact Téléphonique :** ${telephone}\n` +
+                    `• **Compte Discord :** <@${user.id}>\n` +
+                    (isBenevolat ? `• **Pôle sollicité :** ${poleType === 'ben_social' ? 'Action Sociale & Solidarité' : poleType === 'ben_animation' ? 'Animation & Événementiel' : 'Logistique & Technique'}\n` : ``) +
+                    `────────────────────────────────────────\n` +
+                    `📄 **CONTENU DE LA REQUÊTE**\n` +
+                    `${champPrincipal}\n\n` +
+                    `────────────────────────────────────────\n` +
+                    `*Statut : En attente de prise en charge.*`
+                )
                 .setColor(0x2B2D31)
+                .setFooter({ text: 'Association • Service d\'Instruction' })
                 .setTimestamp();
 
-            const rowButtons = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId(`btn_claim_${ticketChannel.id}`).setLabel('Prendre en charge').setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId(`btn_close_${ticketChannel.id}`).setLabel('Clôturer le dossier').setStyle(ButtonStyle.Danger)
-            );
+            const selectOptions = [
+                { label: 'Prendre en charge le dossier', value: 'claim', description: 'Assigner la responsabilité de l\'instruction à votre profil' }
+            ];
+
+            if (!isBenevolat) {
+                selectOptions.push({ label: 'Valider et publier la proposition', value: 'validate', description: 'Diffuser la proposition dans le salon public' });
+                selectOptions.push({ label: 'Demander une modification', value: 'modify', description: 'Inviter le demandeur à réviser le contenu' });
+            }
+
+            selectOptions.push({ label: 'Clôturer le dossier', value: 'close', description: 'Archiver et fermer définitivement le dossier' });
+
+            const staffSelectMenu = new StringSelectMenuBuilder()
+                .setCustomId(`menu_staff_action_${ticketChannel.id}`)
+                .setPlaceholder('⚙️ Gestion administrative du dossier...')
+                .addOptions(selectOptions);
+
+            const componentsList = [
+                new ActionRowBuilder().addComponents(staffSelectMenu)
+            ];
 
             await ticketChannel.send({
-                content: `<@${user.id}> <@&${CONFIG_POSTOP.staffRoles.join('> <@&')}>`,
+                content: `<@${user.id}> ${CONFIG_ASSOCIATION.staffRoles.map(rId => `<@&${rId}>`).join(' ')}`,
                 embeds: [embedTicket],
-                components: [rowButtons]
+                components: componentsList
             });
 
-            return await interaction.reply({ content: `Votre dossier a été généré avec succès : <#${ticketChannel.id}>`, ephemeral: true });
-        }
-    }
-
-    if (interaction.isButton()) {
-        const member = interaction.member;
-        const hasStaffRole = member.roles.cache.some(role => CONFIG_POSTOP.staffRoles.includes(role.id));
-
-        if (id.startsWith('btn_claim_')) {
-            if (!hasStaffRole) {
-                return await interaction.reply({ content: 'Accès restreint aux agents habilités.', ephemeral: true });
-            }
-
-            const message = interaction.message;
-            const embed = EmbedBuilder.from(message.embeds[0]);
-            embed.setDescription(embed.data.description.replace('*Statut : En attente de prise en charge.*', `*Statut : Pris en charge par **${member.user.tag}***`));
-
-            await message.edit({ embeds: [embed], components: message.components });
-            return await interaction.reply({ content: 'Dossier pris en charge.', ephemeral: true });
-        }
-
-        if (id.startsWith('btn_close_')) {
-            if (!hasStaffRole) {
-                return await interaction.reply({ content: 'Accès restreint aux agents habilités.', ephemeral: true });
-            }
-
-            await interaction.reply({ content: 'Clôture du dossier en cours... Archivage imminent.', ephemeral: false });
-
-            setTimeout(async () => {
-                try {
-                    const channel = interaction.channel;
-                    const closedCategory = channel.guild.channels.cache.find(c => c.name.toLowerCase().includes('dossier traité') || c.name.toLowerCase().includes('archives'));
-                    
-                    if (closedCategory) {
-                        await channel.setParent(closedCategory.id);
-                        await channel.permissionOverwrites.set([
-                            { id: channel.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-                            ...CONFIG_POSTOP.staffRoles.map(rId => ({ id: rId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory] }))
-                        ]);
-                        await channel.setName(`archive-${channel.name}`);
-                    } else {
-                        await channel.delete('Dossier clôturé et purgé.');
-                    }
-                } catch (err) {
-                    console.error("Erreur lors de l'archivage du dossier :", err);
-                }
-            }, 60000);
+            return await interaction.editReply({ content: `Votre dossier officiel a été ouvert avec succès : <#${ticketChannel.id}>` });
         }
     }
 }
 
-module.exports = { initPostOpPanels, handlePostOpInteraction };
+module.exports = { initAssociationPanels, handleAssociationInteraction };
