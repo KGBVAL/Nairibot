@@ -3,28 +3,29 @@ const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, T
 const CONFIG_POSTOP = {
     staffRoles: ['1539267928762097770', '1539400476536217690'],
     channels: {
-        services: '1547194699125760020', // Salon pour les services / prestations Post Op
-        recrutement: '1547194702674001942'  // Salon pour le recrutement Post Op
+        commandes: '1547194706671308860',
+        recrutement: '1547194709049479178',
+        service: '1547194707799703563'
     }
 };
 
-function getServicesEmbed() {
+function getCommandesEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST-OP LOGISTICS — DEMANDE DE PRESTATION')
-        .setDescription('Bienvenue sur le portail officiel de Post-Op Logistics. Cet espace sécurisé vous permet de soumettre une demande de service, de logistique ou de transport.\n\nChaque dossier fait l\'objet d\'une instruction confidentielle par notre équipe opérationnelle avant prise en charge.')
+        .setTitle('POST-OP LOGISTICS — COMMANDES & LIVRAISONS')
+        .setDescription('Bienvenue sur le portail de commande de Post-Op Logistics. Utilisez le sélecteur ci-dessous pour initier une demande de livraison, de fret ou de ravitaillement sécurisé.\n\nChaque dossier est traité par notre équipe commerciale et logistique.')
         .setColor(0x2B2D31)
-        .setFooter({ text: 'Post-Op Logistics • Département Commercial & Logistique' })
+        .setFooter({ text: 'Post-Op Logistics • Département Commandes' })
         .setTimestamp();
 }
 
-function getServicesComponents() {
+function getCommandesComponents() {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-            .setCustomId('menu_ticket_postop_service')
-            .setPlaceholder('Sélectionner une prestation...')
+            .setCustomId('menu_ticket_postop_commande')
+            .setPlaceholder('Sélectionner un type de commande...')
             .addOptions([
-                { label: 'Demande de Transport & Logistique', value: 'srv_transport', description: 'Planification d\'une course ou d\'un convoi sécurisé' },
-                { label: 'Prestation Spéciale & Sur-mesure', value: 'srv_custom', description: 'Étude d\'un contrat ou d\'une mission particulière' }
+                { label: 'Livraison / Fret Standard', value: 'cmd_standard', description: 'Commander une livraison de marchandises ou de matériel' },
+                { label: 'Ravitaillement en Gros', value: 'cmd_vrac', description: 'Demande de convoi ou de réapprovisionnement massif' }
             ])
     );
 }
@@ -51,6 +52,27 @@ function getRecrutementComponents() {
     );
 }
 
+function getServiceEmbed() {
+    return new EmbedBuilder()
+        .setTitle('POST-OP LOGISTICS — SUPPORT & SERVICES')
+        .setDescription('Besoin d\'assistance technique, de renseignements généraux ou d\'un service particulier ? Ouvrez un dossier auprès de notre permanence via le sélecteur ci-dessous.')
+        .setColor(0x2B2D31)
+        .setFooter({ text: 'Post-Op Logistics • Support & Services' })
+        .setTimestamp();
+}
+
+function getServiceComponents() {
+    return new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+            .setCustomId('menu_ticket_postop_service')
+            .setPlaceholder('Sélectionner un type de service...')
+            .addOptions([
+                { label: 'Assistance & Support Client', value: 'srv_support', description: 'Poser une question ou régler un litige' },
+                { label: 'Partenariat / Autre Demande', value: 'srv_autre', description: 'Proposer une collaboration ou un contrat spécifique' }
+            ])
+    );
+}
+
 async function initPostOpPanels(guild) {
     const client = guild.client;
 
@@ -67,20 +89,21 @@ async function initPostOpPanels(guild) {
 
     await guild.channels.fetch();
 
-    const srvChan = guild.channels.cache.get(CONFIG_POSTOP.channels.services);
+    const cmdChan = guild.channels.cache.get(CONFIG_POSTOP.channels.commandes);
     const recChan = guild.channels.cache.get(CONFIG_POSTOP.channels.recrutement);
+    const srvChan = guild.channels.cache.get(CONFIG_POSTOP.channels.service);
 
-    if (srvChan) {
+    if (cmdChan) {
         try {
-            const msgs = await srvChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('DEMANDE DE PRESTATION'));
+            const msgs = await cmdChan.messages.fetch({ limit: 10 });
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('COMMANDES & LIVRAISONS'));
             if (!botMsg) {
-                await srvChan.send({ embeds: [getServicesEmbed()], components: [getServicesComponents()] });
+                await cmdChan.send({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
             } else {
-                await botMsg.edit({ embeds: [getServicesEmbed()], components: [getServicesComponents()] });
+                await botMsg.edit({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
             }
         } catch (e) {
-            console.error("[POSTOP] Erreur salon Services :", e);
+            console.error("[POSTOP] Erreur salon Commandes :", e);
         }
     }
 
@@ -97,13 +120,27 @@ async function initPostOpPanels(guild) {
             console.error("[POSTOP] Erreur salon Recrutement :", e);
         }
     }
+
+    if (srvChan) {
+        try {
+            const msgs = await srvChan.messages.fetch({ limit: 10 });
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('SUPPORT & SERVICES'));
+            if (!botMsg) {
+                await srvChan.send({ embeds: [getServiceEmbed()], components: [getServiceComponents()] });
+            } else {
+                await botMsg.edit({ embeds: [getServiceEmbed()], components: [getServiceComponents()] });
+            }
+        } catch (e) {
+            console.error("[POSTOP] Erreur salon Service :", e);
+        }
+    }
 }
 
 async function handlePostOpInteraction(interaction) {
     const id = interaction.customId;
     if (!id) return;
 
-    const isPostOpAction = id === 'menu_ticket_postop_service' || id === 'menu_ticket_postop_recrutement' || id.startsWith('mod_postop_') || id.startsWith('menu_staff_postop_') || id.startsWith('mod_postop_edit_');
+    const isPostOpAction = id === 'menu_ticket_postop_commande' || id === 'menu_ticket_postop_recrutement' || id === 'menu_ticket_postop_service' || id.startsWith('mod_postop_') || id.startsWith('menu_staff_postop_') || id.startsWith('mod_postop_edit_');
     if (!isPostOpAction) return;
 
     if (interaction.handledByPostOp) return;
@@ -112,16 +149,16 @@ async function handlePostOpInteraction(interaction) {
     if (interaction.isStringSelectMenu()) {
         const val = interaction.values[0];
 
-        if (id === 'menu_ticket_postop_service') {
-            const serviceNames = { 'srv_transport': 'Transport & Logistique', 'srv_custom': 'Prestation Sur-mesure' };
+        if (id === 'menu_ticket_postop_commande') {
+            const cmdNames = { 'cmd_standard': 'Livraison / Fret Standard', 'cmd_vrac': 'Ravitaillement en Gros' };
             const modal = new ModalBuilder()
-                .setCustomId(`mod_postop_service_${val}`)
-                .setTitle(`Demande — ${serviceNames[val] || 'Prestation'}`)
+                .setCustomId(`mod_postop_commande_${val}`)
+                .setTitle(`Commande — ${cmdNames[val] || 'Prestation'}`)
                 .addComponents(
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('telephone').setLabel('Téléphone').setStyle(TextInputStyle.Short).setRequired(true)),
-                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cahier_charges').setLabel('Détails / Cahier des charges').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('details').setLabel('Détails de la commande / articles').setStyle(TextInputStyle.Paragraph).setRequired(true))
                 );
             return await interaction.showModal(modal);
         }
@@ -136,6 +173,20 @@ async function handlePostOpInteraction(interaction) {
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('telephone').setLabel('Téléphone').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('motivations').setLabel('Expériences & Motivations').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                );
+            return await interaction.showModal(modal);
+        }
+
+        if (id === 'menu_ticket_postop_service') {
+            const srvNames = { 'srv_support': 'Assistance & Support Client', 'srv_autre': 'Partenariat / Autre Demande' };
+            const modal = new ModalBuilder()
+                .setCustomId(`mod_postop_service_${val}`)
+                .setTitle(`Service — ${srvNames[val] || 'Support'}`)
+                .addComponents(
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('telephone').setLabel('Téléphone').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('requete').setLabel('Objet de votre demande').setStyle(TextInputStyle.Paragraph).setRequired(true))
                 );
             return await interaction.showModal(modal);
         }
@@ -203,7 +254,7 @@ async function handlePostOpInteraction(interaction) {
     if (interaction.isModalSubmit()) {
         const modId = interaction.customId;
 
-        if (modId.startsWith('mod_postop_service_') || modId.startsWith('mod_postop_recrutement_') || modId.startsWith('mod_postop_edit_')) {
+        if (modId.startsWith('mod_postop_commande_') || modId.startsWith('mod_postop_recrutement_') || modId.startsWith('mod_postop_service_') || modId.startsWith('mod_postop_edit_')) {
             const guild = interaction.guild;
             const user = interaction.user;
 
@@ -235,15 +286,27 @@ async function handlePostOpInteraction(interaction) {
 
             await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
-            const isRecrutement = modId.startsWith('mod_postop_recrutement_');
-            const subType = isRecrutement ? modId.replace('mod_postop_recrutement_', '') : modId.replace('mod_postop_service_', '');
-            
-            const typeLabel = isRecrutement ? 'recrutement' : 'prestation';
+            let typeLabel = 'commande';
+            let subType = '';
+            let champPrincipal = '';
+
+            if (modId.startsWith('mod_postop_commande_')) {
+                typeLabel = 'commande & livraison';
+                subType = modId.replace('mod_postop_commande_', '');
+                champPrincipal = interaction.fields.getTextInputValue('details');
+            } else if (modId.startsWith('mod_postop_recrutement_')) {
+                typeLabel = 'recrutement';
+                subType = modId.replace('mod_postop_recrutement_', '');
+                champPrincipal = interaction.fields.getTextInputValue('motivations');
+            } else if (modId.startsWith('mod_postop_service_')) {
+                typeLabel = 'support & service';
+                subType = modId.replace('mod_postop_service_', '');
+                champPrincipal = interaction.fields.getTextInputValue('requete');
+            }
 
             const prenom = interaction.fields.getTextInputValue('prenom');
             const nom = interaction.fields.getTextInputValue('nom');
             const telephone = interaction.fields.getTextInputValue('telephone');
-            const champPrincipal = isRecrutement ? interaction.fields.getTextInputValue('motivations') : interaction.fields.getTextInputValue('cahier_charges');
 
             let dossierCategory = guild.channels.cache.find(
                 c => c.type === ChannelType.GuildCategory && c.name.toLowerCase().includes('dossier en cours')
@@ -265,7 +328,9 @@ async function handlePostOpInteraction(interaction) {
                 permissionOverwrites.push({ id: roleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] });
             }
 
-            const cleanChannelName = `${isRecrutement ? ' rec' : ' srv'}-${user.username}`.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 90);
+            const prefixMap = { 'commande': 'cmd', 'recrutement': 'rec', 'support & service': 'srv' };
+            const cleanChannelName = `${prefixMap[typeLabel] || 'ticket'}-${user.username}`.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 90);
+            
             const ticketChannel = await guild.channels.create({
                 name: cleanChannelName,
                 type: ChannelType.GuildText,
