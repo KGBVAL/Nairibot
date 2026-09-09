@@ -3,8 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-// Importation du gestionnaire unifié (vérifie bien le nom du fichier dans utils, ici Manager.js)
+// Importation des gestionnaires
 const { initAllPanels, handleManagersInteraction } = require('./utils/Manager');
+const { initPostOpPanels, handlePostOpInteraction } = require('./postop');
 
 // Serveur Web pour Render
 const server = http.createServer((req, res) => {
@@ -113,10 +114,11 @@ async function setupCommunityStructure(guild) {
             }
         }
 
-        // Lancement de l'initialisation des panneaux (Bureau + Salons cibles) après un court délai pour laisser le cache se synchroniser
+        // Lancement de l'initialisation des panneaux après un court délai pour laisser le cache se synchroniser
         setTimeout(async () => {
             await initAllPanels(guild);
-            console.log(`[LITTLE ARMENIA] Panneaux initialisés avec succès pour ${guild.name}`);
+            await initPostOpPanels(guild);
+            console.log(`[LITTLE ARMENIA & POST OP] Panneaux initialisés avec succès pour ${guild.name}`);
         }, 4000);
 
     } catch (error) {
@@ -146,9 +148,10 @@ client.once(Events.ClientReady, async () => {
     }
 });
 
-// Routeur central des interactions (boutons du bureau et formulaires)
+// Routeur central des interactions (gestionnaires unifiés + postop + commandes slash)
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
+        // Routeur Manager existant
         if (
             interaction.customId && 
             (
@@ -161,6 +164,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
             return;
         }
 
+        // Routeur Post Op Logistics (`postop.js`)
+        if (
+            interaction.customId &&
+            (
+                interaction.customId === 'menu_ticket_commande' ||
+                interaction.customId === 'menu_ticket_recrutement' ||
+                interaction.customId.startsWith('mod_ticket_') ||
+                interaction.customId.startsWith('btn_claim_') ||
+                interaction.customId.startsWith('btn_close_')
+            )
+        ) {
+            await handlePostOpInteraction(interaction);
+            return;
+        }
+
+        // Commandes Slash
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
             if (command) await command.execute(interaction);
