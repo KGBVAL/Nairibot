@@ -1,14 +1,20 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits } = require('discord.js');
 
 const CONFIG_POSTOP = {
-    staffRoles: ['1539267928762097770', '1539400476536217690']
+    staffRoles: ['1539267928762097770', '1539400476536217690'],
+    channels: {
+        commandes: '1547194706671308860', // ID par défaut ou recherché par nom
+        services: '1547194707799703563',
+        recrutement: '1547194709049479178'
+    }
 };
 
 function getCommandesEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS — CENTRALISTE & COMMANDES')
-        .setDescription('Besoin d\'une livraison ou d\'une commande de marchandises ? Ouvrez un dossier de commande via le menu ci-dessous.')
-        .setColor(0x202225)
+        .setTitle('POST OP LOGISTICS — DIVISION COMMANDE & FRET')
+        .setDescription('Bienvenue au département centralisé de Post Op Logistics. \n\nNos équipes assurent l\'acheminement de vos marchandises et la gestion de vos flux logistiques avec rigueur et discrétion. Veuillez initier votre demande via le sélecteur ci-dessous.')
+        .setColor(0x2B2D31)
+        .setFooter({ text: 'Post Op Logistics • Division Commerciale' })
         .setTimestamp();
 }
 
@@ -16,26 +22,28 @@ function getCommandesComponents() {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
             .setCustomId('menu_ticket_commande')
-            .setPlaceholder('Effectuer une demande de commande...')
+            .setPlaceholder('Sélectionner une typologie de commande...')
             .addOptions([
-                { label: 'Passer une commande / Livraison', value: 'cmd_standard', description: 'Ouvrir un ticket de commande personnalisé' }
+                { label: 'Ouverture de dossier de commande', value: 'cmd_standard', description: 'Initier une demande de transport ou d\'approvisionnement' }
             ])
     );
 }
 
 function getServiceEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS — CATALOGUE DES SERVICES')
-        .setDescription('Retrouvez ci-dessous l\'ensemble des prestations assurées par Post Op Logistics :\n\n• **Transport & Fret Sécurisé** : Acheminement de marchandises en tout genre.\n• **Logistique d\'Entreprise** : Gestion de stocks et approvisionnement de commerces.\n• **Convoi Protégé** : Transport sous haute surveillance pour cargaisons sensibles.\n• **Affrètement Sur-Mesure** : Contrats de sous-traitance logistique longue durée.')
-        .setColor(0x202225)
+        .setTitle('POST OP LOGISTICS — PORTFOLIO DES PRESTATIONS')
+        .setDescription('Post Op Logistics met à disposition une infrastructure professionnelle dédiée aux acteurs économiques et institutionnels :\n\n• **Transport & Fret Sécurisé** : Acheminement terrestre de marchandises en volume.\n• **Logistique d\'Entreprise** : Gestion de stocks, inventaires et réapprovisionnement de structures commerciales.\n• **Convoi Protégé** : Transfert sécurisé sous escorte pour actifs à haute valeur.\n• **Affrètement Contractuel** : Partenariats logistiques long terme et contrats sur-mesure.')
+        .setColor(0x2B2D31)
+        .setFooter({ text: 'Post Op Logistics • Solutions Professionnelles' })
         .setTimestamp();
 }
 
 function getRecrutementEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS — RECRUTEMENT')
-        .setDescription('Vous souhaitez rejoindre nos équipes et intégrer la logistique ? Sélectionnez votre poste de prédilection dans le menu ci-dessous pour ouvrir votre dossier de recrutement.')
-        .setColor(0x202225)
+        .setTitle('POST OP LOGISTICS — RECRUTEMENT INSTITUTIONNEL')
+        .setDescription('L\'expansion constante de nos activités logistiques requiert l\'intégration de profils qualifiés, disciplinés et investis.\n\nConsultez les postes vacants et soumettez votre dossier de candidature par l\'intermédiaire du module ci-dessous.')
+        .setColor(0x2B2D31)
+        .setFooter({ text: 'Post Op Logistics • Ressources Humaines' })
         .setTimestamp();
 }
 
@@ -43,11 +51,11 @@ function getRecrutementComponents() {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
             .setCustomId('menu_ticket_recrutement')
-            .setPlaceholder('Choisir un poste à postuler...')
+            .setPlaceholder('Sélectionner un poste à pourvoir...')
             .addOptions([
-                { label: 'Chauffeur / Livreur', value: 'rec_chauffeur', description: 'Rejoindre l\'équipe de terrain' },
-                { label: 'Logisticien / Gestionnaire', value: 'rec_logisticien', description: 'Gérer la centralisation et les stocks' },
-                { label: 'Sécurité / Escorte', value: 'rec_securite', description: 'Protéger les convois sensibles' }
+                { label: 'Chauffeur / Livreur', value: 'rec_chauffeur', description: 'Affectation aux lignes de transport et tournées' },
+                { label: 'Logisticien / Gestionnaire', value: 'rec_logisticien', description: 'Supervision des stocks et centralisation' },
+                { label: 'Sécurité / Escorte', value: 'rec_securite', description: 'Protection des convois et sécurisation des actifs' }
             ])
     );
 }
@@ -68,15 +76,16 @@ async function initPostOpPanels(guild) {
 
     await guild.channels.fetch();
 
-    const cmdChan = guild.channels.cache.find(c => c.name === 'commandes' && c.type === ChannelType.GuildText);
-    const srvChan = guild.channels.cache.find(c => (c.name === 'services' || c.name === 'commerces-et-partenariats') && c.type === ChannelType.GuildText);
-    const recChan = guild.channels.cache.find(c => (c.name === 'recrutement-interne' || c.name === 'recrutement') && c.type === ChannelType.GuildText);
+    // Récupération ciblée par ID exact fourni ou fallback par nom
+    const cmdChan = guild.channels.cache.get(CONFIG_POSTOP.channels.commandes) || guild.channels.cache.find(c => c.name === 'commandes' && c.type === ChannelType.GuildText);
+    const srvChan = guild.channels.cache.get(CONFIG_POSTOP.channels.services) || guild.channels.cache.find(c => c.name === 'services' && c.type === ChannelType.GuildText);
+    const recChan = guild.channels.cache.get(CONFIG_POSTOP.channels.recrutement) || guild.channels.cache.find(c => (c.name === 'recrutement-interne' || c.name === 'recrutement') && c.type === ChannelType.GuildText);
 
-    // Salon Commandes
+    // Panel Commandes
     if (cmdChan) {
         try {
             const msgs = await cmdChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CENTRALISTE'));
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('DIVISION COMMANDE'));
             if (!botMsg) {
                 await cmdChan.send({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
                 console.log(`[POSTOP] Panel Commandes envoyé dans #${cmdChan.name}`);
@@ -89,28 +98,28 @@ async function initPostOpPanels(guild) {
         }
     }
 
-    // Salon Service
+    // Panel Services
     if (srvChan) {
         try {
             const msgs = await srvChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CATALOGUE'));
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('PORTFOLIO'));
             if (!botMsg) {
                 await srvChan.send({ embeds: [getServiceEmbed()] });
-                console.log(`[POSTOP] Panel Service envoyé dans #${srvChan.name}`);
+                console.log(`[POSTOP] Panel Services envoyé dans #${srvChan.name}`);
             } else {
                 await botMsg.edit({ embeds: [getServiceEmbed()] });
-                console.log(`[POSTOP] Panel Service mis à jour dans #${srvChan.name}`);
+                console.log(`[POSTOP] Panel Services mis à jour dans #${srvChan.name}`);
             }
         } catch (e) {
-            console.error("[POSTOP] Erreur salon Service :", e);
+            console.error("[POSTOP] Erreur salon Services :", e);
         }
     }
 
-    // Salon Recrutement
+    // Panel Recrutement
     if (recChan) {
         try {
             const msgs = await recChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('RECRUTEMENT'));
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('RECRUTEMENT INSTITUTIONNEL'));
             if (!botMsg) {
                 await recChan.send({ embeds: [getRecrutementEmbed()], components: [getRecrutementComponents()] });
                 console.log(`[POSTOP] Panel Recrutement envoyé dans #${recChan.name}`);
@@ -140,7 +149,7 @@ async function handlePostOpInteraction(interaction) {
         if (id === 'menu_ticket_commande') {
             const modal = new ModalBuilder()
                 .setCustomId('mod_ticket_commande')
-                .setTitle('Formulaire de Commande')
+                .setTitle('Dossier de Commande')
                 .addComponents(
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
@@ -154,7 +163,7 @@ async function handlePostOpInteraction(interaction) {
             const posteNames = { 'rec_chauffeur': 'Chauffeur / Livreur', 'rec_logisticien': 'Logisticien', 'rec_securite': 'Sécurité / Escorte' };
             const modal = new ModalBuilder()
                 .setCustomId(`mod_ticket_rec_${val}`)
-                .setTitle(`Recrutement — ${posteNames[val] || 'Poste'}`)
+                .setTitle(`Candidature — ${posteNames[val] || 'Poste'}`)
                 .addComponents(
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
                     new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
@@ -175,7 +184,6 @@ async function handlePostOpInteraction(interaction) {
             const isRecrutement = modId.startsWith('mod_ticket_rec_');
             const ticketType = isRecrutement ? 'recrutement' : 'commande';
 
-            // Récupération des champs des modals
             const prenom = interaction.fields.getTextInputValue('prenom');
             const nom = interaction.fields.getTextInputValue('nom');
             const telephone = interaction.fields.getTextInputValue('telephone');
@@ -189,14 +197,13 @@ async function handlePostOpInteraction(interaction) {
                 descriptionField = `**Description de la demande :**\n${interaction.fields.getTextInputValue('description')}`;
             }
 
-            // Recherche ou création de la catégorie "DOSSIER EN COURS"
             let dossierCategory = guild.channels.cache.find(
                 c => c.type === ChannelType.GuildCategory && (c.name.toLowerCase().includes('dossier') || c.name.toLowerCase().includes('en cours'))
             );
 
             if (!dossierCategory) {
                 dossierCategory = await guild.channels.create({
-                    name: '📁 ┆ DOSSIERS EN COURS',
+                    name: 'DOSSIER EN COURS',
                     type: ChannelType.GuildCategory
                 });
             }
@@ -218,14 +225,14 @@ async function handlePostOpInteraction(interaction) {
             });
 
             const embedTicket = new EmbedBuilder()
-                .setTitle(`DOSSIER — ${ticketType.toUpperCase()}`)
-                .setDescription(`Demandeur : <@${user.id}>\n\n**Informations personnelles :**\n• Prénom / Nom : ${prenom} ${nom}\n• Téléphone : ${telephone}\n\n${descriptionField}\n\n*Statut : En attente de prise en charge.*`)
-                .setColor(0x202225)
+                .setTitle(`DOSSIER ADMINISTRATIF — ${ticketType.toUpperCase()}`)
+                .setDescription(`Demandeur : <@${user.id}>\n\n**État civil & Contact :**\n• Identité : ${prenom} ${nom}\n• Téléphone : ${telephone}\n\n${descriptionField}\n\n*Statut : En attente de prise en charge.*`)
+                .setColor(0x2B2D31)
                 .setTimestamp();
 
             const rowButtons = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId(`btn_claim_${ticketChannel.id}`).setLabel('Prendre en charge').setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId(`btn_close_${ticketChannel.id}`).setLabel('Clôturer le ticket').setStyle(ButtonStyle.Danger)
+                new ButtonBuilder().setCustomId(`btn_close_${ticketChannel.id}`).setLabel('Clôturer le dossier').setStyle(ButtonStyle.Danger)
             );
 
             await ticketChannel.send({
@@ -234,7 +241,7 @@ async function handlePostOpInteraction(interaction) {
                 components: [rowButtons]
             });
 
-            return await interaction.reply({ content: `Votre ticket a été ouvert avec succès : <#${ticketChannel.id}>`, ephemeral: true });
+            return await interaction.reply({ content: `Votre dossier a été généré avec succès : <#${ticketChannel.id}>`, ephemeral: true });
         }
     }
 
@@ -244,7 +251,7 @@ async function handlePostOpInteraction(interaction) {
 
         if (id.startsWith('btn_claim_')) {
             if (!hasStaffRole) {
-                return await interaction.reply({ content: 'Seuls les membres habilités peuvent prendre en charge ce ticket.', ephemeral: true });
+                return await interaction.reply({ content: 'Accès restreint aux agents habilités.', ephemeral: true });
             }
 
             const message = interaction.message;
@@ -252,15 +259,15 @@ async function handlePostOpInteraction(interaction) {
             embed.setDescription(embed.data.description.replace('*Statut : En attente de prise en charge.*', `*Statut : Pris en charge par **${member.user.tag}***`));
 
             await message.edit({ embeds: [embed], components: message.components });
-            return await interaction.reply({ content: `Vous avez pris en charge ce ticket.`, ephemeral: true });
+            return await interaction.reply({ content: 'Dossier pris en charge.', ephemeral: true });
         }
 
         if (id.startsWith('btn_close_')) {
             if (!hasStaffRole) {
-                return await interaction.reply({ content: 'Seuls les rôles autorisés peuvent clôturer ce dossier.', ephemeral: true });
+                return await interaction.reply({ content: 'Accès restreint aux agents habilités.', ephemeral: true });
             }
 
-            await interaction.reply({ content: 'Fermeture du dossier en cours... Transfert dans les archives dans 1 minute.', ephemeral: false });
+            await interaction.reply({ content: 'Clôture du dossier en cours... Archivage imminent.', ephemeral: false });
 
             setTimeout(async () => {
                 try {
@@ -273,12 +280,12 @@ async function handlePostOpInteraction(interaction) {
                             { id: channel.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
                             ...CONFIG_POSTOP.staffRoles.map(rId => ({ id: rId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory] }))
                         ]);
-                        await channel.setName(`ferme-${channel.name}`);
+                        await channel.setName(`archive-${channel.name}`);
                     } else {
-                        await channel.delete('Ticket archivé et fermé.');
+                        await channel.delete('Dossier clôturé et purgé.');
                     }
                 } catch (err) {
-                    console.error("Erreur lors du déplacement ou de la suppression du ticket :", err);
+                    console.error("Erreur lors de l'archivage du dossier :", err);
                 }
             }, 60000);
         }
