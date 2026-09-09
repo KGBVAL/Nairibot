@@ -89,21 +89,47 @@ async function initAllPanels(guild) {
         });
     }
 
+    // Gestion propre du salon #bureau (1 message pour l'asso, 1 pour postop max)
     const bureauChan = guild.channels.cache.find(c => c.name === 'bureau');
     if (bureauChan) {
-        const msgs = await bureauChan.messages.fetch({ limit: 10 });
-        if (!msgs.some(m => m.author.id === client.user.id)) {
+        const msgs = await bureauChan.messages.fetch({ limit: 20 });
+        const botMsgs = msgs.filter(m => m.author.id === client.user.id);
+
+        const assocMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('LITTLE ARMENIA ASSOCIATION'));
+        const postOpMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('POST OP LOGISTICS'));
+
+        if (!assocMsg) {
             await bureauChan.send({ embeds: [getBureauAssociationEmbed()], components: [getBureauAssociationComponents()] });
+        } else {
+            await assocMsg.edit({ embeds: [getBureauAssociationEmbed()], components: [getBureauAssociationComponents()] });
+        }
+
+        if (!postOpMsg) {
             await bureauChan.send({ embeds: [getBureauPostOpEmbed()], components: [getBureauPostOpComponents()] });
+        } else {
+            await postOpMsg.edit({ embeds: [getBureauPostOpEmbed()], components: [getBureauPostOpComponents()] });
         }
     }
 
+    // Gestion propre du salon #comptabilite (1 message par entité max)
     const comptaChan = guild.channels.cache.find(c => c.name === 'comptabilite');
     if (comptaChan) {
-        const msgs = await comptaChan.messages.fetch({ limit: 10 });
-        if (!msgs.some(m => m.author.id === client.user.id)) {
+        const msgs = await comptaChan.messages.fetch({ limit: 20 });
+        const botMsgs = msgs.filter(m => m.author.id === client.user.id);
+
+        const comptaAssocMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('LITTLE ARMENIA — RAPPORT'));
+        const comptaPostOpMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('POST OP LOGISTICS — RAPPORT'));
+
+        if (!comptaAssocMsg) {
             await comptaChan.send({ embeds: [getAccountingEmbed('association')], components: [getAccountingComponents('association')] });
+        } else {
+            await comptaAssocMsg.edit({ embeds: [getAccountingEmbed('association')], components: [getAccountingComponents('association')] });
+        }
+
+        if (!comptaPostOpMsg) {
             await comptaChan.send({ embeds: [getAccountingEmbed('postop')], components: [getAccountingComponents('postop')] });
+        } else {
+            await comptaPostOpMsg.edit({ embeds: [getAccountingEmbed('postop')], components: [getAccountingComponents('postop')] });
         }
     }
 }
@@ -260,8 +286,8 @@ async function handleManagersInteraction(interaction) {
             try {
                 const chan = interaction.guild.channels.cache.find(c => c.name === 'comptabilite');
                 if (chan) {
-                    const msgs = await chan.messages.fetch({ limit: 10 });
-                    const targetMsg = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes(entity === 'postop' ? 'POST OP' : 'LITTLE ARMENIA'));
+                    const msgs = await chan.messages.fetch({ limit: 20 });
+                    const targetMsg = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes(entity === 'postop' ? 'POST OP LOGISTICS — RAPPORT' : 'LITTLE ARMENIA — RAPPORT'));
                     if (targetMsg) {
                         await targetMsg.edit({ embeds: [getAccountingEmbed(entity)], components: [getAccountingComponents(entity)] });
                     }
