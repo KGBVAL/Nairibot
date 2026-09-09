@@ -1,233 +1,225 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
-// Stockage local centralisé pour les entités du projet
+// Stockage local centralisé
 const db = {
     association: { solde: 0, factures: [] },
     postop: { solde: 0, factures: [] },
-    annoncesAssoc: [],
-    annoncesPostOp: [],
     commerces: [],
     partenaires: [],
     calendrier: []
 };
 
 // ==========================================
-// 1. GESTION COMPTABILITÉ
+// PANNEAU DE CONTRÔLE CENTRALISÉ (POUR LE BUREAU)
 // ==========================================
-function getAccountingEmbed(entity) {
-    const data = db[entity];
-    const isPostOp = entity === 'postop';
-    const title = isPostOp ? 'POST OP LOGISTICS — COMPTABILITÉ' : 'ARMENIAN ASSOCIATION OF VINEWOOD — TRÉSORERIE';
-    const color = isPostOp ? 0x2b2d31 : 0xd4af37;
-
-    let facturesList = data.factures.length === 0 
-        ? 'Aucune facture enregistrée pour le moment.' 
-        : data.factures.slice(-5).map((f, index) => `\`#${index + 1}\` • **${f.client}** : $${f.montant.toLocaleString()} — *(${f.statut})*`).join('\n');
-
+function getBureauControlEmbed() {
     return new EmbedBuilder()
-        .setTitle(title)
-        .setDescription(`Registre financier officiel et gestion des flux.\n\n**Solde Actuel :** \`$${data.solde.toLocaleString()}\``)
-        .addFields({ name: '📋 Dernières Factures Émises', value: facturesList, inline: false })
-        .setColor(color)
-        .setTimestamp();
-}
-
-function getAccountingComponents(entity) {
-    return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`acc_add_${entity}`).setLabel('Ajouter Recette').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId(`acc_sub_${entity}`).setLabel('Retirer Fonds').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId(`acc_inv_${entity}`).setLabel('Créer Facture').setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId(`acc_del_${entity}`).setLabel('Supprimer Facture').setStyle(ButtonStyle.Secondary)
-    );
-}
-
-// ==========================================
-// 2. GESTION ANNONCES
-// ==========================================
-function getAnnoncesEmbed(type) {
-    const isPostOp = type === 'postop';
-    const title = isPostOp ? 'POST OP LOGISTICS — CANAL D\'ANNONCES' : 'LITTLE ARMENIA — ANNONCES OFFICIELLES';
-    const desc = isPostOp ? 'Communications opérationnelles et logistiques.' : 'Communiqués officiels de l\'Association de Vinewood.';
-    
-    return new EmbedBuilder()
-        .setTitle(title)
-        .setDescription(`${desc}\n\nUtilisez le bouton ci-dessous pour rédiger une nouvelle annonce officielle diffusée dans ce flux.`)
-        .setColor(isPostOp ? 0x2b2d31 : 0xd4af37)
-        .setTimestamp();
-}
-
-function getAnnoncesComponents(type) {
-    return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId(`ann_publish_${type}`).setLabel('Rédiger une annonce').setStyle(ButtonStyle.Primary)
-    );
-}
-
-// ==========================================
-// 3. GESTION COMMERCES & PARTENAIRES
-// ==========================================
-function getCommercesPanelEmbed() {
-    let commercesList = db.commerces.length === 0 ? 'Aucun commerce enregistré.' : db.commerces.map((c, i) => `**#${i+1} - ${c.nom}**\n${c.desc}`).join('\n\n');
-    let partenairesList = db.partenaires.length === 0 ? 'Aucun partenaire enregistré.' : db.partenaires.map((p, i) => `**#${i+1} - ${p.nom}**\n${p.desc}`).join('\n\n');
-
-    return new EmbedBuilder()
-        .setTitle('LITTLE ARMENIA — COMMERCES & PARTENAIRES')
-        .setDescription('Répertoire officiel des enseignes du quartier et des partenaires extérieurs.')
+        .setTitle('LITTLE ARMENIA & POST OP — BUREAU DE DIRECTION')
+        .setDescription('Panneau de commande unifié.\n\nUtilisez les boutons ci-dessous pour administrer les annonces, alimenter les registres de commerces/partenaires, planifier le calendrier 2026 ou gérer la comptabilité des deux entités de manière totalement étanche.')
         .addFields(
-            { name: '🏪 Commerces Locaux', value: commercesList, inline: false },
-            { name: '🤝 Partenaires', value: partenairesList, inline: false }
+            { name: '📢 Communication', value: 'Rédigez vos communiqués officiels (Association ou Post Op).', inline: false },
+            { name: '🏪 Répertoire & Agenda', value: 'Ajoutez ou supprimez des commerces, partenaires ou événements.', inline: false },
+            { name: '💼 Finances', value: 'Accédez aux flux de trésorerie et à la facturation.', inline: false }
         )
         .setColor(0xd4af37)
         .setTimestamp();
 }
 
-function getCommercesPanelComponents() {
-    return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('cp_add_commerce').setLabel('+ Ajouter Commerce').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId('cp_del_commerce').setLabel('- Supprimer Commerce').setStyle(ButtonStyle.Danger),
-        new ButtonBuilder().setCustomId('cp_add_partenaire').setLabel('+ Ajouter Partenaire').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId('cp_del_partenaire').setLabel('- Supprimer Partenaire').setStyle(ButtonStyle.Danger)
-    );
+function getBureauControlComponents() {
+    return [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('ctrl_ann_assoc').setLabel('📢 Annonce Association').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('ctrl_ann_postop').setLabel('📢 Annonce Post Op').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('ctrl_cal_add').setLabel('📅 Ajouter Événement').setStyle(ButtonStyle.Success)
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('ctrl_cp_add_commerce').setLabel('+ Commerce').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('ctrl_cp_del_commerce').setLabel('- Commerce').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId('ctrl_cp_add_partenaire').setLabel('+ Partenaire').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('ctrl_cp_del_partenaire').setLabel('- Partenaire').setStyle(ButtonStyle.Danger)
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('ctrl_acc_view_assoc').setLabel('💼 Trésorerie Association').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('ctrl_acc_view_postop').setLabel('💼 Trésorerie Post Op').setStyle(ButtonStyle.Secondary)
+        )
+    ];
 }
 
 // ==========================================
-// 4. GESTION CALENDRIER 2026
-// ==========================================
-function getCalendrierPanelEmbed() {
-    let eventsList = db.calendrier.length === 0 
-        ? 'Aucun événement planifié pour le moment.' 
-        : db.calendrier.map((e, i) => `\`#${i+1}\` **📅 ${e.date}** — **${e.titre}**\n> ${e.desc}`).join('\n\n');
-
-    return new EmbedBuilder()
-        .setTitle('LITTLE ARMENIA — CALENDRIER COMMUNAUTAIRE & CULTUREL 2026')
-        .setDescription('Agenda des grands rendez-vous, fêtes de quartier et rassemblements.\n\n' + eventsList)
-        .setColor(0xd4af37)
-        .setTimestamp();
-}
-
-function getCalendrierPanelComponents() {
-    return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('cal_add_event').setLabel('+ Ajouter Événement').setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId('cal_del_event').setLabel('- Supprimer Événement').setStyle(ButtonStyle.Danger)
-    );
-}
-
-// ==========================================
-// INITIALISATION DES PANNEAUX DANS LES SALONS
+// INITIALISATION DES PANNEAUX (BUREAU + SALONS CIBLES)
 // ==========================================
 async function initAllPanels(guild) {
-    const channelsMap = {
-        comptabilite: async (chan) => {
+    // 1. Initialisation du panneau de contrôle dans #bureau
+    const bureauChan = guild.channels.cache.find(c => c.name === 'bureau');
+    if (bureauChan) {
+        try {
+            const msgs = await bureauChan.messages.fetch({ limit: 10 });
+            if (!msgs.some(m => m.author.id === guild.client.user.id)) {
+                await bureauChan.send({ 
+                    embeds: [getBureauControlEmbed()], 
+                    components: getBureauControlComponents() 
+                });
+            }
+        } catch (err) {
+            console.error('[INIT] Erreur sur le salon bureau:', err);
+        }
+    }
+
+    // 2. Initialisation des affichages permanents dans les salons cibles si nécessaire
+    const targets = {
+        'comptabilite': async (chan) => {
             const msgs = await chan.messages.fetch({ limit: 10 });
             if (!msgs.some(m => m.author.id === guild.client.user.id)) {
                 await chan.send({ embeds: [getAccountingEmbed('association')], components: [getAccountingComponents('association')] });
                 await chan.send({ embeds: [getAccountingEmbed('postop')], components: [getAccountingComponents('postop')] });
             }
         },
-        'annonces': async (chan) => {
-            const msgs = await chan.messages.fetch({ limit: 10 });
-            if (!msgs.some(m => m.author.id === guild.client.user.id)) {
-                await chan.send({ embeds: [getAnnoncesEmbed('association')], components: [getAnnoncesComponents('association')] });
-            }
-        },
-        'annonces-post-op': async (chan) => {
-            const msgs = await chan.messages.fetch({ limit: 10 });
-            if (!msgs.some(m => m.author.id === guild.client.user.id)) {
-                await chan.send({ embeds: [getAnnoncesEmbed('postop')], components: [getAnnoncesComponents('postop')] });
-            }
-        },
         'commerces-et-partenariats': async (chan) => {
             const msgs = await chan.messages.fetch({ limit: 10 });
             if (!msgs.some(m => m.author.id === guild.client.user.id)) {
-                await chan.send({ embeds: [getCommercesPanelEmbed()], components: [getCommercesPanelComponents()] });
+                await chan.send({ embeds: [getCommercesPanelEmbed()] });
             }
         },
         'calendrier-2026': async (chan) => {
             const msgs = await chan.messages.fetch({ limit: 10 });
             if (!msgs.some(m => m.author.id === guild.client.user.id)) {
-                await chan.send({ embeds: [getCalendrierPanelEmbed()], components: [getCalendrierPanelComponents()] });
+                await chan.send({ embeds: [getCalendrierPanelEmbed()] });
             }
         }
     };
 
-    for (const [chanName, initFn] of Object.entries(channelsMap)) {
+    for (const [chanName, initFn] of Object.entries(targets)) {
         const chan = guild.channels.cache.find(c => c.name === chanName);
         if (chan) {
-            try {
-                await initFn(chan);
-            } catch (err) {
-                console.error(`[INIT] Erreur sur le salon ${chanName}:`, err);
-            }
+            try { await initFn(chan); } catch (e) { console.error(`Erreur init ${chanName}:`, e); }
         }
     }
 }
 
+// Helpers d'affichage
+function getAccountingEmbed(entity) {
+    const data = db[entity];
+    const isPostOp = entity === 'postop';
+    const title = isPostOp ? 'POST OP LOGISTICS — COMPTABILITÉ' : 'ARMENIAN ASSOCIATION OF VINEWOOD — TRÉSORERIE';
+    const color = isPostOp ? 0x2b2d31 : 0xd4af37;
+    let facturesList = data.factures.length === 0 ? 'Aucune facture enregistrée.' : data.factures.map((f, i) => `\`#${i+1}\` • **${f.client}** : $${f.montant.toLocaleString()} — *(${f.statut})*`).join('\n');
+    return new EmbedBuilder().setTitle(title).setDescription(`**Solde Actuel :** \`$${data.solde.toLocaleString()}\``).addFields({ name: '📋 Factures', value: facturesList }).setColor(color);
+}
+function getAccountingComponents(entity) {
+    return new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`acc_add_${entity}`).setLabel('Ajouter Recette').setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId(`acc_sub_${entity}`).setLabel('Retirer Fonds').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId(`acc_inv_${entity}`).setLabel('Créer Facture').setStyle(ButtonStyle.Primary)
+    );
+}
+
+function getCommercesPanelEmbed() {
+    let comms = db.commerces.length === 0 ? 'Aucun commerce.' : db.commerces.map((c, i) => `**#${i+1} - ${c.nom}**\n${c.desc}` + (c.logo ? `\n> Logo: ${c.logo}` : '')).join('\n\n');
+    let parts = db.partenaires.length === 0 ? 'Aucun partenaire.' : db.partenaires.map((p, i) => `**#${i+1} - ${p.nom}**\n${p.desc}` + (p.logo ? `\n> Logo: ${p.logo}` : '')).join('\n\n');
+    return new EmbedBuilder().setTitle('LITTLE ARMENIA — COMMERCES & PARTENAIRES').addFields({ name: '🏪 Commerces', value: comms }, { name: '🤝 Partenaires', value: parts }).setColor(0xd4af37);
+}
+
+function getCalendrierPanelEmbed() {
+    let evs = db.calendrier.length === 0 ? 'Aucun événement.' : db.calendrier.map((e, i) => `\`#${i+1}\` **📅 ${e.date}** — **${e.titre}**\n> ${e.desc}`).join('\n\n');
+    return new EmbedBuilder().setTitle('LITTLE ARMENIA — CALENDRIER COMMUNAUTAIRE 2026').setDescription(evs).setColor(0xd4af37);
+}
+
 // ==========================================
-// ROUTEUR D'INTERACTIONS GLOBAL
+// ROUTEUR D'INTERACTIONS GLOBAL (DEPUIS LE BUREAU)
 // ==========================================
 async function handleManagersInteraction(interaction) {
     if (!interaction.isButton() && !interaction.isModalSubmit()) return;
     const id = interaction.customId;
 
-    // --- GESTION COMPTABILITÉ ---
-    if (id.startsWith('acc_')) {
-        const [, action, entity] = id.split('_');
-        if (interaction.isModalSubmit()) {
-            const val = interaction.fields.getTextInputValue('val_input');
-            const val2 = interaction.fields.getTextInputValue('val2_input');
-            if (action === 'modaladd') db[entity].solde += parseFloat(val);
-            if (action === 'modalsub') db[entity].solde -= parseFloat(val);
-            if (action === 'modalinv') db[entity].factures.push({ client: val, montant: parseFloat(val2), statut: 'Émise' });
-            if (action === 'modaldel') db[entity].factures.splice(parseInt(val) - 1, 1);
-            
-            await updateComptabiliteMessage(interaction, entity);
-            return interaction.reply({ content: 'Opération comptable mise à jour.', ephemeral: true });
+    // --- CLICS DEPUIS LE PANNEAU DE CONTRÔLE (BUREAU) ---
+    if (id.startsWith('ctrl_')) {
+        const action = id.replace('ctrl_', '');
+
+        if (action === 'ann_assoc' || action === 'ann_postop') {
+            const type = action === 'ann_assoc' ? 'association' : 'postop';
+            const modal = new ModalBuilder().setCustomId(`mod_ann_${type}`).setTitle(type === 'postop' ? 'Annonce Post Op' : 'Annonce Association')
+                .addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('text').setLabel('Contenu de l\'annonce').setStyle(TextInputStyle.Paragraph).setRequired(true)));
+            return interaction.showModal(modal);
         }
 
-        const modal = new ModalBuilder().setCustomId(`acc_modal${action}_${entity}`);
-        if (action === 'add' || action === 'sub') {
-            modal.setTitle('Modifier Trésorerie').addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('val_input').setLabel('Montant ($)').setStyle(TextInputStyle.Short).setRequired(true)));
-        } else if (action === 'inv') {
-            modal.setTitle('Créer Facture').addComponents(
-                new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('val_input').setLabel('Nom Client').setStyle(TextInputStyle.Short).setRequired(true)),
-                new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('val2_input').setLabel('Montant ($)').setStyle(TextInputStyle.Short).setRequired(true))
-            );
-        } else if (action === 'del') {
-            modal.setTitle('Supprimer Facture').addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('val_input').setLabel('Numéro de facture').setStyle(TextInputStyle.Short).setRequired(true)));
+        if (action === 'cal_add') {
+            const modal = new ModalBuilder().setCustomId('mod_cal_add').setTitle('Ajouter Événement Calendrier')
+                .addComponents(
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('date').setLabel('Date (ex: 15 Octobre)').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('titre').setLabel('Titre').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('desc').setLabel('Descriptif / Lieu').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                );
+            return interaction.showModal(modal);
         }
-        return interaction.showModal(modal);
+
+        if (action.startsWith('cp_add_') || action.startsWith('cp_del_')) {
+            const parts = action.split('_'); // cp, add, commerce
+            const mode = parts[1];
+            const target = parts[2];
+            const modal = new ModalBuilder().setCustomId(`mod_cp_${mode}_${target}`).setTitle(`${mode === 'add' ? 'Ajouter' : 'Supprimer'} ${target}`);
+            if (mode === 'add') {
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('desc').setLabel('Descriptif').setStyle(TextInputStyle.Paragraph).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('logo').setLabel('URL du Logo (Optionnel)').setStyle(TextInputStyle.Short).setRequired(false))
+                );
+            } else {
+                modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel(`Numéro du ${target} à supprimer`).setStyle(TextInputStyle.Short).setRequired(true)));
+            }
+            return interaction.showModal(modal);
+        }
+
+        if (action.startsWith('acc_view_')) {
+            const entity = action.replace('acc_view_', '');
+            return interaction.reply({ embeds: [getAccountingEmbed(entity)], ephemeral: true });
+        }
     }
 
-    // --- GESTION ANNONCES ---
-    if (id.startsWith('ann_')) {
-        const [, action, type] = id.split('_');
-        if (interaction.isModalSubmit()) {
-            const text = interaction.fields.getTextInputValue('ann_text');
-            const targetChanName = type === 'postop' ? 'annonces-post-op' : 'annonces';
-            const targetChan = interaction.guild.channels.cache.find(c => c.name === targetChanName);
-            if (targetChan) {
+    // --- SOUMISSIONS DE MODALS (PUBLICATION DANS LES BONS SALONS) ---
+    if (interaction.isModalSubmit()) {
+        const modId = interaction.customId;
+
+        if (modId.startsWith('mod_ann_')) {
+            const type = modId.replace('mod_ann_', '');
+            const text = interaction.fields.getTextInputValue('text');
+            const targetName = type === 'postop' ? 'annonces-post-op' : 'annonces';
+            const chan = interaction.guild.channels.cache.find(c => c.name === targetName);
+            
+            if (chan) {
                 const embed = new EmbedBuilder()
-                    .setTitle(type === 'postop' ? '📢 COMMUNIQUÉ POST OP LOGISTICS' : '📢 COMMUNIQUÉ OFFICIEL')
+                    .setTitle(type === 'postop' ? '📢 POST OP LOGISTICS — COMMUNIQUÉ' : '📢 LITTLE ARMENIA — ANNONCE OFFICIELLE')
                     .setDescription(text)
                     .setColor(type === 'postop' ? 0x2b2d31 : 0xd4af37)
                     .setTimestamp();
-                await targetChan.send({ embeds: [embed] });
+                await chan.send({ embeds: [embed] });
+                return interaction.reply({ content: `Annonce publiée avec succès dans #${targetName} !`, ephemeral: true });
             }
-            return interaction.reply({ content: 'Annonce publiée avec succès.', ephemeral: true });
+            return interaction.reply({ content: `Salon #${targetName} introuvable.`, ephemeral: true });
         }
-        const modal = new ModalBuilder().setCustomId(`ann_pub_${type}`).setTitle('Rédiger une annonce')
-            .addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('ann_text').setLabel('Contenu de l\'annonce').setStyle(TextInputStyle.Paragraph).setRequired(true)));
-        return interaction.showModal(modal);
-    }
 
-    // --- GESTION COMMERCES & PARTENAIRES ---
-    if (id.startsWith('cp_')) {
-        const [, action, target] = id.split('_'); // ex: cp_add_commerce
-        if (interaction.isModalSubmit()) {
-            const nom = interaction.fields.getTextInputValue('cp_nom');
-            const desc = interaction.fields.getTextInputValue('cp_desc');
-            const logo = interaction.fields.getTextInputValue('cp_logo') || null;
+        if (modId === 'mod_cal_add') {
+            const date = interaction.fields.getTextInputValue('date');
+            const titre = interaction.fields.getTextInputValue('titre');
+            const desc = interaction.fields.getTextInputValue('desc');
+            db.calendrier.push({ date, titre, desc });
 
-            if (action === 'add') {
+            const chan = interaction.guild.channels.cache.find(c => c.name === 'calendrier-2026');
+            if (chan) {
+                const msgs = await chan.messages.fetch({ limit: 10 });
+                const targetMsg = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes('CALENDRIER'));
+                if (targetMsg) await targetMsg.edit({ embeds: [getCalendrierPanelEmbed()] });
+                else await chan.send({ embeds: [getCalendrierPanelEmbed()] });
+            }
+            return interaction.reply({ content: 'Événement ajouté au calendrier.', ephemeral: true });
+        }
+
+        if (modId.startsWith('mod_cp_')) {
+            const [, , mode, target] = modId.split('_'); // mod, cp, add, commerce
+            const nom = interaction.fields.getTextInputValue('nom');
+
+            if (mode === 'add') {
+                const desc = interaction.fields.getTextInputValue('desc');
+                const logo = interaction.fields.getTextInputValue('logo') || null;
                 const item = { nom, desc, logo };
                 if (target === 'commerce') db.commerces.push(item);
                 else db.partenaires.push(item);
@@ -236,70 +228,17 @@ async function handleManagersInteraction(interaction) {
                 if (target === 'commerce') db.commerces.splice(idx, 1);
                 else db.partenaires.splice(idx, 1);
             }
-            await updateCommercesMessage(interaction);
-            return interaction.reply({ content: 'Mise à jour du registre effectuée.', ephemeral: true });
-        }
 
-        const modal = new ModalBuilder().setCustomId(`cp_${action}_${target}`).setTitle(`${action === 'add' ? 'Ajouter' : 'Supprimer'} ${target}`);
-        if (action === 'add') {
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cp_nom').setLabel('Nom de l\'enseigne').setStyle(TextInputStyle.Short).setRequired(true)),
-                new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cp_desc').setLabel('Descriptif').setStyle(TextInputStyle.Paragraph).setRequired(true)),
-                new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cp_logo').setLabel('URL du Logo (Optionnel)').setStyle(TextInputStyle.Short).setRequired(false))
-            );
-        } else {
-            modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cp_nom').setLabel(`Numéro du ${target} à supprimer`).setStyle(TextInputStyle.Short).setRequired(true)));
-        }
-        return interaction.showModal(modal);
-    }
-
-    // --- GESTION CALENDRIER ---
-    if (id.startsWith('cal_')) {
-        const [, action] = id.split('_');
-        if (interaction.isModalSubmit()) {
-            const date = interaction.fields.getTextInputValue('cal_date');
-            const titre = interaction.fields.getTextInputValue('cal_titre');
-            const desc = interaction.fields.getTextInputValue('cal_desc');
-
-            if (action === 'add') {
-                db.calendrier.push({ date, titre, desc });
-            } else {
-                db.calendrier.splice(parseInt(date) - 1, 1);
+            const chan = interaction.guild.channels.cache.find(c => c.name === 'commerces-et-partenariats');
+            if (chan) {
+                const msgs = await chan.messages.fetch({ limit: 10 });
+                const targetMsg = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes('COMMERCES'));
+                if (targetMsg) await targetMsg.edit({ embeds: [getCommercesPanelEmbed()] });
+                else await chan.send({ embeds: [getCommercesPanelEmbed()] });
             }
-            await updateCalendrierMessage(interaction);
-            return interaction.reply({ content: 'Calendrier mis à jour.', ephemeral: true });
+            return interaction.reply({ content: 'Registre Commerces & Partenaires mis à jour.', ephemeral: true });
         }
-
-        const modal = new ModalBuilder().setCustomId(`cal_${action}_event`).setTitle(action === 'add' ? 'Ajouter Événement' : 'Supprimer Événement');
-        if (action === 'add') {
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cal_date').setLabel('Date (ex: 20 Septembre)').setStyle(TextInputStyle.Short).setRequired(true)),
-                new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cal_titre').setLabel('Titre de l\'événement').setStyle(TextInputStyle.Short).setRequired(true)),
-                new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cal_desc').setLabel('Descriptif / Lieu').setStyle(TextInputStyle.Paragraph).setRequired(true))
-            );
-        } else {
-            modal.addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('cal_date').setLabel('Numéro de l\'événement à supprimer').setStyle(TextInputStyle.Short).setRequired(true)));
-        }
-        return interaction.showModal(modal);
     }
-}
-
-async function updateComptabiliteMessage(interaction, entity) {
-    const msgs = await interaction.channel.messages.fetch({ limit: 10 });
-    const target = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes(entity === 'postop' ? 'POST OP' : 'ARMENIAN'));
-    if (target) await target.edit({ embeds: [getAccountingEmbed(entity)], components: [getAccountingComponents(entity)] });
-}
-
-async function updateCommercesMessage(interaction) {
-    const msgs = await interaction.channel.messages.fetch({ limit: 10 });
-    const target = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes('COMMERCES'));
-    if (target) await target.edit({ embeds: [getCommercesPanelEmbed()], components: [getCommercesPanelComponents()] });
-}
-
-async function updateCalendrierMessage(interaction) {
-    const msgs = await interaction.channel.messages.fetch({ limit: 10 });
-    const target = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes('CALENDRIER'));
-    if (target) await target.edit({ embeds: [getCalendrierPanelEmbed()], components: [getCalendrierPanelComponents()] });
 }
 
 module.exports = { initAllPanels, handleManagersInteraction };
