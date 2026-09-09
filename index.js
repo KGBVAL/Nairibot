@@ -75,6 +75,13 @@ async function setupCommunityStructure(guild) {
                     { name: 'recrutement-interne', type: ChannelType.GuildText },
                     { name: 'salle-de-pause', type: ChannelType.GuildText }
                 ]
+            },
+            {
+                categoryName: '💼 ┆ ADMINISTRATION',
+                channels: [
+                    { name: 'comptabilite', type: ChannelType.GuildText },
+                    { name: 'bureau', type: ChannelType.GuildText }
+                ]
             }
         ];
 
