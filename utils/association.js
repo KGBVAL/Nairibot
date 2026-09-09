@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits, MessageFlags } = require('discord.js');
 
 const CONFIG_ASSOCIATION = {
     staffRoles: ['1539267928762097770', '1539400476536217690'],
@@ -156,16 +156,32 @@ async function handleAssociationInteraction(interaction) {
                 const channel = guild.channels.cache.get(ticketId);
 
                 if (channel) {
-                    const fetchedMsg = await channel.messages.fetch({ limit: 10 });
-                    const targetMsg = fetchedMsg.find(m => m.embeds.length > 0 && m.embeds[0].title?.includes('PROPOSITION'));
-                    if (targetMsg) {
-                        const embed = EmbedBuilder.from(targetMsg.embeds[0]);
-                        embed.setDescription(embed.data.description.replace(/Sujet :\n([\s\S]*?)(?=\n\n\*Statut|$)/, `Sujet :\n${nouveauSujet}`));
-                        await targetMsg.edit({ embeds: [embed] });
+                    try {
+                        const fetchedMsg = await channel.messages.fetch({ limit: 10 });
+                        const targetMsg = fetchedMsg.find(m => m.embeds.length > 0 && m.embeds[0].title?.includes('DOSSIER ASSOCIATIF'));
+                        if (targetMsg) {
+                            const oldEmbed = targetMsg.embeds[0];
+                            const embed = EmbedBuilder.from(oldEmbed);
+                            
+                            // Remplacement propre du bloc Sujet dans la description
+                            let desc = oldEmbed.description;
+                            if (desc.includes('**Sujet :**')) {
+                                desc = desc.replace(/\*\*Sujet :\*\*\n[\s\S]*?(?=\n\n\*Statut|$)/, `**Sujet :**\n${nouveauSujet}`);
+                            } else if (desc.includes('**Motivations :**')) {
+                                desc = desc.replace(/\*\*Motivations :\*\*\n[\s\S]*?(?=\n\n\*Statut|$)/, `**Motivations :**\n${nouveauSujet}`);
+                            }
+                            embed.setDescription(desc);
+                            await targetMsg.edit({ embeds: [embed] });
+                        }
+                    } catch (err) {
+                        console.error("Erreur lors de la mise à jour du message du dossier :", err);
                     }
                 }
-                return await interaction.reply({ content: 'Votre proposition a été mise à jour avec succès.', ephemeral: true });
+                return await interaction.reply({ content: 'Votre proposition a été mise à jour avec succès.', flags: [MessageFlags.Ephemeral] });
             }
+
+            // Pour éviter l'expiration du délai de 3 secondes sur la création de salon/catégorie
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
             const isBenevolat = modId.startsWith('mod_assoc_benevolat_');
             const ticketType = isBenevolat ? 'benevolat' : 'proposition';
@@ -196,7 +212,7 @@ async function handleAssociationInteraction(interaction) {
             }
 
             const ticketChannel = await guild.channels.create({
-                name: `${ticketType}-${user.username}`,
+                name: `${ticketType}-${user.username}`.substring(0, 100),
                 type: ChannelType.GuildText,
                 parent: dossierCategory.id,
                 permissionOverwrites: permissionOverwrites
@@ -216,21 +232,25 @@ async function handleAssociationInteraction(interaction) {
             ];
 
             if (!isBenevolat) {
+                // Encodage sécurisé en Base64 pour éviter les crashs si le prénom ou le nom contient des caractères spéciaux ou des espaces
+                const encodedPrenom = Buffer.from(prenom).toString('base64');
+                const encodedNom = Buffer.from(nom).toString('base64');
+                
                 componentsList.push(
                     new ActionRowBuilder().addComponents(
-                        new ButtonBuilder().setCustomId(`btn_prop_validate_${ticketChannel.id}_${Buffer.from(prenom).toString('base64')}_${Buffer.from(nom).toString('base64')}`).setLabel('Valider et publier').setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder().setCustomId(`btn_prop_validate_${ticketChannel.id}_${encodedPrenom}_${encodedNom}`).setLabel('Valider et publier').setStyle(ButtonStyle.Primary),
                         new ButtonBuilder().setCustomId(`btn_prop_modify_${ticketChannel.id}`).setLabel('Demander une modification').setStyle(ButtonStyle.Secondary)
                     )
                 );
             }
 
             await ticketChannel.send({
-                content: `<@${user.id}> <@&${CONFIG_ASSOCIATION.staffRoles.join('> <@&')}>`,
+                content: `<@${user.id}> ${CONFIG_ASSOCIATION.staffRoles.map(rId => `<@&${rId}>`).join(' ')}`,
                 embeds: [embedTicket],
                 components: componentsList
             });
 
-            return await interaction.reply({ content: `Votre dossier a été ouvert avec succès : <#${ticketChannel.id}>`, ephemeral: true });
+            return await interaction.editReply({ content: `Votre dossier a été ouvert avec succès : <#${ticketChannel.id}>` });
         }
     }
 
@@ -239,16 +259,18 @@ async function handleAssociationInteraction(interaction) {
         const hasStaffRole = member.roles.cache.some(role => CONFIG_ASSOCIATION.staffRoles.includes(role.id));
 
         if (!hasStaffRole) {
-            return await interaction.reply({ content: 'Accès restreint aux membres habilités de l\'association.', ephemeral: true });
+            return await interaction.reply({ content: 'Accès restreint aux membres habilités de l\'association.', flags: [MessageFlags.Ephemeral] });
         }
 
         if (id.startsWith('btn_assoc_claim_')) {
             const message = interaction.message;
-            const embed = EmbedBuilder.from(message.embeds[0]);
-            embed.setDescription(embed.data.description.replace('*Statut : En attente de prise en charge.*', `*Statut : Pris en charge par **${member.user.tag}***`));
+            const oldEmbed = message.embeds[0];
+            const embed = EmbedBuilder.from(oldEmbed);
+            
+            embed.setDescription(oldEmbed.description.replace('*Statut : En attente de prise en charge.*', `*Statut : Pris en charge par **${member.user.tag}***`));
 
             await message.edit({ embeds: [embed], components: message.components });
-            return await interaction.reply({ content: 'Dossier pris en charge.', ephemeral: true });
+            return await interaction.reply({ content: 'Dossier pris en charge.', flags: [MessageFlags.Ephemeral] });
         }
 
         if (id.startsWith('btn_prop_modify_')) {
@@ -268,32 +290,42 @@ async function handleAssociationInteraction(interaction) {
             const prenomB64 = parts[4];
             const nomB64 = parts[5];
 
-            const prenom = Buffer.from(prenomB64, 'base64').toString('utf8');
-            const nom = Buffer.from(nomB64, 'base64').toString('utf8');
+            let prenom = 'A.';
+            let nom = 'C.';
+            try {
+                if (prenomB64) prenom = Buffer.from(prenomB64, 'base64').toString('utf8');
+                if (nomB64) nom = Buffer.from(nomB64, 'base64').toString('utf8');
+            } catch (e) {
+                console.error("Erreur décodage base64 nom/prenom :", e);
+            }
             const initiales = `${prenom.charAt(0).toUpperCase()}. ${nom.charAt(0).toUpperCase()}.`;
 
             const channel = interaction.channel;
-            const fetchedMsg = await channel.messages.fetch({ limit: 10 });
-            const targetMsg = fetchedMsg.find(m => m.embeds.length > 0 && m.embeds[0].title?.includes('PROPOSITION'));
+            try {
+                const fetchedMsg = await channel.messages.fetch({ limit: 10 });
+                const targetMsg = fetchedMsg.find(m => m.embeds.length > 0 && m.embeds[0].title?.includes('DOSSIER ASSOCIATIF'));
 
-            if (targetMsg) {
-                const desc = targetMsg.embeds[0].description;
-                const matchSujet = desc.match(/\*\*Sujet :\*\*\n([\s\S]*?)(?=\n\n\*Statut|$)/);
-                const sujetTexte = matchSujet ? matchSujet[1].trim() : 'Proposition validée.';
+                if (targetMsg) {
+                    const desc = targetMsg.embeds[0].description;
+                    const matchSujet = desc.match(/\*\*Sujet :\*\*\n([\s\S]*?)(?=\n\n\*Statut|$)/);
+                    const sujetTexte = matchSujet ? matchSujet[1].trim() : 'Proposition validée.';
 
-                const publicChannel = interaction.guild.channels.cache.get(CONFIG_ASSOCIATION.channels.propositions);
-                if (publicChannel) {
-                    const publicEmbed = new EmbedBuilder()
-                        .setTitle('PROPOSITION CITOYENNE VALIDÉE')
-                        .setDescription(`> "${sujetTexte}"\n\n— *${initiales}*`)
-                        .setColor(0x2B2D31)
-                        .setTimestamp();
+                    const publicChannel = interaction.guild.channels.cache.get(CONFIG_ASSOCIATION.channels.propositions);
+                    if (publicChannel) {
+                        const publicEmbed = new EmbedBuilder()
+                            .setTitle('PROPOSITION CITOYENNE VALIDÉE')
+                            .setDescription(`> "${sujetTexte}"\n\n— *${initiales}*`)
+                            .setColor(0x2B2D31)
+                            .setTimestamp();
 
-                    await publicChannel.send({ embeds: [publicEmbed] });
+                        await publicChannel.send({ embeds: [publicEmbed] });
+                    }
                 }
+            } catch (err) {
+                console.error("Erreur lors de la récupération ou publication du message :", err);
             }
 
-            await interaction.reply({ content: 'La proposition a été validée et publiée dans le salon dédié.', ephemeral: false });
+            await interaction.reply({ content: 'La proposition a été validée et publiée dans le salon dédié.', flags: [MessageFlags.Ephemeral] });
             
             setTimeout(async () => {
                 try {
@@ -304,7 +336,7 @@ async function handleAssociationInteraction(interaction) {
                             { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
                             ...CONFIG_ASSOCIATION.staffRoles.map(rId => ({ id: rId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory] }))
                         ]);
-                        await channel.setName(`archive-${channel.name}`);
+                        await channel.setName(`archive-${channel.name}`.substring(0, 100));
                     } else {
                         await channel.delete('Proposition validée et archivée.');
                     }
@@ -316,11 +348,12 @@ async function handleAssociationInteraction(interaction) {
         }
 
         if (id.startsWith('btn_assoc_close_')) {
-            await interaction.reply({ content: 'Clôture du dossier en cours... Archivage imminent.', ephemeral: false });
+            await interaction.reply({ content: 'Clôture du dossier en cours... Archivage imminent.', flags: [MessageFlags.Ephemeral] });
 
             setTimeout(async () => {
                 try {
                     const channel = interaction.channel;
+                    if (!channel) return;
                     const closedCategory = channel.guild.channels.cache.find(c => c.name.toLowerCase().includes('dossier traité') || c.name.toLowerCase().includes('archives'));
                     
                     if (closedCategory) {
@@ -329,14 +362,14 @@ async function handleAssociationInteraction(interaction) {
                             { id: channel.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
                             ...CONFIG_ASSOCIATION.staffRoles.map(rId => ({ id: rId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory] }))
                         ]);
-                        await channel.setName(`archive-${channel.name}`);
+                        await channel.setName(`archive-${channel.name}`.substring(0, 100));
                     } else {
                         await channel.delete('Dossier clôturé et purgé.');
                     }
                 } catch (err) {
                     console.error("Erreur lors de l'archivage du dossier :", err);
                 }
-            }, 60000);
+            }, 10000);
         }
     }
 }
