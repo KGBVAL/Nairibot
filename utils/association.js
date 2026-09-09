@@ -157,7 +157,7 @@ async function handleAssociationInteraction(interaction) {
                 }
 
                 const embed = EmbedBuilder.from(oldEmbed);
-                embed.setDescription(oldEmbed.description.replace('*Statut : En attente de prise en charge.*', `*Statut : Dossier pris en charge par **${member.user.tag}***`));
+                embed.setDescription(oldEmbed.description.replace('• Statut : En attente d\'instruction.', `• Statut : Dossier pris en charge par **${member.user.tag}**`));
 
                 await message.edit({ embeds: [embed], components: message.components });
                 return await interaction.reply({ content: 'Vous avez pris en charge ce dossier avec succès.', flags: [MessageFlags.Ephemeral] });
@@ -165,12 +165,12 @@ async function handleAssociationInteraction(interaction) {
 
             if (actionVal === 'validate') {
                 const embedDesc = oldEmbed.description;
-                const matchNom = embedDesc.match(/• Nom : (.*?) (.*?)\n/);
+                const matchNom = embedDesc.match(/• Identité du requérant : (.*?) (.*?)\n/);
                 const prenom = matchNom ? matchNom[1] : 'A.';
                 const nom = matchNom ? matchNom[2] : 'C.';
                 const initiales = `${prenom.charAt(0).toUpperCase()}. ${nom.charAt(0).toUpperCase()}.`;
 
-                const matchSujet = embedDesc.match(/📄 \*\*CONTENU DE LA REQUÊTE\*\*([\s\S]*?)(?=\n\n────────────────────────────────────────|\n\n\*Statut|$)/);
+                const matchSujet = embedDesc.match(/CONTENU DE LA REQUÈTE\n(.*?)(?=\n\nSUIVI DU DOSSIER|$)/s);
                 const sujetTexte = matchSujet ? matchSujet[1].trim() : 'Proposition validée.';
 
                 const publicChannel = interaction.guild.channels.cache.get(CONFIG_ASSOCIATION.channels.propositions);
@@ -262,8 +262,7 @@ async function handleAssociationInteraction(interaction) {
                             const embed = EmbedBuilder.from(oldEmbed);
                             let desc = oldEmbed.description;
                             
-                            // Remplacement du contenu de la requête dans l'embed corporate
-                            desc = desc.replace(/(📄 \*\*CONTENU DE LA REQUÊTE\*\*)\n[\s\S]*?(?=\n\n────────────────────────────────────────)/, `$1\n${nouveauSujet}`);
+                            desc = desc.replace(/(CONTENU DE LA REQUÈTE\n)([\s\S]*?)(?=\n\nSUIVI DU DOSSIER|$)/, `$1${nouveauSujet}`);
                             
                             embed.setDescription(desc);
                             await targetMsg.edit({ embeds: [embed] });
@@ -278,7 +277,7 @@ async function handleAssociationInteraction(interaction) {
             await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
             const isBenevolat = modId.startsWith('mod_assoc_benevolat_');
-            const ticketType = isBenevolat ? 'candidature bénévole' : 'proposition citoyenne';
+            const ticketType = isBenevolat ? 'CANDIDATURE BÉNÉVOLE' : 'PROPOSITION CITOYENNE';
             const poleType = isBenevolat ? modId.replace('mod_assoc_benevolat_', '') : null;
 
             const prenom = interaction.fields.getTextInputValue('prenom');
@@ -315,23 +314,21 @@ async function handleAssociationInteraction(interaction) {
             });
 
             const embedTicket = new EmbedBuilder()
-                .setTitle(`📋 DOSSIER ADMINISTRATIF — ${ticketType.toUpperCase()}`)
+                .setTitle(`REGISTRE OFFICIEL — ${ticketType}`)
                 .setDescription(
-                    `L'ouverture de ce dossier fait suite à une démarche officielle enregistrée auprès de l'administration.\n\n` +
-                    `────────────────────────────────────────\n` +
-                    `👤 **INFORMATIONS DU DEMANDEUR**\n` +
-                    `• **Identité :** ${prenom} ${nom}\n` +
-                    `• **Contact Téléphonique :** ${telephone}\n` +
-                    `• **Compte Discord :** <@${user.id}>\n` +
-                    (isBenevolat ? `• **Pôle sollicité :** ${poleType === 'ben_social' ? 'Action Sociale & Solidarité' : poleType === 'ben_animation' ? 'Animation & Événementiel' : 'Logistique & Technique'}\n` : ``) +
-                    `────────────────────────────────────────\n` +
-                    `📄 **CONTENU DE LA REQUÊTE**\n` +
+                    `Ouverture de dossier instanciée par les services administratifs.\n\n` +
+                    `**INFORMATIONS DU REQUÉRANT**\n` +
+                    `• Identité du requérant : ${prenom} ${nom}\n` +
+                    `• Ligne directe : ${telephone}\n` +
+                    (isBenevolat ? `• Affectation visée : ${poleType === 'ben_social' ? 'Action Sociale & Solidarité' : poleType === 'ben_animation' ? 'Animation & Événementiel' : 'Logistique & Technique'}\n` : ``) +
+                    `\n` +
+                    `**CONTENU DE LA REQUÈTE**\n` +
                     `${champPrincipal}\n\n` +
-                    `────────────────────────────────────────\n` +
-                    `*Statut : En attente de prise en charge.*`
+                    `**SUIVI DU DOSSIER**\n` +
+                    `• Statut : En attente d'instruction.`
                 )
                 .setColor(0x2B2D31)
-                .setFooter({ text: 'Association • Service d\'Instruction' })
+                .setFooter({ text: 'Association • Secrétariat Général' })
                 .setTimestamp();
 
             const selectOptions = [
