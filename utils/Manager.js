@@ -125,9 +125,6 @@ async function initAllPanels(guild) {
 async function handleManagersInteraction(interaction) {
     const id = interaction.customId;
     if (!id) return;
-    
-    const isManaged = id === 'menu_assoc' || id === 'menu_postop' || id.startsWith('menu_acc_') || id.startsWith('mod_ann_') || id.startsWith('mod_pub_') || id.startsWith('mod_acc_');
-    if (!isManaged) return;
 
     if (interaction.isStringSelectMenu()) {
         const val = interaction.values[0];
