@@ -114,7 +114,9 @@ async function setupCommunityStructure(guild) {
             }
         }
 
-        // Lancement de l'initialisation des panneaux après un court délai pour laisser le cache se synchroniser
+        // Synchronisation forcée du cache des salons et initialisation des panneaux
+        await guild.channels.fetch();
+
         setTimeout(async () => {
             await initAllPanels(guild);
             await initPostOpPanels(guild);
