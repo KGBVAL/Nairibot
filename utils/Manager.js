@@ -79,18 +79,6 @@ function getAccountingComponents(entity) {
 async function initAllPanels(guild) {
     const client = guild.client;
 
-    // SÉCURITÉ ANTI-DOUBLE LISTENER
-    if (!client._managerListenerRegistered) {
-        client._managerListenerRegistered = true;
-        client.on('interactionCreate', async (interaction) => {
-            try {
-                await handleManagersInteraction(interaction);
-            } catch (err) {
-                console.error("Erreur critique interaction Manager:", err);
-            }
-        });
-    }
-
     // Gestion propre du salon #bureau (Évite les doublons de messages)
     const bureauChan = guild.channels.cache.find(c => c.name === 'bureau');
     if (bureauChan) {
@@ -252,7 +240,12 @@ async function handleManagersInteraction(interaction) {
             const desc = interaction.fields.getTextInputValue('desc');
             const logo = interaction.fields.getTextInputValue('logo');
 
-            const chan = interaction.guild.channels.cache.find(c => c.name === 'calendrier-2026');
+            // Recherche prioritaire par ID de salon (1547194694163894337) ou par nom de secours
+            let chan = interaction.guild.channels.cache.get('1547194694163894337');
+            if (!chan) {
+                chan = interaction.guild.channels.cache.find(c => c.name === 'calendrier-2026');
+            }
+
             if (chan) {
                 const embed = new EmbedBuilder()
                     .setTitle(`CALENDRIER 2026 — ${titre.toUpperCase()}`)
