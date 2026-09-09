@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require('discord.js');
 
 const db = {
     association: { solde: 0, factures: [] },
@@ -79,7 +79,7 @@ function getAccountingComponents(entity) {
 async function initAllPanels(guild) {
     const client = guild.client;
 
-    // Gestion propre du salon #bureau (Évite les doublons de messages)
+    // Gestion propre du salon #bureau
     const bureauChan = guild.channels.cache.find(c => c.name === 'bureau');
     if (bureauChan) {
         const msgs = await bureauChan.messages.fetch({ limit: 20 });
@@ -130,10 +130,6 @@ async function handleManagersInteraction(interaction) {
     
     const isManaged = id === 'menu_assoc' || id === 'menu_postop' || id.startsWith('menu_acc_') || id.startsWith('mod_ann_') || id.startsWith('mod_pub_') || id.startsWith('mod_acc_');
     if (!isManaged) return;
-
-    // SÉCURITÉ ANTI-DOUBLE CLIC / EXÉCUTION
-    if (interaction.handledByManager) return;
-    interaction.handledByManager = true;
 
     if (interaction.isStringSelectMenu()) {
         const val = interaction.values[0];
@@ -209,9 +205,9 @@ async function handleManagersInteraction(interaction) {
                     .setColor(type === 'postop' ? 0x202225 : 0x2f3136)
                     .setTimestamp();
                 await chan.send({ embeds: [embed] });
-                return await interaction.reply({ content: `Communiqué transmis.`, ephemeral: true });
+                return await interaction.reply({ content: `Communiqué transmis.`, flags: [MessageFlags.Ephemeral] });
             }
-            return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
+            return await interaction.reply({ content: 'Salon introuvable.', flags: [MessageFlags.Ephemeral] });
         }
 
         if (modId.startsWith('mod_pub_commerce') || modId.startsWith('mod_pub_partenaire')) {
@@ -229,9 +225,9 @@ async function handleManagersInteraction(interaction) {
                     .setTimestamp();
                 if (logo && logo.startsWith('http')) embed.setThumbnail(logo);
                 await chan.send({ embeds: [embed] });
-                return await interaction.reply({ content: 'Fiche publiée.', ephemeral: true });
+                return await interaction.reply({ content: 'Fiche publiée.', flags: [MessageFlags.Ephemeral] });
             }
-            return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
+            return await interaction.reply({ content: 'Salon introuvable.', flags: [MessageFlags.Ephemeral] });
         }
 
         if (modId === 'mod_pub_evenement') {
@@ -240,7 +236,7 @@ async function handleManagersInteraction(interaction) {
             const desc = interaction.fields.getTextInputValue('desc');
             const logo = interaction.fields.getTextInputValue('logo');
 
-            // Recherche prioritaire par ID de salon (1547194694163894337) ou par nom de secours
+            // Ciblage direct par l'ID exact fourni
             let chan = interaction.guild.channels.cache.get('1547194694163894337');
             if (!chan) {
                 chan = interaction.guild.channels.cache.find(c => c.name === 'calendrier-2026');
@@ -253,10 +249,11 @@ async function handleManagersInteraction(interaction) {
                     .setColor(0x2f3136)
                     .setTimestamp();
                 if (logo && logo.startsWith('http')) embed.setImage(logo);
+                
                 await chan.send({ embeds: [embed] });
-                return await interaction.reply({ content: 'Événement publié.', ephemeral: true });
+                return await interaction.reply({ content: 'Événement publié.', flags: [MessageFlags.Ephemeral] });
             }
-            return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
+            return await interaction.reply({ content: 'Salon introuvable.', flags: [MessageFlags.Ephemeral] });
         }
 
         if (modId.startsWith('mod_acc_')) {
@@ -280,7 +277,7 @@ async function handleManagersInteraction(interaction) {
                 if (!isNaN(index) && db[entity].factures[index]) db[entity].factures.splice(index, 1);
             }
 
-            await interaction.reply({ content: 'Registre mis à jour.', ephemeral: true });
+            await interaction.reply({ content: 'Registre mis à jour.', flags: [MessageFlags.Ephemeral] });
 
             try {
                 const chan = interaction.guild.channels.cache.find(c => c.name === 'comptabilite');
