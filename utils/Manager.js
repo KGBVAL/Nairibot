@@ -79,7 +79,6 @@ function getAccountingComponents(entity) {
 async function initAllPanels(guild) {
     const client = guild.client;
 
-    // Gestion propre du salon #bureau
     const bureauChan = guild.channels.cache.find(c => c.name === 'bureau');
     if (bureauChan) {
         const msgs = await bureauChan.messages.fetch({ limit: 20 });
@@ -101,7 +100,6 @@ async function initAllPanels(guild) {
         }
     }
 
-    // Gestion propre du salon #comptabilite
     const comptaChan = guild.channels.cache.find(c => c.name === 'comptabilite');
     if (comptaChan) {
         const msgs = await comptaChan.messages.fetch({ limit: 20 });
@@ -128,7 +126,6 @@ async function handleManagersInteraction(interaction) {
     const id = interaction.customId;
     if (!id) return;
     
-    // É largissement de la condition pour intercepter tous les menus et modals gérés ici
     const isManaged = id === 'menu_assoc' || id === 'menu_postop' || id.startsWith('menu_acc_') || id.startsWith('mod_ann_') || id.startsWith('mod_pub_') || id.startsWith('mod_acc_');
     if (!isManaged) return;
 
@@ -194,6 +191,7 @@ async function handleManagersInteraction(interaction) {
         const modId = interaction.customId;
 
         if (modId.startsWith('mod_ann_')) {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
             const type = modId.replace('mod_ann_', '');
             const text = interaction.fields.getTextInputValue('text');
             const targetName = type === 'postop' ? 'annonces-post-op' : 'annonces';
@@ -206,12 +204,13 @@ async function handleManagersInteraction(interaction) {
                     .setColor(type === 'postop' ? 0x202225 : 0x2f3136)
                     .setTimestamp();
                 await chan.send({ embeds: [embed] });
-                return await interaction.reply({ content: `Communiqué transmis.`, flags: [MessageFlags.Ephemeral] });
+                return await interaction.editReply({ content: `Communiqué transmis.` });
             }
-            return await interaction.reply({ content: 'Salon introuvable.', flags: [MessageFlags.Ephemeral] });
+            return await interaction.editReply({ content: 'Salon introuvable.' });
         }
 
         if (modId.startsWith('mod_pub_commerce') || modId.startsWith('mod_pub_partenaire')) {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
             const type = modId.includes('commerce') ? 'Commerce Local' : 'Partenaire Officiel';
             const nom = interaction.fields.getTextInputValue('nom');
             const desc = interaction.fields.getTextInputValue('desc');
@@ -226,18 +225,18 @@ async function handleManagersInteraction(interaction) {
                     .setTimestamp();
                 if (logo && logo.startsWith('http')) embed.setThumbnail(logo);
                 await chan.send({ embeds: [embed] });
-                return await interaction.reply({ content: 'Fiche publiée.', flags: [MessageFlags.Ephemeral] });
+                return await interaction.editReply({ content: 'Fiche publiée.' });
             }
-            return await interaction.reply({ content: 'Salon introuvable.', flags: [MessageFlags.Ephemeral] });
+            return await interaction.editReply({ content: 'Salon introuvable.' });
         }
 
         if (modId === 'mod_pub_evenement') {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
             const date = interaction.fields.getTextInputValue('date');
             const titre = interaction.fields.getTextInputValue('titre');
             const desc = interaction.fields.getTextInputValue('desc');
             const logo = interaction.fields.getTextInputValue('logo');
 
-            // Ciblage direct et unique par l'ID exact de ton salon (1547194694163894337)
             let chan = interaction.guild.channels.cache.get('1547194694163894337');
             if (!chan) {
                 chan = interaction.guild.channels.cache.find(c => c.name === 'calendrier-2026');
@@ -252,12 +251,13 @@ async function handleManagersInteraction(interaction) {
                 if (logo && logo.startsWith('http')) embed.setImage(logo);
                 
                 await chan.send({ embeds: [embed] });
-                return await interaction.reply({ content: 'Événement publié.', flags: [MessageFlags.Ephemeral] });
+                return await interaction.editReply({ content: 'Événement publié.' });
             }
-            return await interaction.reply({ content: 'Salon introuvable.', flags: [MessageFlags.Ephemeral] });
+            return await interaction.editReply({ content: 'Salon introuvable.' });
         }
 
         if (modId.startsWith('mod_acc_')) {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
             const parts = modId.split('_');
             const subType = parts[2]; 
             const entity = parts[parts.length - 1];
@@ -278,7 +278,7 @@ async function handleManagersInteraction(interaction) {
                 if (!isNaN(index) && db[entity].factures[index]) db[entity].factures.splice(index, 1);
             }
 
-            await interaction.reply({ content: 'Registre mis à jour.', flags: [MessageFlags.Ephemeral] });
+            await interaction.editReply({ content: 'Registre mis à jour.' });
 
             try {
                 const chan = interaction.guild.channels.cache.find(c => c.name === 'comptabilite');
