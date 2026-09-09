@@ -3,7 +3,7 @@ const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, T
 const CONFIG_POSTOP = {
     staffRoles: ['1539267928762097770', '1539400476536217690'],
     channels: {
-        commandes: '1547194706671308860', // ID par défaut ou recherché par nom
+        commandes: '1547194706671308860',
         services: '1547194707799703563',
         recrutement: '1547194709049479178'
     }
@@ -12,7 +12,7 @@ const CONFIG_POSTOP = {
 function getCommandesEmbed() {
     return new EmbedBuilder()
         .setTitle('POST OP LOGISTICS — DIVISION COMMANDE & FRET')
-        .setDescription('Bienvenue au département centralisé de Post Op Logistics. \n\nNos équipes assurent l\'acheminement de vos marchandises et la gestion de vos flux logistiques avec rigueur et discrétion. Veuillez initier votre demande via le sélecteur ci-dessous.')
+        .setDescription('Bienvenue au département centralisé de Post Op Logistics.\n\nNos équipes assurent l\'acheminement de vos marchandises et la gestion de vos flux logistiques avec rigueur et discrétion. Veuillez initier votre demande via le sélecteur ci-dessous.')
         .setColor(0x2B2D31)
         .setFooter({ text: 'Post Op Logistics • Division Commerciale' })
         .setTimestamp();
@@ -31,10 +31,32 @@ function getCommandesComponents() {
 
 function getServiceEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS — PORTFOLIO DES PRESTATIONS')
-        .setDescription('Post Op Logistics met à disposition une infrastructure professionnelle dédiée aux acteurs économiques et institutionnels :\n\n• **Transport & Fret Sécurisé** : Acheminement terrestre de marchandises en volume.\n• **Logistique d\'Entreprise** : Gestion de stocks, inventaires et réapprovisionnement de structures commerciales.\n• **Convoi Protégé** : Transfert sécurisé sous escorte pour actifs à haute valeur.\n• **Affrètement Contractuel** : Partenariats logistiques long terme et contrats sur-mesure.')
+        .setTitle('POST OP LOGISTICS — CATALOGUE DES PRESTATIONS')
+        .setDescription('Infrastructure logistique de référence dédiée aux professionnels, aux entreprises et aux acteurs institutionnels.')
         .setColor(0x2B2D31)
-        .setFooter({ text: 'Post Op Logistics • Solutions Professionnelles' })
+        .addFields(
+            {
+                name: '📦 Transport & Fret Sécurisé',
+                value: 'Acheminement terrestre de marchandises en volume, adapté à tous types de cargaisons et planifié selon vos exigences opérationnelles.',
+                false: true
+            },
+            {
+                name: '🏢 Logistique d\'Entreprise',
+                value: 'Gestion optimisée des stocks, inventaires rigoureux et réapprovisionnement régulier de structures commerciales et points de vente.',
+                false: true
+            },
+            {
+                name: '🔒 Convoi Protégé',
+                value: 'Transfert sécurisé sous haute surveillance et escorte armée pour les actifs sensibles ou à forte valeur ajoutée.',
+                false: true
+            },
+            {
+                name: '📑 Affrètement Contractuel',
+                value: 'Mise en place de partenariats logistiques à long terme, contrats-cadres et solutions de sous-traitance sur-mesure.',
+                false: true
+            }
+        )
+        .setFooter({ text: 'Post Op Logistics • Services Professionnels' })
         .setTimestamp();
 }
 
@@ -76,12 +98,10 @@ async function initPostOpPanels(guild) {
 
     await guild.channels.fetch();
 
-    // Récupération ciblée par ID exact fourni ou fallback par nom
     const cmdChan = guild.channels.cache.get(CONFIG_POSTOP.channels.commandes) || guild.channels.cache.find(c => c.name === 'commandes' && c.type === ChannelType.GuildText);
     const srvChan = guild.channels.cache.get(CONFIG_POSTOP.channels.services) || guild.channels.cache.find(c => c.name === 'services' && c.type === ChannelType.GuildText);
     const recChan = guild.channels.cache.get(CONFIG_POSTOP.channels.recrutement) || guild.channels.cache.find(c => (c.name === 'recrutement-interne' || c.name === 'recrutement') && c.type === ChannelType.GuildText);
 
-    // Panel Commandes
     if (cmdChan) {
         try {
             const msgs = await cmdChan.messages.fetch({ limit: 10 });
@@ -98,11 +118,10 @@ async function initPostOpPanels(guild) {
         }
     }
 
-    // Panel Services
     if (srvChan) {
         try {
             const msgs = await srvChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('PORTFOLIO'));
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CATALOGUE DES PRESTATIONS'));
             if (!botMsg) {
                 await srvChan.send({ embeds: [getServiceEmbed()] });
                 console.log(`[POSTOP] Panel Services envoyé dans #${srvChan.name}`);
@@ -115,7 +134,6 @@ async function initPostOpPanels(guild) {
         }
     }
 
-    // Panel Recrutement
     if (recChan) {
         try {
             const msgs = await recChan.messages.fetch({ limit: 10 });
