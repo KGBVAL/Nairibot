@@ -78,6 +78,8 @@ function getAccountingComponents(entity) {
 
 async function initAllPanels(guild) {
     const client = guild.client;
+
+    // SÉCURITÉ ANTI-DOUBLE LISTENER : On s'assure qu'un seul écouteur global existe sur le client
     if (!client._managerListenerRegistered) {
         client._managerListenerRegistered = true;
         client.on('interactionCreate', async (interaction) => {
@@ -89,7 +91,7 @@ async function initAllPanels(guild) {
         });
     }
 
-    // Gestion propre du salon #bureau (1 message pour l'asso, 1 pour postop max)
+    // Gestion propre du salon #bureau
     const bureauChan = guild.channels.cache.find(c => c.name === 'bureau');
     if (bureauChan) {
         const msgs = await bureauChan.messages.fetch({ limit: 20 });
@@ -111,7 +113,7 @@ async function initAllPanels(guild) {
         }
     }
 
-    // Gestion propre du salon #comptabilite (1 message par entité max)
+    // Gestion propre du salon #comptabilite
     const comptaChan = guild.channels.cache.find(c => c.name === 'comptabilite');
     if (comptaChan) {
         const msgs = await comptaChan.messages.fetch({ limit: 20 });
@@ -140,6 +142,10 @@ async function handleManagersInteraction(interaction) {
     
     const isManaged = id === 'menu_assoc' || id === 'menu_postop' || id.startsWith('menu_acc_') || id.startsWith('mod_ann_') || id.startsWith('mod_pub_') || id.startsWith('mod_acc_');
     if (!isManaged) return;
+
+    // SÉCURITÉ ANTI-DOUBLE CLic / EXÉCUTION : Empêche de traiter la même interaction plusieurs fois si Discord renvoie un écho
+    if (interaction.handledByManager) return;
+    interaction.handledByManager = true;
 
     if (interaction.isStringSelectMenu()) {
         const val = interaction.values[0];
