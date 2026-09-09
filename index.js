@@ -3,9 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-// Importation des gestionnaires
+// Importation des gestionnaires (avec le bon chemin pour postop)
 const { initAllPanels, handleManagersInteraction } = require('./utils/Manager');
-const { initPostOpPanels, handlePostOpInteraction } = require('./postop');
+const { initPostOpPanels, handlePostOpInteraction } = require('./utils/postop');
 
 // Serveur Web pour Render
 const server = http.createServer((req, res) => {
