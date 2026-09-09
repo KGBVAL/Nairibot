@@ -79,7 +79,7 @@ function getAccountingComponents(entity) {
 async function initAllPanels(guild) {
     const client = guild.client;
 
-    // SÉCURITÉ ANTI-DOUBLE LISTENER : On s'assure qu'un seul écouteur global existe sur le client
+    // SÉCURITÉ ANTI-DOUBLE LISTENER
     if (!client._managerListenerRegistered) {
         client._managerListenerRegistered = true;
         client.on('interactionCreate', async (interaction) => {
@@ -91,7 +91,7 @@ async function initAllPanels(guild) {
         });
     }
 
-    // Gestion propre du salon #bureau
+    // Gestion propre du salon #bureau (Évite les doublons de messages)
     const bureauChan = guild.channels.cache.find(c => c.name === 'bureau');
     if (bureauChan) {
         const msgs = await bureauChan.messages.fetch({ limit: 20 });
@@ -143,7 +143,7 @@ async function handleManagersInteraction(interaction) {
     const isManaged = id === 'menu_assoc' || id === 'menu_postop' || id.startsWith('menu_acc_') || id.startsWith('mod_ann_') || id.startsWith('mod_pub_') || id.startsWith('mod_acc_');
     if (!isManaged) return;
 
-    // SÉCURITÉ ANTI-DOUBLE CLic / EXÉCUTION : Empêche de traiter la même interaction plusieurs fois si Discord renvoie un écho
+    // SÉCURITÉ ANTI-DOUBLE CLIC / EXÉCUTION
     if (interaction.handledByManager) return;
     interaction.handledByManager = true;
 
