@@ -11,7 +11,7 @@ const db = {
 // ==========================================
 function getBureauAssociationEmbed() {
     return new EmbedBuilder()
-        .setTitle('LITTLE ARMENIA ASSOCIATION - DIRECTION')
+        .setTitle('LITTLE ARMENIA ASSOCIATION — DIRECTION')
         .setDescription('Sélectionnez une action administrative dans le menu ci-dessous pour ouvrir le formulaire correspondant.')
         .setColor(0x2f3136)
         .setTimestamp();
@@ -33,7 +33,7 @@ function getBureauAssociationComponents() {
 
 function getBureauPostOpEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS - DIRECTION EXÉCUTIVE')
+        .setTitle('POST OP LOGISTICS — DIRECTION EXÉCUTIVE')
         .setDescription('Sélectionnez une action opérationnelle dans le menu ci-dessous pour ouvrir le formulaire correspondant.')
         .setColor(0x202225)
         .setTimestamp();
@@ -53,7 +53,7 @@ function getBureauPostOpComponents() {
 function getAccountingEmbed(entity) {
     const data = db[entity];
     const isPostOp = entity === 'postop';
-    const title = isPostOp ? 'POST OP LOGISTICS - RAPPORT FINANCIER' : 'LITTLE ARMENIA - RAPPORT FINANCIER';
+    const title = isPostOp ? 'POST OP LOGISTICS — RAPPORT FINANCIER' : 'LITTLE ARMENIA — RAPPORT FINANCIER';
     
     let facturesList = data.factures.length === 0 
         ? 'Aucune facture active enregistrée.' 
@@ -118,7 +118,7 @@ async function handleManagersInteraction(interaction) {
                 const type = val === 'ann_assoc' ? 'association' : 'postop';
                 const modal = new ModalBuilder().setCustomId(`mod_ann_${type}`).setTitle('Rédaction d\'annonce officielle')
                     .addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('text').setLabel('Contenu du communiqué').setStyle(TextInputStyle.Paragraph).setRequired(true)));
-                return interaction.showModal(modal);
+                return await interaction.showModal(modal);
             }
 
             if (val === 'pub_commerce' || val === 'pub_partenaire') {
@@ -129,29 +129,29 @@ async function handleManagersInteraction(interaction) {
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('desc').setLabel('Descriptif détaillé').setStyle(TextInputStyle.Paragraph).setRequired(true)),
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('logo').setLabel('URL de l\'image / Logo').setStyle(TextInputStyle.Short).setRequired(false))
                     );
-                return interaction.showModal(modal);
+                return await interaction.showModal(modal);
             }
 
             if (val === 'pub_evenement') {
-                const modal = new ModalBuilder().setCustomId('mod_pub_evenement').setTitle('Publication - Événement 2026')
+                const modal = new ModalBuilder().setCustomId('mod_pub_evenement').setTitle('Publication — Événement 2026')
                     .addComponents(
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('date').setLabel('Date et heure').setStyle(TextInputStyle.Short).setRequired(true)),
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('titre').setLabel('Intitulé de l\'événement').setStyle(TextInputStyle.Short).setRequired(true)),
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('desc').setLabel('Descriptif et lieu').setStyle(TextInputStyle.Paragraph).setRequired(true)),
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('logo').setLabel('URL du visuel (Optionnel)').setStyle(TextInputStyle.Short).setRequired(false))
                     );
-                return interaction.showModal(modal);
+                return await interaction.showModal(modal);
             }
         }
 
-        // Menu Comptabilité (Acknowledge immédiat pour éviter l'échec d'interaction)
+        // Menu Comptabilité (Ouverture des modals financiers)
         if (id.startsWith('menu_acc_')) {
             const entity = id.replace('menu_acc_', '');
 
             if (val === 'add' || val === 'sub') {
                 const modal = new ModalBuilder().setCustomId(`mod_acc_money_${val}_${entity}`).setTitle('Ajustement financier')
                     .addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('montant').setLabel('Montant ($)').setStyle(TextInputStyle.Short).setRequired(true)));
-                return interaction.showModal(modal);
+                return await interaction.showModal(modal);
             }
             if (val === 'inv') {
                 const modal = new ModalBuilder().setCustomId(`mod_acc_inv_${entity}`).setTitle('Émission de facture')
@@ -159,12 +159,12 @@ async function handleManagersInteraction(interaction) {
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('client').setLabel('Client / Destinataire').setStyle(TextInputStyle.Short).setRequired(true)),
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('montant').setLabel('Montant ($)').setStyle(TextInputStyle.Short).setRequired(true))
                     );
-                return interaction.showModal(modal);
+                return await interaction.showModal(modal);
             }
             if (val === 'del') {
                 const modal = new ModalBuilder().setCustomId(`mod_acc_del_${entity}`).setTitle('Suppression de facture')
                     .addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('index').setLabel('Numéro de la facture (ex: 1)').setStyle(TextInputStyle.Short).setRequired(true)));
-                return interaction.showModal(modal);
+                return await interaction.showModal(modal);
             }
         }
     }
@@ -182,14 +182,14 @@ async function handleManagersInteraction(interaction) {
             
             if (chan) {
                 const embed = new EmbedBuilder()
-                    .setTitle(type === 'postop' ? 'POST OP LOGISTICS - COMMUNIQUÉ' : 'COMMUNIQUÉ OFFICIEL')
+                    .setTitle(type === 'postop' ? 'POST OP LOGISTICS — COMMUNIQUÉ' : 'COMMUNIQUÉ OFFICIEL')
                     .setDescription(text)
                     .setColor(type === 'postop' ? 0x202225 : 0x2f3136)
                     .setTimestamp();
                 await chan.send({ embeds: [embed] });
-                return interaction.reply({ content: `Communiqué transmis au salon #${targetName}.`, ephemeral: true });
+                return await interaction.reply({ content: `Communiqué transmis au salon #${targetName}.`, ephemeral: true });
             }
-            return interaction.reply({ content: 'Salon cible introuvable.', ephemeral: true });
+            return await interaction.reply({ content: 'Salon cible introuvable.', ephemeral: true });
         }
 
         // Commerces & Partenaires
@@ -213,9 +213,9 @@ async function handleManagersInteraction(interaction) {
                 if (logo && logo.startsWith('http')) embed.setThumbnail(logo);
 
                 await chan.send({ embeds: [embed] });
-                return interaction.reply({ content: 'Fiche publiée.', ephemeral: true });
+                return await interaction.reply({ content: 'Fiche publiée.', ephemeral: true });
             }
-            return interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
+            return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
         }
 
         // Calendrier
@@ -239,12 +239,12 @@ async function handleManagersInteraction(interaction) {
                 if (logo && logo.startsWith('http')) embed.setImage(logo);
 
                 await chan.send({ embeds: [embed] });
-                return interaction.reply({ content: 'Événement publié au calendrier.', ephemeral: true });
+                return await interaction.reply({ content: 'Événement publié au calendrier.', ephemeral: true });
             }
-            return interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
+            return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
         }
 
-        // Comptabilité (Mise à jour en TEMPS RÉEL de l'embed dans le salon)
+        // Comptabilité (Mise à jour immédiate de l'embed d'origine)
         if (modId.startsWith('mod_acc_')) {
             const parts = modId.split('_');
             const subType = parts[2]; 
@@ -266,28 +266,22 @@ async function handleManagersInteraction(interaction) {
                 if (!isNaN(index) && db[entity].factures[index]) db[entity].factures.splice(index, 1);
             }
 
-            // Met à jour directement le message d'origine dans le salon comptabilité en temps réel
+            // Répond d'abord à l'interaction du modal pour la valider proprement
+            await interaction.reply({ content: 'Registre mis à jour.', ephemeral: true });
+
+            // Met à jour le message d'origine dans le salon comptabilité en temps réel
             try {
-                if (interaction.message) {
-                    await interaction.message.edit({ 
-                        embeds: [getAccountingEmbed(entity)], 
-                        components: [getAccountingComponents(entity)] 
-                    });
-                } else {
-                    const chan = interaction.guild.channels.cache.find(c => c.name === 'comptabilite');
-                    if (chan) {
-                        const msgs = await chan.messages.fetch({ limit: 10 });
-                        const targetMsg = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes(entity === 'postop' ? 'POST OP' : 'LITTLE ARMENIA'));
-                        if (targetMsg) {
-                            await targetMsg.edit({ embeds: [getAccountingEmbed(entity)], components: [getAccountingComponents(entity)] });
-                        }
+                const chan = interaction.guild.channels.cache.find(c => c.name === 'comptabilite');
+                if (chan) {
+                    const msgs = await chan.messages.fetch({ limit: 10 });
+                    const targetMsg = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes(entity === 'postop' ? 'POST OP' : 'LITTLE ARMENIA'));
+                    if (targetMsg) {
+                        await targetMsg.edit({ embeds: [getAccountingEmbed(entity)], components: [getAccountingComponents(entity)] });
                     }
                 }
             } catch (err) {
                 console.error("Erreur de mise à jour en temps réel :", err);
             }
-
-            return interaction.reply({ content: 'Registre comptable mis à jour en temps réel.', ephemeral: true });
         }
     }
 }
