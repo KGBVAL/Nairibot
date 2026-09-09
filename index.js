@@ -155,10 +155,13 @@ client.once(Events.ClientReady, async () => {
 // Routeur central des interactions
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
-        // Routeur Manager existant
+        // Routeur Manager mis à jour pour intercepter menu_assoc, menu_postop, menu_acc_ et les modals associés
         if (
             interaction.customId && 
             (
+                interaction.customId === 'menu_assoc' ||
+                interaction.customId === 'menu_postop' ||
+                interaction.customId.startsWith('menu_acc_') ||
                 interaction.customId.startsWith('ctrl_') || 
                 interaction.customId.startsWith('acc_') || 
                 interaction.customId.startsWith('mod_')
