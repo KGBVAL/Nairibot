@@ -3,13 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-// Importation depuis le dossier utils
-const { handleInteraction } = require('./events/interactionCreate');
+// Importation du gestionnaire unifié (vérifie bien le nom du fichier dans utils, ici Manager.js)
+const { initAllPanels, handleManagersInteraction } = require('./utils/Manager');
 
 // Serveur Web pour Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Little Armenia Bot est en ligne !\n');
+    res.end('Little Armenia & Post Op Bot est en ligne !\n');
 });
 
 const PORT = process.env.PORT || 3000;
@@ -42,12 +42,11 @@ if (fs.existsSync(commandsPath)) {
     }
 }
 
-// Fonction pour créer automatiquement l'arborescence du projet Little Armenia & Post Op
+// Fonction de création de l'arborescence complète et propre
 async function setupCommunityStructure(guild) {
     try {
         console.log(`[LITTLE ARMENIA] Vérification de la structure pour : ${guild.name}`);
 
-        // Définition de l'arborescence souhaitée
         const structure = [
             {
                 categoryName: '📌 ┆ INFORMATIONS',
@@ -86,21 +85,18 @@ async function setupCommunityStructure(guild) {
         ];
 
         for (const catData of structure) {
-            // Cherche si la catégorie existe déjà
             let category = guild.channels.cache.find(
                 c => c.type === ChannelType.GuildCategory && c.name.toLowerCase() === catData.categoryName.toLowerCase()
             );
 
-            // Si elle n'existe pas, on la crée
             if (!category) {
                 category = await guild.channels.create({
                     name: catData.categoryName,
                     type: ChannelType.GuildCategory,
                 });
-                console.log(`[LITTLE ARMENIA] Catégorie créée : ${catData.categoryName}`);
+                console.log(`[SETUP] Catégorie créée : ${catData.categoryName}`);
             }
 
-            // Vérifie et crée les salons associés dans cette catégorie
             for (const chanData of catData.channels) {
                 const existingChan = guild.channels.cache.find(
                     c => c.parentId === category.id && c.name === chanData.name
@@ -112,11 +108,17 @@ async function setupCommunityStructure(guild) {
                         type: chanData.type,
                         parent: category.id,
                     });
-                    console.log(`[LITTLE ARMENIA] Salon créé : #${chanData.name} dans ${catData.categoryName}`);
+                    console.log(`[SETUP] Salon créé : #${chanData.name}`);
                 }
             }
         }
-        console.log(`[LITTLE ARMENIA] Structure initialisée avec succès pour ${guild.name}`);
+
+        // Lancement de l'initialisation des panneaux (Bureau + Salons cibles) après un court délai pour laisser le cache se synchroniser
+        setTimeout(async () => {
+            await initAllPanels(guild);
+            console.log(`[LITTLE ARMENIA] Panneaux initialisés avec succès pour ${guild.name}`);
+        }, 4000);
+
     } catch (error) {
         console.error(`[LITTLE ARMENIA] Erreur lors de la configuration de la structure :`, error);
     }
@@ -125,7 +127,6 @@ async function setupCommunityStructure(guild) {
 client.once(Events.ClientReady, async () => {
     console.log(`[LITTLE ARMENIA BOT] Connecté en tant que ${client.user.tag}`);
 
-    // Initialisation de la structure sur chaque serveur où est le bot
     for (const [id, guild] of client.guilds.cache) {
         try {
             await setupCommunityStructure(guild);
@@ -134,7 +135,6 @@ client.once(Events.ClientReady, async () => {
         }
     }
 
-    // Enregistrement des commandes slash
     if (process.env.DISCORD_TOKEN) {
         const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
         try {
@@ -146,22 +146,32 @@ client.once(Events.ClientReady, async () => {
     }
 });
 
+// Routeur central des interactions (boutons du bureau et formulaires)
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
+        if (
+            interaction.customId && 
+            (
+                interaction.customId.startsWith('ctrl_') || 
+                interaction.customId.startsWith('acc_') || 
+                interaction.customId.startsWith('mod_')
+            )
+        ) {
+            await handleManagersInteraction(interaction);
+            return;
+        }
+
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
             if (command) await command.execute(interaction);
             return;
         }
-        await handleInteraction(interaction);
     } catch (error) {
         console.error("Erreur interaction :", error);
     }
 });
 
-// Vérification du token et connexion à Discord
-console.log("[DEBUG] Tentative de connexion avec le token :", process.env.DISCORD_TOKEN ? "Token présent (longueur: " + process.env.DISCORD_TOKEN.length + ")" : "AUCUN TOKEN TROUVÉ !");
-
+console.log("[DEBUG] Tentative de connexion avec le token...");
 client.login(process.env.DISCORD_TOKEN).catch(error => {
     console.error("[LITTLE ARMENIA BOT] Erreur fatale lors de la connexion à Discord :", error);
 });
