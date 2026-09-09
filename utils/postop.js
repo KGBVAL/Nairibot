@@ -1,10 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits } = require('discord.js');
 
 const CONFIG_POSTOP = {
-    staffRoles: ['1539267928762097770', '1539400476536217690'],
-    chanCommandes: '1547194706671308860',
-    chanService: '1547194707799703563',
-    chanRecrutement: '1547194709049479178'
+    staffRoles: ['1539267928762097770', '1539400476536217690']
 };
 
 function getCommandesEmbed() {
@@ -29,7 +26,7 @@ function getCommandesComponents() {
 function getServiceEmbed() {
     return new EmbedBuilder()
         .setTitle('POST OP LOGISTICS — CATALOGUE DES SERVICES')
-        .setDescription('Retrouvez ci-dessous l\'ensemble des prestations assurées par Post Op Logistics :\n\n📦 **Transport & Fret Sécurisé** : Acheminement de marchandises en tout genre.\n🚚 **Logistique d\'Entreprise** : Gestion de stocks et approvisionnement de buralistes/commerces.\n🔒 **Convoi Protégé** : Transport sous haute surveillance pour cargaisons sensibles.\n📑 **Affrètement Sur-Mesure** : Contrats de sous-traitance logistique longue durée.')
+        .setDescription('Retrouvez ci-dessous l\'ensemble des prestations assurées par Post Op Logistics :\n\n• **Transport & Fret Sécurisé** : Acheminement de marchandises en tout genre.\n• **Logistique d\'Entreprise** : Gestion de stocks et approvisionnement de commerces.\n• **Convoi Protégé** : Transport sous haute surveillance pour cargaisons sensibles.\n• **Affrètement Sur-Mesure** : Contrats de sous-traitance logistique longue durée.')
         .setColor(0x202225)
         .setTimestamp();
 }
@@ -69,11 +66,13 @@ async function initPostOpPanels(guild) {
         });
     }
 
-    // Force la mise en cache des salons pour éviter les retours vides au démarrage
     await guild.channels.fetch();
 
+    const cmdChan = guild.channels.cache.find(c => c.name === 'commandes' && c.type === ChannelType.GuildText);
+    const srvChan = guild.channels.cache.find(c => (c.name === 'services' || c.name === 'commerces-et-partenariats') && c.type === ChannelType.GuildText);
+    const recChan = guild.channels.cache.find(c => (c.name === 'recrutement-interne' || c.name === 'recrutement') && c.type === ChannelType.GuildText);
+
     // Salon Commandes
-    const cmdChan = guild.channels.cache.get(CONFIG_POSTOP.chanCommandes);
     if (cmdChan) {
         try {
             const msgs = await cmdChan.messages.fetch({ limit: 10 });
@@ -88,12 +87,9 @@ async function initPostOpPanels(guild) {
         } catch (e) {
             console.error("[POSTOP] Erreur salon Commandes :", e);
         }
-    } else {
-        console.warn(`[POSTOP] Salon Commandes introuvable avec l'ID : ${CONFIG_POSTOP.chanCommandes}`);
     }
 
     // Salon Service
-    const srvChan = guild.channels.cache.get(CONFIG_POSTOP.chanService);
     if (srvChan) {
         try {
             const msgs = await srvChan.messages.fetch({ limit: 10 });
@@ -108,12 +104,9 @@ async function initPostOpPanels(guild) {
         } catch (e) {
             console.error("[POSTOP] Erreur salon Service :", e);
         }
-    } else {
-        console.warn(`[POSTOP] Salon Service introuvable avec l'ID : ${CONFIG_POSTOP.chanService}`);
     }
 
     // Salon Recrutement
-    const recChan = guild.channels.cache.get(CONFIG_POSTOP.chanRecrutement);
     if (recChan) {
         try {
             const msgs = await recChan.messages.fetch({ limit: 10 });
@@ -128,8 +121,6 @@ async function initPostOpPanels(guild) {
         } catch (e) {
             console.error("[POSTOP] Erreur salon Recrutement :", e);
         }
-    } else {
-        console.warn(`[POSTOP] Salon Recrutement introuvable avec l'ID : ${CONFIG_POSTOP.chanRecrutement}`);
     }
 }
 
@@ -151,7 +142,10 @@ async function handlePostOpInteraction(interaction) {
                 .setCustomId('mod_ticket_commande')
                 .setTitle('Formulaire de Commande')
                 .addComponents(
-                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('details').setLabel('Détails de la commande / Marchandise').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('telephone').setLabel('Téléphone').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Description de la demande').setStyle(TextInputStyle.Paragraph).setRequired(true))
                 );
             return await interaction.showModal(modal);
         }
@@ -162,7 +156,11 @@ async function handlePostOpInteraction(interaction) {
                 .setCustomId(`mod_ticket_rec_${val}`)
                 .setTitle(`Recrutement — ${posteNames[val] || 'Poste'}`)
                 .addComponents(
-                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('motivations').setLabel('Vos motivations et expériences').setStyle(TextInputStyle.Paragraph).setRequired(true))
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('telephone').setLabel('Téléphone').setStyle(TextInputStyle.Short).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('experience').setLabel('Expérience').setStyle(TextInputStyle.Paragraph).setRequired(true)),
+                    new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('motivations').setLabel('Motivations').setStyle(TextInputStyle.Paragraph).setRequired(true))
                 );
             return await interaction.showModal(modal);
         }
@@ -176,7 +174,32 @@ async function handlePostOpInteraction(interaction) {
             const user = interaction.user;
             const isRecrutement = modId.startsWith('mod_ticket_rec_');
             const ticketType = isRecrutement ? 'recrutement' : 'commande';
-            const contentInput = interaction.fields.getTextInputValue(isRecrutement ? 'motivations' : 'details');
+
+            // Récupération des champs des modals
+            const prenom = interaction.fields.getTextInputValue('prenom');
+            const nom = interaction.fields.getTextInputValue('nom');
+            const telephone = interaction.fields.getTextInputValue('telephone');
+
+            let descriptionField = '';
+            if (isRecrutement) {
+                const experience = interaction.fields.getTextInputValue('experience');
+                const motivations = interaction.fields.getTextInputValue('motivations');
+                descriptionField = `**Expérience :**\n${experience}\n\n**Motivations :**\n${motivations}`;
+            } else {
+                descriptionField = `**Description de la demande :**\n${interaction.fields.getTextInputValue('description')}`;
+            }
+
+            // Recherche ou création de la catégorie "DOSSIER EN COURS"
+            let dossierCategory = guild.channels.cache.find(
+                c => c.type === ChannelType.GuildCategory && (c.name.toLowerCase().includes('dossier') || c.name.toLowerCase().includes('en cours'))
+            );
+
+            if (!dossierCategory) {
+                dossierCategory = await guild.channels.create({
+                    name: '📁 ┆ DOSSIERS EN COURS',
+                    type: ChannelType.GuildCategory
+                });
+            }
 
             const permissionOverwrites = [
                 { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
@@ -190,12 +213,13 @@ async function handlePostOpInteraction(interaction) {
             const ticketChannel = await guild.channels.create({
                 name: `${ticketType}-${user.username}`,
                 type: ChannelType.GuildText,
+                parent: dossierCategory.id,
                 permissionOverwrites: permissionOverwrites
             });
 
             const embedTicket = new EmbedBuilder()
                 .setTitle(`DOSSIER — ${ticketType.toUpperCase()}`)
-                .setDescription(`Demandeur : <@${user.id}>\n\n**Contenu de la demande :**\n${contentInput}\n\n*Statut : En attente de prise en charge.*`)
+                .setDescription(`Demandeur : <@${user.id}>\n\n**Informations personnelles :**\n• Prénom / Nom : ${prenom} ${nom}\n• Téléphone : ${telephone}\n\n${descriptionField}\n\n*Statut : En attente de prise en charge.*`)
                 .setColor(0x202225)
                 .setTimestamp();
 
@@ -236,7 +260,7 @@ async function handlePostOpInteraction(interaction) {
                 return await interaction.reply({ content: 'Seuls les rôles autorisés peuvent clôturer ce dossier.', ephemeral: true });
             }
 
-            await interaction.reply({ content: 'Fermeture du dossier en cours... Transfert dans les archives privées dans 1 minute.', ephemeral: false });
+            await interaction.reply({ content: 'Fermeture du dossier en cours... Transfert dans les archives dans 1 minute.', ephemeral: false });
 
             setTimeout(async () => {
                 try {
