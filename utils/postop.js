@@ -69,31 +69,67 @@ async function initPostOpPanels(guild) {
         });
     }
 
+    // Force la mise en cache des salons pour éviter les retours vides au démarrage
+    await guild.channels.fetch();
+
     // Salon Commandes
     const cmdChan = guild.channels.cache.get(CONFIG_POSTOP.chanCommandes);
     if (cmdChan) {
-        const msgs = await cmdChan.messages.fetch({ limit: 10 });
-        const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CENTRALISTE'));
-        if (!botMsg) await cmdChan.send({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
-        else await botMsg.edit({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
+        try {
+            const msgs = await cmdChan.messages.fetch({ limit: 10 });
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CENTRALISTE'));
+            if (!botMsg) {
+                await cmdChan.send({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
+                console.log(`[POSTOP] Panel Commandes envoyé dans #${cmdChan.name}`);
+            } else {
+                await botMsg.edit({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
+                console.log(`[POSTOP] Panel Commandes mis à jour dans #${cmdChan.name}`);
+            }
+        } catch (e) {
+            console.error("[POSTOP] Erreur salon Commandes :", e);
+        }
+    } else {
+        console.warn(`[POSTOP] Salon Commandes introuvable avec l'ID : ${CONFIG_POSTOP.chanCommandes}`);
     }
 
     // Salon Service
     const srvChan = guild.channels.cache.get(CONFIG_POSTOP.chanService);
     if (srvChan) {
-        const msgs = await srvChan.messages.fetch({ limit: 10 });
-        const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CATALOGUE'));
-        if (!botMsg) await srvChan.send({ embeds: [getServiceEmbed()] });
-        else await botMsg.edit({ embeds: [getServiceEmbed()] });
+        try {
+            const msgs = await srvChan.messages.fetch({ limit: 10 });
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CATALOGUE'));
+            if (!botMsg) {
+                await srvChan.send({ embeds: [getServiceEmbed()] });
+                console.log(`[POSTOP] Panel Service envoyé dans #${srvChan.name}`);
+            } else {
+                await botMsg.edit({ embeds: [getServiceEmbed()] });
+                console.log(`[POSTOP] Panel Service mis à jour dans #${srvChan.name}`);
+            }
+        } catch (e) {
+            console.error("[POSTOP] Erreur salon Service :", e);
+        }
+    } else {
+        console.warn(`[POSTOP] Salon Service introuvable avec l'ID : ${CONFIG_POSTOP.chanService}`);
     }
 
     // Salon Recrutement
     const recChan = guild.channels.cache.get(CONFIG_POSTOP.chanRecrutement);
     if (recChan) {
-        const msgs = await recChan.messages.fetch({ limit: 10 });
-        const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('RECRUTEMENT'));
-        if (!botMsg) await recChan.send({ embeds: [getRecrutementEmbed()], components: [getRecrutementComponents()] });
-        else await botMsg.edit({ embeds: [getRecrutementEmbed()], components: [getRecrutementComponents()] });
+        try {
+            const msgs = await recChan.messages.fetch({ limit: 10 });
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('RECRUTEMENT'));
+            if (!botMsg) {
+                await recChan.send({ embeds: [getRecrutementEmbed()], components: [getRecrutementComponents()] });
+                console.log(`[POSTOP] Panel Recrutement envoyé dans #${recChan.name}`);
+            } else {
+                await botMsg.edit({ embeds: [getRecrutementEmbed()], components: [getRecrutementComponents()] });
+                console.log(`[POSTOP] Panel Recrutement mis à jour dans #${recChan.name}`);
+            }
+        } catch (e) {
+            console.error("[POSTOP] Erreur salon Recrutement :", e);
+        }
+    } else {
+        console.warn(`[POSTOP] Salon Recrutement introuvable avec l'ID : ${CONFIG_POSTOP.chanRecrutement}`);
     }
 }
 
