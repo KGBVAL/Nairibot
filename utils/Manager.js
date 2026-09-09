@@ -1,18 +1,14 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
-// Stockage centralisé en mémoire
 const db = {
     association: { solde: 0, factures: [] },
     postop: { solde: 0, factures: [] }
 };
 
-// ==========================================
-// EMBEDS & COMPOSANTS
-// ==========================================
 function getBureauAssociationEmbed() {
     return new EmbedBuilder()
         .setTitle('LITTLE ARMENIA ASSOCIATION — DIRECTION')
-        .setDescription('Sélectionnez une action administrative dans le menu ci-dessous pour ouvrir le formulaire correspondant.')
+        .setDescription('Sélectionnez une action administrative dans le menu ci-dessous.')
         .setColor(0x2f3136)
         .setTimestamp();
 }
@@ -23,10 +19,10 @@ function getBureauAssociationComponents() {
             .setCustomId('menu_assoc')
             .setPlaceholder('Sélectionner une action administrative...')
             .addOptions([
-                { label: 'Rédiger une annonce officielle', value: 'ann_assoc', description: 'Publier un communiqué dans le salon des annonces' },
+                { label: 'Rédiger une annonce officielle', value: 'ann_assoc', description: 'Publier un communiqué' },
                 { label: 'Publier un commerce', value: 'pub_commerce', description: 'Ajouter une fiche commerce' },
                 { label: 'Publier un partenaire', value: 'pub_partenaire', description: 'Ajouter une fiche partenaire' },
-                { label: 'Planifier un événement (Calendrier)', value: 'pub_evenement', description: 'Ajouter une entrée dans le calendrier 2026' }
+                { label: 'Planifier un événement', value: 'pub_evenement', description: 'Ajouter une entrée au calendrier' }
             ])
     );
 }
@@ -34,7 +30,7 @@ function getBureauAssociationComponents() {
 function getBureauPostOpEmbed() {
     return new EmbedBuilder()
         .setTitle('POST OP LOGISTICS — DIRECTION EXÉCUTIVE')
-        .setDescription('Sélectionnez une action opérationnelle dans le menu ci-dessous pour ouvrir le formulaire correspondant.')
+        .setDescription('Sélectionnez une action opérationnelle dans le menu ci-dessous.')
         .setColor(0x202225)
         .setTimestamp();
 }
@@ -73,18 +69,14 @@ function getAccountingComponents(entity) {
             .setPlaceholder('Sélectionner une action financière...')
             .addOptions([
                 { label: 'Ajouter une recette', value: 'add', description: 'Créditer la trésorerie' },
-                { label: 'Retirer des fonds (Dépense)', value: 'sub', description: 'Débiter la trésorerie' },
-                { label: 'Créer une facture', value: 'inv', description: 'Émettre une nouvelle facture' },
-                { label: 'Supprimer une facture', value: 'del', description: 'Retirer une facture existante' }
+                { label: 'Retirer des fonds', value: 'sub', description: 'Débiter la trésorerie' },
+                { label: 'Créer une facture', value: 'inv', description: 'Émettre une facture' },
+                { label: 'Supprimer une facture', value: 'del', description: 'Retirer une facture' }
             ])
     );
 }
 
-// ==========================================
-// INITIALISATION DES SALONS & ECOUTEUR AUTONOME
-// ==========================================
 async function initAllPanels(guild) {
-    // S'assure que l'écouteur global des interactions est actif sur le client Discord
     const client = guild.client;
     if (!client._managerListenerRegistered) {
         client._managerListenerRegistered = true;
@@ -92,7 +84,7 @@ async function initAllPanels(guild) {
             try {
                 await handleManagersInteraction(interaction);
             } catch (err) {
-                console.error("Erreur dans le gestionnaire d'interaction Manager:", err);
+                console.error("Erreur critique interaction Manager:", err);
             }
         });
     }
@@ -116,24 +108,20 @@ async function initAllPanels(guild) {
     }
 }
 
-// ==========================================
-// GESTION DES INTERACTIONS (AUTONOME)
-// ==========================================
 async function handleManagersInteraction(interaction) {
-    // Filtrer uniquement les interactions gérées par ce module
     const id = interaction.customId;
     if (!id) return;
+    
     const isManaged = id === 'menu_assoc' || id === 'menu_postop' || id.startsWith('menu_acc_') || id.startsWith('mod_ann_') || id.startsWith('mod_pub_') || id.startsWith('mod_acc_');
     if (!isManaged) return;
 
-    // 1. Gestion des sélections dans les menus déroulants
     if (interaction.isStringSelectMenu()) {
         const val = interaction.values[0];
 
         if (id === 'menu_assoc' || id === 'menu_postop') {
             if (val === 'ann_assoc' || val === 'ann_postop') {
                 const type = val === 'ann_assoc' ? 'association' : 'postop';
-                const modal = new ModalBuilder().setCustomId(`mod_ann_${type}`).setTitle('Rédaction d\'annonce officielle')
+                const modal = new ModalBuilder().setCustomId(`mod_ann_${type}`).setTitle('Rédaction d\'annonce')
                     .addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('text').setLabel('Contenu du communiqué').setStyle(TextInputStyle.Paragraph).setRequired(true)));
                 return await interaction.showModal(modal);
             }
@@ -150,7 +138,7 @@ async function handleManagersInteraction(interaction) {
             }
 
             if (val === 'pub_evenement') {
-                const modal = new ModalBuilder().setCustomId('mod_pub_evenement').setTitle('Publication — Événement 2026')
+                const modal = new ModalBuilder().setCustomId('mod_pub_evenement').setTitle('Publication — Événement')
                     .addComponents(
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('date').setLabel('Date et heure').setStyle(TextInputStyle.Short).setRequired(true)),
                         new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('titre').setLabel('Intitulé de l\'événement').setStyle(TextInputStyle.Short).setRequired(true)),
@@ -185,7 +173,6 @@ async function handleManagersInteraction(interaction) {
         }
     }
 
-    // 2. Gestion des soumissions de formulaires (Modals)
     if (interaction.isModalSubmit()) {
         const modId = interaction.customId;
 
@@ -202,9 +189,9 @@ async function handleManagersInteraction(interaction) {
                     .setColor(type === 'postop' ? 0x202225 : 0x2f3136)
                     .setTimestamp();
                 await chan.send({ embeds: [embed] });
-                return await interaction.reply({ content: `Communiqué transmis au salon #${targetName}.`, ephemeral: true });
+                return await interaction.reply({ content: `Communiqué transmis.`, ephemeral: true });
             }
-            return await interaction.reply({ content: 'Salon cible introuvable.', ephemeral: true });
+            return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
         }
 
         if (modId.startsWith('mod_pub_commerce') || modId.startsWith('mod_pub_partenaire')) {
@@ -217,15 +204,10 @@ async function handleManagersInteraction(interaction) {
             if (chan) {
                 const embed = new EmbedBuilder()
                     .setTitle(`RÉFÉRENCE — ${type.toUpperCase()}`)
-                    .addFields(
-                        { name: 'Enseigne', value: nom, inline: false },
-                        { name: 'Descriptif', value: desc, inline: false }
-                    )
+                    .addFields({ name: 'Enseigne', value: nom }, { name: 'Descriptif', value: desc })
                     .setColor(0x2f3136)
                     .setTimestamp();
-                
                 if (logo && logo.startsWith('http')) embed.setThumbnail(logo);
-
                 await chan.send({ embeds: [embed] });
                 return await interaction.reply({ content: 'Fiche publiée.', ephemeral: true });
             }
@@ -242,22 +224,16 @@ async function handleManagersInteraction(interaction) {
             if (chan) {
                 const embed = new EmbedBuilder()
                     .setTitle(`CALENDRIER 2026 — ${titre.toUpperCase()}`)
-                    .addFields(
-                        { name: 'Date', value: date, inline: false },
-                        { name: 'Détails', value: desc, inline: false }
-                    )
+                    .addFields({ name: 'Date', value: date }, { name: 'Détails', value: desc })
                     .setColor(0x2f3136)
                     .setTimestamp();
-
                 if (logo && logo.startsWith('http')) embed.setImage(logo);
-
                 await chan.send({ embeds: [embed] });
-                return await interaction.reply({ content: 'Événement publié au calendrier.', ephemeral: true });
+                return await interaction.reply({ content: 'Événement publié.', ephemeral: true });
             }
             return await interaction.reply({ content: 'Salon introuvable.', ephemeral: true });
         }
 
-        // Comptabilité en temps réel
         if (modId.startsWith('mod_acc_')) {
             const parts = modId.split('_');
             const subType = parts[2]; 
@@ -291,7 +267,7 @@ async function handleManagersInteraction(interaction) {
                     }
                 }
             } catch (err) {
-                console.error("Erreur de mise à jour en temps réel :", err);
+                console.error("Erreur de mise à jour comptable :", err);
             }
         }
     }
