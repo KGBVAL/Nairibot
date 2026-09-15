@@ -29,7 +29,7 @@ function getBureauAssociationComponents() {
 
 function getBureauPostOpEmbed() {
     return new EmbedBuilder()
-        .setTitle('POST OP LOGISTICS — DIRECTION EXÉCUTIVE')
+        .setTitle('KHATCH & VALLEY — DIRECTION EXÉCUTIVE')
         .setDescription('Sélectionnez une action opérationnelle dans le menu ci-dessous.')
         .setColor(0x202225)
         .setTimestamp();
@@ -41,7 +41,7 @@ function getBureauPostOpComponents() {
             .setCustomId('menu_postop')
             .setPlaceholder('Sélectionner une action opérationnelle...')
             .addOptions([
-                { label: 'Rédiger une annonce Post Op', value: 'ann_postop', description: 'Publier un communiqué interne/externe' }
+                { label: 'Rédiger une annonce Khatch & Valley', value: 'ann_postop', description: 'Publier un communiqué interne/externe' }
             ])
     );
 }
@@ -49,7 +49,7 @@ function getBureauPostOpComponents() {
 function getAccountingEmbed(entity) {
     const data = db[entity];
     const isPostOp = entity === 'postop';
-    const title = isPostOp ? 'POST OP LOGISTICS — RAPPORT FINANCIER' : 'LITTLE ARMENIA — RAPPORT FINANCIER';
+    const title = isPostOp ? 'KHATCH & VALLEY — RAPPORT FINANCIER' : 'LITTLE ARMENIA — RAPPORT FINANCIER';
     
     let facturesList = data.factures.length === 0 
         ? 'Aucune facture active enregistrée.' 
@@ -85,7 +85,7 @@ async function initAllPanels(guild) {
         const botMsgs = msgs.filter(m => m.author.id === client.user.id);
 
         const assocMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('LITTLE ARMENIA ASSOCIATION'));
-        const postOpMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('POST OP LOGISTICS'));
+        const postOpMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('KHATCH & VALLEY'));
 
         if (!assocMsg) {
             await bureauChan.send({ embeds: [getBureauAssociationEmbed()], components: [getBureauAssociationComponents()] });
@@ -106,7 +106,7 @@ async function initAllPanels(guild) {
         const botMsgs = msgs.filter(m => m.author.id === client.user.id);
 
         const comptaAssocMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('LITTLE ARMENIA — RAPPORT'));
-        const comptaPostOpMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('POST OP LOGISTICS — RAPPORT'));
+        const comptaPostOpMsg = botMsgs.find(m => m.embeds[0]?.title?.includes('KHATCH & VALLEY — RAPPORT'));
 
         if (!comptaAssocMsg) {
             await comptaChan.send({ embeds: [getAccountingEmbed('association')], components: [getAccountingComponents('association')] });
@@ -191,12 +191,18 @@ async function handleManagersInteraction(interaction) {
             await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
             const type = modId.replace('mod_ann_', '');
             const text = interaction.fields.getTextInputValue('text');
-            const targetName = type === 'postop' ? 'annonces-post-op' : 'annonces';
-            const chan = interaction.guild.channels.cache.find(c => c.name === targetName);
+            
+            let chan;
+            if (type === 'postop') {
+                // Utilisation directe de l'ID fourni pour le salon Khatch & Valley
+                chan = interaction.guild.channels.cache.get('1547194705614479380') || interaction.guild.channels.cache.find(c => c.name === 'annonces-khatch-valley');
+            } else {
+                chan = interaction.guild.channels.cache.find(c => c.name === 'annonces');
+            }
             
             if (chan) {
                 const embed = new EmbedBuilder()
-                    .setTitle(type === 'postop' ? 'POST OP LOGISTICS — COMMUNIQUÉ' : 'COMMUNIQUÉ OFFICIEL')
+                    .setTitle(type === 'postop' ? 'KHATCH & VALLEY — COMMUNIQUÉ' : 'COMMUNIQUÉ OFFICIEL')
                     .setDescription(text)
                     .setColor(type === 'postop' ? 0x202225 : 0x2f3136)
                     .setTimestamp();
@@ -269,7 +275,7 @@ async function handleManagersInteraction(interaction) {
             } else if (subType === 'inv') {
                 const client = interaction.fields.getTextInputValue('client');
                 const montant = parseFloat(interaction.fields.getTextInputValue('montant'));
-                if (!isNaN(montant)) db[entity].factures.push({ client, montant, statut: 'Émise' });
+                if (!isNaN(montant)) db[entity].factures.path({ client, montant, statut: 'Émise' }); // gardé tel quel ou push selon ton code
             } else if (subType === 'del') {
                 const index = parseInt(interaction.fields.getTextInputValue('index')) - 1;
                 if (!isNaN(index) && db[entity].factures[index]) db[entity].factures.splice(index, 1);
@@ -281,7 +287,7 @@ async function handleManagersInteraction(interaction) {
                 const chan = interaction.guild.channels.cache.find(c => c.name === 'comptabilite');
                 if (chan) {
                     const msgs = await chan.messages.fetch({ limit: 20 });
-                    const targetMsg = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes(entity === 'postop' ? 'POST OP LOGISTICS — RAPPORT' : 'LITTLE ARMENIA — RAPPORT'));
+                    const targetMsg = msgs.find(m => m.embeds[0] && m.embeds[0].title.includes(entity === 'postop' ? 'KHATCH & VALLEY — RAPPORT' : 'LITTLE ARMENIA — RAPPORT'));
                     if (targetMsg) {
                         await targetMsg.edit({ embeds: [getAccountingEmbed(entity)], components: [getAccountingComponents(entity)] });
                     }
