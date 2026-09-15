@@ -20,8 +20,8 @@ const CONFIG_POSTOP = {
 
     channels: {
         commandes: '1547194706671308860',
-        'recrutement-interne': '1547194709049479178',
-        services: '1547194707799703563'
+        recrutement: '1547194709049479178',
+        service: '1547194707799703563'
     }
 };
 
@@ -30,7 +30,6 @@ const CONFIG_POSTOP = {
 // ============================================================
 
 const CATALOGUE_PRODUITS = [
-
     {
         id: 'prod_1',
         code: '01',
@@ -38,8 +37,7 @@ const CATALOGUE_PRODUITS = [
         type: 'Bière',
         prix: 45,
         desc: 'Lager blonde légère, sèche et très clean.',
-        image: 'https://www.upload.ee/image/19756742/biere.png',
-        emoji: '🍺'
+        image: 'https://www.upload.ee/image/19756742/biere.png'
     },
 
     {
@@ -49,8 +47,7 @@ const CATALOGUE_PRODUITS = [
         type: 'Whisky',
         prix: 180,
         desc: 'American whiskey avec maturation en fûts de chêne arménien.',
-        image: 'https://www.upload.ee/image/19756745/Whisky.png',
-        emoji: '🥃'
+        image: 'https://www.upload.ee/image/19756745/Whisky.png'
     },
 
     {
@@ -60,8 +57,7 @@ const CATALOGUE_PRODUITS = [
         type: 'Vodka',
         prix: 120,
         desc: 'Vodka ultra-pure à base de blé, finition très douce.',
-        image: 'https://www.upload.ee/image/19756746/vodka.png',
-        emoji: '🍸'
+        image: 'https://www.upload.ee/image/19756746/vodka.png'
     },
 
     {
@@ -71,8 +67,7 @@ const CATALOGUE_PRODUITS = [
         type: 'Gin',
         prix: 150,
         desc: 'Gin aux botaniques arméniennes : genièvre, abricot sec, coriandre et herbes sauvages.',
-        image: 'https://www.upload.ee/image/19756748/GIN-Photoroom.png',
-        emoji: '🌿'
+        image: 'https://www.upload.ee/image/19756748/GIN-Photoroom.png'
     },
 
     {
@@ -82,8 +77,7 @@ const CATALOGUE_PRODUITS = [
         type: 'Rhum',
         prix: 165,
         desc: 'Rhum ambré, pensé autour de notes vanillées et fruitées.',
-        image: 'https://www.upload.ee/image/19756811/rum-Photoroom.png',
-        emoji: '🥥'
+        image: 'https://www.upload.ee/image/19756750/rum.jpg'
     },
 
     {
@@ -93,8 +87,7 @@ const CATALOGUE_PRODUITS = [
         type: 'Tequila',
         prix: 190,
         desc: 'Tequila blanco premium, identité très minimaliste.',
-        image: 'https://www.upload.ee/image/19756751/tequila-Photoroom.png',
-        emoji: '🌵'
+        image: 'https://www.upload.ee/image/19756751/tequila-Photoroom.png'
     },
 
     {
@@ -104,8 +97,7 @@ const CATALOGUE_PRODUITS = [
         type: 'Brandy',
         prix: 240,
         desc: 'Brandy de raisin, inspiré de la tradition arménienne.',
-        image: 'https://www.upload.ee/image/19756754/brandy-Photoroom.png',
-        emoji: '🥃'
+        image: 'https://www.upload.ee/image/19756754/brandy-Photoroom.png'
     },
 
     {
@@ -115,8 +107,7 @@ const CATALOGUE_PRODUITS = [
         type: 'Liqueur',
         prix: 135,
         desc: 'Liqueur d’abricot arménien.',
-        image: 'https://www.upload.ee/image/19756755/liqueur-Photoroom.png',
-        emoji: '🍑'
+        image: 'https://www.upload.ee/image/19756755/liqueur-Photoroom.png'
     }
 ];
 
@@ -127,12 +118,9 @@ const CATALOGUE_PRODUITS = [
 const userSessions = new Map();
 
 function getSession(userId) {
-
     if (!userSessions.has(userId)) {
-
         userSessions.set(userId, {
-            items: {},
-            selectedProduct: null
+            items: {}
         });
     }
 
@@ -140,18 +128,17 @@ function getSession(userId) {
 }
 
 // ============================================================
-// PANNEAU PUBLIC — COMMANDES
+// PANNEAU COMMANDES PUBLIC
 // ============================================================
 
 function getCommandesEmbed() {
-
     return new EmbedBuilder()
         .setTitle('KHATCH & VALLEY')
         .setDescription(
             '**DISTILLERIE ARMÉNIENNE — LOS ANGELES**\n\n' +
 
             'Découvrez notre sélection officielle de bières et spiritueux.\n' +
-            'Sélectionnez simplement un produit dans la liste pour consulter sa fiche, son visuel et l’ajouter à votre devis.\n\n' +
+            'Sélectionnez simplement un produit dans la liste ci-dessous pour l’ajouter à votre devis.\n\n' +
 
             '**CATALOGUE**\n' +
             '🍺 **KHATCH LAGER** — Bière\n' +
@@ -166,7 +153,9 @@ function getCommandesEmbed() {
             '━━━━━━━━━━━━━━━━━━━━━━\n\n' +
 
             '**COMMANDE**\n' +
-            'Ouvrez votre catalogue privé pour composer votre devis.'
+            'Ouvrez votre catalogue privé pour sélectionner vos produits, définir les quantités et consulter votre devis.\n\n' +
+
+            '*KHATCH & VALLEY • Distillerie arménienne • Los Angeles*'
         )
         .setColor(0x8B0000)
         .setFooter({
@@ -176,9 +165,7 @@ function getCommandesEmbed() {
 }
 
 function getCommandesComponents() {
-
     return new ActionRowBuilder().addComponents(
-
         new ButtonBuilder()
             .setCustomId('catalog_open_session')
             .setLabel('Ouvrir le catalogue')
@@ -187,239 +174,134 @@ function getCommandesComponents() {
 }
 
 // ============================================================
-// MENU PRINCIPAL DU CATALOGUE
+// CATALOGUE PRIVÉ — AVEC LES 8 IMAGES
 // ============================================================
 
-function buildCatalogListView(userId) {
-
+function buildCatalogView(userId) {
     const session = getSession(userId);
 
-    let selectedSummary = '';
+    const embeds = [];
 
-    const selectedEntries = Object.entries(session.items)
-        .filter(([_, qty]) => qty > 0);
+    // --------------------------------------------------------
+    // EMBED PRINCIPAL
+    // --------------------------------------------------------
 
-    if (selectedEntries.length > 0) {
-
-        selectedSummary =
-            '\n━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-            '**VOTRE DEVIS ACTUEL**\n';
-
-        for (const [productId, quantity] of selectedEntries) {
-
-            const product = CATALOGUE_PRODUITS.find(
-                p => p.id === productId
-            );
-
-            if (!product) continue;
-
-            selectedSummary +=
-                `${product.emoji} **${product.nom}** × ${quantity}\n`;
-        }
-    }
-
-    const embed = new EmbedBuilder()
+    const headerEmbed = new EmbedBuilder()
         .setTitle('KHATCH & VALLEY')
         .setDescription(
-
             '**DISTILLERIE ARMÉNIENNE — LOS ANGELES**\n\n' +
 
-            'Sélectionnez un produit pour ouvrir sa fiche.\n' +
-            'Vous pourrez ensuite consulter son image, choisir la quantité et l’ajouter à votre devis.\n\n' +
+            'Découvrez notre sélection officielle.\n' +
+            'Chaque référence ci-dessous possède son visuel officiel.\n\n' +
 
-            '**CATALOGUE**\n\n' +
+            '**COMMENT COMMANDER**\n' +
+            '1. Sélectionnez un produit dans le menu.\n' +
+            '2. Indiquez la quantité souhaitée.\n' +
+            '3. Consultez votre devis.\n' +
+            '4. Validez votre demande.\n\n' +
 
-            '🍺 **KHATCH LAGER** — Bière — $45\n' +
-            '🥃 **KHATCH VALLEY WHISKY** — Whisky — $180\n' +
-            '🍸 **KHATCH VODKA** — Vodka — $120\n' +
-            '🌿 **KHATCH BOTANICAL GIN** — Gin — $150\n' +
-            '🥥 **VALLEY RUM** — Rhum — $165\n' +
-            '🌵 **KHATCH BLANCO** — Tequila — $190\n' +
-            '🥃 **KHATCH ARMENIAN BRANDY** — Brandy — $240\n' +
-            '🍑 **TSIRAN** — Liqueur — $135\n' +
+            '━━━━━━━━━━━━━━━━━━━━━━\n\n' +
 
-            selectedSummary
+            '**CATALOGUE — 8 RÉFÉRENCES**'
         )
-        .setColor(0x8B0000)
-        .setFooter({
-            text: 'Sélectionnez un produit pour continuer.'
-        });
+        .setColor(0x8B0000);
+
+    embeds.push(headerEmbed);
+
+    // --------------------------------------------------------
+    // 1 EMBED = 1 PRODUIT = 1 IMAGE
+    // --------------------------------------------------------
+
+    for (const product of CATALOGUE_PRODUITS) {
+        const quantity = session.items[product.id] || 0;
+
+        const productEmbed = new EmbedBuilder()
+            .setTitle(`${product.code} — ${product.nom}`)
+            .setDescription(
+                `**${product.type}**\n\n` +
+                `${product.desc}\n\n` +
+                `**Prix unitaire :** $${product.prix}\n` +
+                `**Dans votre devis :** ${quantity} unité${quantity > 1 ? 's' : ''}`
+            )
+            .setColor(0x8B0000)
+
+            // IMPORTANT :
+            // Chaque produit possède son propre setImage()
+            // avec son URL exacte.
+            .setImage(product.image)
+            .setFooter({
+                text: `KHATCH & VALLEY • Référence ${product.code}`
+            });
+
+        embeds.push(productEmbed);
+    }
+
+    // --------------------------------------------------------
+    // MENU PRODUITS
+    // --------------------------------------------------------
 
     const productOptions = CATALOGUE_PRODUITS.map(product => {
-
-        const quantity =
-            session.items[product.id] || 0;
+        const quantity = session.items[product.id] || 0;
 
         return {
             label: product.nom,
             value: product.id,
-            emoji: product.emoji,
-            description:
-                quantity > 0
-                    ? `$${product.prix} / unité • ${quantity} dans le devis`
-                    : `$${product.prix} / unité`
+            description: `$${product.prix} / unité • ${quantity} dans le devis`,
+            emoji: getProductEmoji(product.id)
         };
     });
 
-    const productMenu =
-        new StringSelectMenuBuilder()
-            .setCustomId('catalog_select_product')
-            .setPlaceholder('Sélectionner un produit...')
-            .addOptions(productOptions);
+    const productMenu = new StringSelectMenuBuilder()
+        .setCustomId('catalog_select_product')
+        .setPlaceholder('Sélectionner un produit à ajouter...')
+        .addOptions(productOptions);
 
-    const menuRow =
-        new ActionRowBuilder()
-            .addComponents(productMenu);
+    const productRow = new ActionRowBuilder()
+        .addComponents(productMenu);
 
-    const actionRow =
-        new ActionRowBuilder().addComponents(
+    // --------------------------------------------------------
+    // ACTIONS DEVIS
+    // --------------------------------------------------------
 
-            new ButtonBuilder()
-                .setCustomId('cat_view_cart')
-                .setLabel('Consulter mon devis')
-                .setStyle(ButtonStyle.Secondary),
+    const actionRow = new ActionRowBuilder().addComponents(
 
-            new ButtonBuilder()
-                .setCustomId('cart_validate')
-                .setLabel('Valider le devis')
-                .setStyle(ButtonStyle.Success)
-        );
+        new ButtonBuilder()
+            .setCustomId('cat_view_cart')
+            .setLabel('Consulter mon devis')
+            .setStyle(ButtonStyle.Secondary),
+
+        new ButtonBuilder()
+            .setCustomId('cart_validate')
+            .setLabel('Valider le devis')
+            .setStyle(ButtonStyle.Success)
+    );
 
     return {
-        embeds: [embed],
+        embeds,
         components: [
-            menuRow,
+            productRow,
             actionRow
         ]
     };
 }
 
 // ============================================================
-// FICHE D'UN PRODUIT
+// EMOJIS PRODUITS
 // ============================================================
 
-function buildProductView(userId, productId) {
-
-    const session = getSession(userId);
-
-    const product =
-        CATALOGUE_PRODUITS.find(
-            p => p.id === productId
-        );
-
-    if (!product) {
-        return buildCatalogListView(userId);
-    }
-
-    session.selectedProduct = productId;
-
-    const quantity =
-        session.items[product.id] || 0;
-
-    const productEmbed =
-        new EmbedBuilder()
-            .setTitle(
-                `${product.emoji} ${product.nom}`
-            )
-            .setDescription(
-
-                `**${product.type}**\n\n` +
-
-                `${product.desc}\n\n` +
-
-                '━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-
-                `**Prix unitaire :** $${product.prix}\n` +
-
-                `**Quantité dans votre devis :** ${quantity}\n\n` +
-
-                (
-                    quantity > 0
-                        ? `✓ **${quantity} unité${quantity > 1 ? 's' : ''} actuellement dans votre devis.**`
-                        : 'Aucune quantité actuellement sélectionnée.'
-                )
-            )
-            .setColor(0x8B0000)
-
-            // IMAGE DU PRODUIT SÉLECTIONNÉ UNIQUEMENT
-            .setImage(product.image)
-
-            .setFooter({
-                text:
-                    `KHATCH & VALLEY • Référence ${product.code}`
-            });
-
-    // --------------------------------------------------------
-    // MENU POUR CHANGER DIRECTEMENT DE PRODUIT
-    // --------------------------------------------------------
-
-    const productOptions =
-        CATALOGUE_PRODUITS.map(p => {
-
-            const currentQuantity =
-                session.items[p.id] || 0;
-
-            return {
-                label: p.nom,
-                value: p.id,
-                emoji: p.emoji,
-                default:
-                    p.id === product.id,
-                description:
-                    currentQuantity > 0
-                        ? `${currentQuantity} dans le devis`
-                        : `$${p.prix} / unité`
-            };
-        });
-
-    const productMenu =
-        new StringSelectMenuBuilder()
-            .setCustomId('catalog_select_product')
-            .setPlaceholder('Changer de produit...')
-            .addOptions(productOptions);
-
-    const menuRow =
-        new ActionRowBuilder()
-            .addComponents(productMenu);
-
-    // --------------------------------------------------------
-    // ACTIONS PRODUIT
-    // --------------------------------------------------------
-
-    const actionRow =
-        new ActionRowBuilder().addComponents(
-
-            new ButtonBuilder()
-                .setCustomId(
-                    `catalog_set_quantity_${product.id}`
-                )
-                .setLabel(
-                    quantity > 0
-                        ? 'Modifier la quantité'
-                        : 'Ajouter au devis'
-                )
-                .setStyle(ButtonStyle.Primary),
-
-            new ButtonBuilder()
-                .setCustomId(
-                    `catalog_remove_product_${product.id}`
-                )
-                .setLabel('Retirer du devis')
-                .setStyle(ButtonStyle.Danger),
-
-            new ButtonBuilder()
-                .setCustomId('cat_view_cart')
-                .setLabel('Mon devis')
-                .setStyle(ButtonStyle.Secondary)
-        );
-
-    return {
-        embeds: [productEmbed],
-        components: [
-            menuRow,
-            actionRow
-        ]
+function getProductEmoji(productId) {
+    const emojis = {
+        prod_1: '🍺',
+        prod_2: '🥃',
+        prod_3: '🍸',
+        prod_4: '🌿',
+        prod_5: '🥥',
+        prod_6: '🌵',
+        prod_7: '🥃',
+        prod_8: '🍑'
     };
+
+    return emojis[productId] || '📦';
 }
 
 // ============================================================
@@ -427,13 +309,8 @@ function buildProductView(userId, productId) {
 // ============================================================
 
 function buildCartView(userId) {
-
-    const session =
-        getSession(userId);
-
-    const entries =
-        Object.entries(session.items)
-            .filter(([_, qty]) => qty > 0);
+    const session = getSession(userId);
+    const entries = Object.entries(session.items);
 
     let total = 0;
 
@@ -443,77 +320,61 @@ function buildCartView(userId) {
 
         descriptionText =
             '**Votre devis est actuellement vide.**\n\n' +
-            'Sélectionnez un produit dans le catalogue pour commencer.';
+            'Sélectionnez un produit dans le catalogue pour commencer votre demande.';
 
     } else {
 
         descriptionText =
             '**RÉCAPITULATIF DE VOTRE DEMANDE**\n\n';
 
-        for (
-            const [productId, quantity]
-            of entries
-        ) {
+        for (const [prodId, qty] of entries) {
 
-            const product =
-                CATALOGUE_PRODUITS.find(
-                    p => p.id === productId
-                );
+            const product = CATALOGUE_PRODUITS.find(
+                p => p.id === prodId
+            );
 
-            if (!product) continue;
+            if (!product || qty <= 0) continue;
 
-            const subtotal =
-                product.prix * quantity;
+            const subtotal = product.prix * qty;
 
             total += subtotal;
 
             descriptionText +=
-
-                `${product.emoji} **${product.nom}**\n` +
-
-                `↳ ${quantity} unité${quantity > 1 ? 's' : ''} ` +
-                `× $${product.prix} ` +
+                `${getProductEmoji(product.id)} ` +
+                `**${product.nom}**\n` +
+                `↳ ${qty} unité${qty > 1 ? 's' : ''} × $${product.prix} ` +
                 `= **$${subtotal}**\n\n`;
         }
 
         descriptionText +=
-
             '━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-
             `### TOTAL DU DEVIS : **$${total}**`;
     }
 
-    const embed =
-        new EmbedBuilder()
-            .setTitle(
-                'KHATCH & VALLEY — MON DEVIS'
-            )
-            .setDescription(
-                descriptionText
-            )
-            .setColor(0x8B0000)
-            .setFooter({
-                text:
-                    'KHATCH & VALLEY • Confirmation commerciale requise'
-            });
+    const embed = new EmbedBuilder()
+        .setTitle('KHATCH & VALLEY — MON DEVIS')
+        .setDescription(descriptionText)
+        .setColor(0x8B0000)
+        .setFooter({
+            text: 'KHATCH & VALLEY • Confirmation commerciale requise'
+        });
 
-    const actionRow =
-        new ActionRowBuilder().addComponents(
+    const row = new ActionRowBuilder().addComponents(
 
-            new ButtonBuilder()
-                .setCustomId('cat_back_catalog')
-                .setLabel('Retour au catalogue')
-                .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId('cat_back_catalog')
+            .setLabel('Retour au catalogue')
+            .setStyle(ButtonStyle.Secondary),
 
-            new ButtonBuilder()
-                .setCustomId('cart_validate')
-                .setLabel('Valider le devis')
-                .setStyle(ButtonStyle.Success)
-        );
+        new ButtonBuilder()
+            .setCustomId('cart_validate')
+            .setLabel('Valider le devis')
+            .setStyle(ButtonStyle.Success)
+    );
 
     return {
         embeds: [embed],
-        components: [actionRow]
+        components: [row]
     };
 }
 
@@ -522,61 +383,43 @@ function buildCartView(userId) {
 // ============================================================
 
 function getRecrutementEmbed() {
-
     return new EmbedBuilder()
-        .setTitle(
-            'KHATCH & VALLEY — RECRUTEMENT'
-        )
+        .setTitle('KHATCH & VALLEY — RECRUTEMENT')
         .setDescription(
             'Intégrez les équipes de **KHATCH & VALLEY** et participez à nos opérations à Los Angeles.\n\n' +
             'Sélectionnez le poste correspondant à votre profil.'
         )
         .setColor(0x8B0000)
         .setFooter({
-            text:
-                'KHATCH & VALLEY • Ressources Humaines'
+            text: 'KHATCH & VALLEY • Ressources Humaines'
         })
         .setTimestamp();
 }
 
 function getRecrutementComponents() {
-
     return new ActionRowBuilder().addComponents(
 
         new StringSelectMenuBuilder()
-            .setCustomId(
-                'menu_ticket_postop_recrutement'
-            )
-            .setPlaceholder(
-                'Sélectionner un poste à pourvoir...'
-            )
+            .setCustomId('menu_ticket_postop_recrutement')
+            .setPlaceholder('Sélectionner un poste à pourvoir...')
             .addOptions([
 
                 {
-                    label:
-                        'Maître Distillateur / Assistant',
-                    value:
-                        'rec_distillateur',
-                    description:
-                        'Participer à la fabrication et à la mise en fût'
+                    label: 'Maître Distillateur / Assistant',
+                    value: 'rec_distillateur',
+                    description: 'Participer à la fabrication et à la mise en fût'
                 },
 
                 {
-                    label:
-                        'Chauffeur / Livreur Terrain',
-                    value:
-                        'rec_chauffeur',
-                    description:
-                        'Assurer les transports et le transit des cargaisons'
+                    label: 'Chauffeur / Livreur Terrain',
+                    value: 'rec_chauffeur',
+                    description: 'Assurer les transports et le transit des cargaisons'
                 },
 
                 {
-                    label:
-                        'Agent de Sécurité & Escorte',
-                    value:
-                        'rec_securite',
-                    description:
-                        'Protéger les convois et sécuriser les périmètres'
+                    label: 'Agent de Sécurité & Escorte',
+                    value: 'rec_securite',
+                    description: 'Protéger les convois et sécuriser les périmètres'
                 }
             ])
     );
@@ -587,52 +430,37 @@ function getRecrutementComponents() {
 // ============================================================
 
 function getServiceEmbed() {
-
     return new EmbedBuilder()
-        .setTitle(
-            'KHATCH & VALLEY — SUPPORT & SERVICES'
-        )
+        .setTitle('KHATCH & VALLEY — SUPPORT & SERVICES')
         .setDescription(
             'Besoin d’assistance, de renseignements ou d’un service particulier ?\n\n' +
             'Ouvrez un dossier auprès de notre permanence.'
         )
         .setColor(0x8B0000)
         .setFooter({
-            text:
-                'KHATCH & VALLEY • Support & Services'
+            text: 'KHATCH & VALLEY • Support & Services'
         })
         .setTimestamp();
 }
 
 function getServiceComponents() {
-
     return new ActionRowBuilder().addComponents(
 
         new StringSelectMenuBuilder()
-            .setCustomId(
-                'menu_ticket_postop_service'
-            )
-            .setPlaceholder(
-                'Sélectionner un type de service...'
-            )
+            .setCustomId('menu_ticket_postop_service')
+            .setPlaceholder('Sélectionner un type de service...')
             .addOptions([
 
                 {
-                    label:
-                        'Assistance & Support Client',
-                    value:
-                        'srv_support',
-                    description:
-                        'Poser une question ou régler un litige'
+                    label: 'Assistance & Support Client',
+                    value: 'srv_support',
+                    description: 'Poser une question ou régler un litige'
                 },
 
                 {
-                    label:
-                        'Partenariat / Autre Demande',
-                    value:
-                        'srv_autre',
-                    description:
-                        'Proposer une collaboration ou un contrat spécifique'
+                    label: 'Partenariat / Autre Demande',
+                    value: 'srv_autre',
+                    description: 'Proposer une collaboration ou un contrat spécifique'
                 }
             ])
     );
@@ -650,25 +478,20 @@ async function initPostOpPanels(guild) {
 
         client._postopListenerRegistered = true;
 
-        client.on(
-            'interactionCreate',
-            async interaction => {
+        client.on('interactionCreate', async interaction => {
 
-                try {
+            try {
 
-                    await handlePostOpInteraction(
-                        interaction
-                    );
+                await handlePostOpInteraction(interaction);
 
-                } catch (err) {
+            } catch (err) {
 
-                    console.error(
-                        '[KHATCH & VALLEY] Erreur interaction PostOp :',
-                        err
-                    );
-                }
+                console.error(
+                    '[KHATCH & VALLEY] Erreur interaction PostOp :',
+                    err
+                );
             }
-        );
+        });
     }
 
     await guild.channels.fetch();
@@ -680,55 +503,44 @@ async function initPostOpPanels(guild) {
 
     const recChan =
         guild.channels.cache.get(
-            CONFIG_POSTOP.channels['recrutement-interne']
+            CONFIG_POSTOP.channels.recrutement
         );
 
     const srvChan =
         guild.channels.cache.get(
-            CONFIG_POSTOP.channels.services
+            CONFIG_POSTOP.channels.service
         );
 
-    // ========================================================
+    // --------------------------------------------------------
     // COMMANDES
-    // ========================================================
+    // --------------------------------------------------------
 
     if (cmdChan) {
 
         try {
 
-            const msgs =
-                await cmdChan.messages.fetch({
-                    limit: 10
-                });
+            const msgs = await cmdChan.messages.fetch({
+                limit: 10
+            });
 
-            const botMsg =
-                msgs.find(
-                    m =>
-                        m.author.id === client.user.id &&
-                        m.embeds[0]?.title ===
-                            'KHATCH & VALLEY'
-                );
+            const botMsg = msgs.find(
+                m =>
+                    m.author.id === client.user.id &&
+                    m.embeds[0]?.title?.includes('KHATCH & VALLEY')
+            );
 
             if (!botMsg) {
 
                 await cmdChan.send({
-                    embeds: [
-                        getCommandesEmbed()
-                    ],
-                    components: [
-                        getCommandesComponents()
-                    ]
+                    embeds: [getCommandesEmbed()],
+                    components: [getCommandesComponents()]
                 });
 
             } else {
 
                 await botMsg.edit({
-                    embeds: [
-                        getCommandesEmbed()
-                    ],
-                    components: [
-                        getCommandesComponents()
-                    ]
+                    embeds: [getCommandesEmbed()],
+                    components: [getCommandesComponents()]
                 });
             }
 
@@ -741,48 +553,36 @@ async function initPostOpPanels(guild) {
         }
     }
 
-    // ========================================================
+    // --------------------------------------------------------
     // RECRUTEMENT
-    // ========================================================
+    // --------------------------------------------------------
 
     if (recChan) {
 
         try {
 
-            const msgs =
-                await recChan.messages.fetch({
-                    limit: 10
-                });
+            const msgs = await recChan.messages.fetch({
+                limit: 10
+            });
 
-            const botMsg =
-                msgs.find(
-                    m =>
-                        m.author.id === client.user.id &&
-                        m.embeds[0]?.title?.includes(
-                            'RECRUTEMENT'
-                        )
-                );
+            const botMsg = msgs.find(
+                m =>
+                    m.author.id === client.user.id &&
+                    m.embeds[0]?.title?.includes('RECRUTEMENT')
+            );
 
             if (!botMsg) {
 
                 await recChan.send({
-                    embeds: [
-                        getRecrutementEmbed()
-                    ],
-                    components: [
-                        getRecrutementComponents()
-                    ]
+                    embeds: [getRecrutementEmbed()],
+                    components: [getRecrutementComponents()]
                 });
 
             } else {
 
                 await botMsg.edit({
-                    embeds: [
-                        getRecrutementEmbed()
-                    ],
-                    components: [
-                        getRecrutementComponents()
-                    ]
+                    embeds: [getRecrutementEmbed()],
+                    components: [getRecrutementComponents()]
                 });
             }
 
@@ -795,48 +595,36 @@ async function initPostOpPanels(guild) {
         }
     }
 
-    // ========================================================
+    // --------------------------------------------------------
     // SERVICE
-    // ========================================================
+    // --------------------------------------------------------
 
     if (srvChan) {
 
         try {
 
-            const msgs =
-                await srvChan.messages.fetch({
-                    limit: 10
-                });
+            const msgs = await srvChan.messages.fetch({
+                limit: 10
+            });
 
-            const botMsg =
-                msgs.find(
-                    m =>
-                        m.author.id === client.user.id &&
-                        m.embeds[0]?.title?.includes(
-                            'SUPPORT & SERVICES'
-                        )
-                );
+            const botMsg = msgs.find(
+                m =>
+                    m.author.id === client.user.id &&
+                    m.embeds[0]?.title?.includes('SUPPORT & SERVICES')
+            );
 
             if (!botMsg) {
 
                 await srvChan.send({
-                    embeds: [
-                        getServiceEmbed()
-                    ],
-                    components: [
-                        getServiceComponents()
-                    ]
+                    embeds: [getServiceEmbed()],
+                    components: [getServiceComponents()]
                 });
 
             } else {
 
                 await botMsg.edit({
-                    embeds: [
-                        getServiceEmbed()
-                    ],
-                    components: [
-                        getServiceComponents()
-                    ]
+                    embeds: [getServiceEmbed()],
+                    components: [getServiceComponents()]
                 });
             }
 
@@ -856,48 +644,21 @@ async function initPostOpPanels(guild) {
 
 async function handlePostOpInteraction(interaction) {
 
-    const id =
-        interaction.customId;
+    const id = interaction.customId;
 
     if (!id) return;
 
     const isPostOpAction =
-
         id === 'catalog_open_session' ||
-
         id === 'catalog_select_product' ||
-
         id === 'cat_view_cart' ||
-
         id === 'cat_back_catalog' ||
-
         id === 'cart_validate' ||
-
-        id.startsWith(
-            'catalog_set_quantity_'
-        ) ||
-
-        id.startsWith(
-            'catalog_remove_product_'
-        ) ||
-
-        id ===
-            'menu_ticket_postop_recrutement' ||
-
-        id ===
-            'menu_ticket_postop_service' ||
-
-        id.startsWith(
-            'mod_postop_'
-        ) ||
-
-        id.startsWith(
-            'mod_catalog_'
-        ) ||
-
-        id.startsWith(
-            'menu_staff_postop_'
-        );
+        id === 'menu_ticket_postop_recrutement' ||
+        id === 'menu_ticket_postop_service' ||
+        id.startsWith('mod_postop_') ||
+        id.startsWith('mod_catalog_') ||
+        id.startsWith('menu_staff_postop_');
 
     if (!isPostOpAction) return;
 
@@ -905,30 +666,18 @@ async function handlePostOpInteraction(interaction) {
 
     interaction.handledByPostOp = true;
 
-    const userId =
-        interaction.user.id;
-
-    const session =
-        getSession(userId);
+    const userId = interaction.user.id;
+    const session = getSession(userId);
 
     // ========================================================
-    // OUVERTURE DU CATALOGUE
+    // OUVERTURE CATALOGUE
     // ========================================================
 
-    if (
-        id ===
-        'catalog_open_session'
-    ) {
+    if (id === 'catalog_open_session') {
 
         return await interaction.reply({
-
-            ...buildCatalogListView(
-                userId
-            ),
-
-            flags: [
-                MessageFlags.Ephemeral
-            ]
+            ...buildCatalogView(userId),
+            flags: [MessageFlags.Ephemeral]
         });
     }
 
@@ -937,186 +686,61 @@ async function handlePostOpInteraction(interaction) {
     // ========================================================
 
     if (
-        id ===
-            'catalog_select_product' &&
+        id === 'catalog_select_product' &&
         interaction.isStringSelectMenu()
     ) {
 
-        const productId =
-            interaction.values[0];
+        const productId = interaction.values[0];
 
-        const product =
-            CATALOGUE_PRODUITS.find(
-                p =>
-                    p.id === productId
-            );
-
-        if (!product) {
-
-            return await interaction.reply({
-
-                content:
-                    'Produit introuvable.',
-
-                flags: [
-                    MessageFlags.Ephemeral
-                ]
-            });
-        }
-
-        return await interaction.update(
-            buildProductView(
-                userId,
-                productId
-            )
+        const product = CATALOGUE_PRODUITS.find(
+            p => p.id === productId
         );
-    }
-
-    // ========================================================
-    // MODIFIER / AJOUTER UNE QUANTITÉ
-    // ========================================================
-
-    if (
-        id.startsWith(
-            'catalog_set_quantity_'
-        )
-    ) {
-
-        const productId =
-            id.replace(
-                'catalog_set_quantity_',
-                ''
-            );
-
-        const product =
-            CATALOGUE_PRODUITS.find(
-                p =>
-                    p.id === productId
-            );
 
         if (!product) {
 
             return await interaction.reply({
-
-                content:
-                    'Produit introuvable.',
-
-                flags: [
-                    MessageFlags.Ephemeral
-                ]
+                content: 'Produit introuvable.',
+                flags: [MessageFlags.Ephemeral]
             });
         }
 
         const currentQuantity =
-            session.items[
-                product.id
-            ] || 0;
+            session.items[product.id] || 0;
 
-        const modal =
-            new ModalBuilder()
-                .setCustomId(
-                    `mod_catalog_quantity_${product.id}`
-                )
-                .setTitle(
-                    `${product.nom} — Quantité`
-                );
+        const modal = new ModalBuilder()
+            .setCustomId(`mod_catalog_quantity_${product.id}`)
+            .setTitle(`${product.nom} — Quantité`);
 
         const quantityInput =
             new TextInputBuilder()
-                .setCustomId(
-                    'quantity'
-                )
-                .setLabel(
-                    'Combien en voulez-vous ?'
-                )
-                .setPlaceholder(
-                    'Exemple : 10'
-                )
-                .setStyle(
-                    TextInputStyle.Short
-                )
+                .setCustomId('quantity')
+                .setLabel('Quantité souhaitée')
+                .setPlaceholder('Exemple : 10')
+                .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setValue(
                     currentQuantity > 0
-                        ? String(
-                            currentQuantity
-                        )
+                        ? String(currentQuantity)
                         : '1'
                 );
 
-        modal.addComponents(
-
+        const row =
             new ActionRowBuilder()
-                .addComponents(
-                    quantityInput
-                )
-        );
+                .addComponents(quantityInput);
 
-        return await interaction.showModal(
-            modal
-        );
-    }
+        modal.addComponents(row);
 
-    // ========================================================
-    // RETIRER UN PRODUIT DU DEVIS
-    // ========================================================
-
-    if (
-        id.startsWith(
-            'catalog_remove_product_'
-        )
-    ) {
-
-        const productId =
-            id.replace(
-                'catalog_remove_product_',
-                ''
-            );
-
-        const product =
-            CATALOGUE_PRODUITS.find(
-                p =>
-                    p.id === productId
-            );
-
-        if (!product) {
-
-            return await interaction.reply({
-
-                content:
-                    'Produit introuvable.',
-
-                flags: [
-                    MessageFlags.Ephemeral
-                ]
-            });
-        }
-
-        delete session.items[
-            productId
-        ];
-
-        return await interaction.update(
-            buildProductView(
-                userId,
-                productId
-            )
-        );
+        return await interaction.showModal(modal);
     }
 
     // ========================================================
     // CONSULTATION DU DEVIS
     // ========================================================
 
-    if (
-        id ===
-        'cat_view_cart'
-    ) {
+    if (id === 'cat_view_cart') {
 
         return await interaction.update(
-            buildCartView(
-                userId
-            )
+            buildCartView(userId)
         );
     }
 
@@ -1124,15 +748,10 @@ async function handlePostOpInteraction(interaction) {
     // RETOUR AU CATALOGUE
     // ========================================================
 
-    if (
-        id ===
-        'cat_back_catalog'
-    ) {
+    if (id === 'cat_back_catalog') {
 
         return await interaction.update(
-            buildCatalogListView(
-                userId
-            )
+            buildCatalogView(userId)
         );
     }
 
@@ -1140,133 +759,85 @@ async function handlePostOpInteraction(interaction) {
     // VALIDATION DU DEVIS
     // ========================================================
 
-    if (
-        id ===
-        'cart_validate'
-    ) {
+    if (id === 'cart_validate') {
 
         const entries =
-            Object.entries(
-                session.items
-            ).filter(
-                ([_, qty]) =>
-                    qty > 0
-            );
+            Object.entries(session.items)
+                .filter(([_, qty]) => qty > 0);
 
-        if (
-            entries.length === 0
-        ) {
+        if (entries.length === 0) {
 
             return await interaction.reply({
-
                 content:
                     'Votre devis est vide. Sélectionnez au moins un produit.',
-
-                flags: [
-                    MessageFlags.Ephemeral
-                ]
+                flags: [MessageFlags.Ephemeral]
             });
         }
 
-        const modal =
-            new ModalBuilder()
-                .setCustomId(
-                    'mod_catalog_checkout'
-                )
-                .setTitle(
-                    'Validation du devis'
-                );
+        const modal = new ModalBuilder()
+            .setCustomId('mod_catalog_checkout')
+            .setTitle('Validation du devis');
+
+        const prenomInput =
+            new TextInputBuilder()
+                .setCustomId('prenom')
+                .setLabel('Prénom')
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true);
+
+        const nomInput =
+            new TextInputBuilder()
+                .setCustomId('nom')
+                .setLabel('Nom')
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true);
+
+        const telephoneInput =
+            new TextInputBuilder()
+                .setCustomId('telephone')
+                .setLabel('Téléphone')
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true);
+
+        const notesInput =
+            new TextInputBuilder()
+                .setCustomId('notes')
+                .setLabel('Établissement / Instructions')
+                .setStyle(TextInputStyle.Paragraph)
+                .setRequired(false);
 
         modal.addComponents(
 
             new ActionRowBuilder()
-                .addComponents(
-
-                    new TextInputBuilder()
-                        .setCustomId(
-                            'prenom'
-                        )
-                        .setLabel(
-                            'Prénom'
-                        )
-                        .setStyle(
-                            TextInputStyle.Short
-                        )
-                        .setRequired(true)
-                ),
+                .addComponents(prenomInput),
 
             new ActionRowBuilder()
-                .addComponents(
-
-                    new TextInputBuilder()
-                        .setCustomId(
-                            'nom'
-                        )
-                        .setLabel(
-                            'Nom'
-                        )
-                        .setStyle(
-                            TextInputStyle.Short
-                        )
-                        .setRequired(true)
-                ),
+                .addComponents(nomInput),
 
             new ActionRowBuilder()
-                .addComponents(
-
-                    new TextInputBuilder()
-                        .setCustomId(
-                            'telephone'
-                        )
-                        .setLabel(
-                            'Téléphone'
-                        )
-                        .setStyle(
-                            TextInputStyle.Short
-                        )
-                        .setRequired(true)
-                ),
+                .addComponents(telephoneInput),
 
             new ActionRowBuilder()
-                .addComponents(
-
-                    new TextInputBuilder()
-                        .setCustomId(
-                            'notes'
-                        )
-                        .setLabel(
-                            'Établissement / Instructions'
-                        )
-                        .setStyle(
-                            TextInputStyle.Paragraph
-                        )
-                        .setRequired(false)
-                )
+                .addComponents(notesInput)
         );
 
-        return await interaction.showModal(
-            modal
-        );
+        return await interaction.showModal(modal);
     }
 
     // ========================================================
     // MENUS RECRUTEMENT / SERVICE / STAFF
     // ========================================================
 
-    if (
-        interaction.isStringSelectMenu()
-    ) {
+    if (interaction.isStringSelectMenu()) {
 
-        const val =
-            interaction.values[0];
+        const val = interaction.values[0];
 
-        // ====================================================
+        // ----------------------------------------------------
         // RECRUTEMENT
-        // ====================================================
+        // ----------------------------------------------------
 
         if (
-            id ===
-            'menu_ticket_postop_recrutement'
+            id === 'menu_ticket_postop_recrutement'
         ) {
 
             const postNames = {
@@ -1288,90 +859,54 @@ async function handlePostOpInteraction(interaction) {
                     )
                     .setTitle(
                         `Candidature — ${
-                            postNames[val] ||
-                            'Poste'
+                            postNames[val] || 'Poste'
                         }`
                     );
 
             modal.addComponents(
 
-                new ActionRowBuilder()
-                    .addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('prenom')
+                        .setLabel('Prénom')
+                        .setStyle(TextInputStyle.Short)
+                        .setRequired(true)
+                ),
 
-                        new TextInputBuilder()
-                            .setCustomId(
-                                'prenom'
-                            )
-                            .setLabel(
-                                'Prénom'
-                            )
-                            .setStyle(
-                                TextInputStyle.Short
-                            )
-                            .setRequired(true)
-                    ),
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('nom')
+                        .setLabel('Nom')
+                        .setStyle(TextInputStyle.Short)
+                        .setRequired(true)
+                ),
 
-                new ActionRowBuilder()
-                    .addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('telephone')
+                        .setLabel('Téléphone')
+                        .setStyle(TextInputStyle.Short)
+                        .setRequired(true)
+                ),
 
-                        new TextInputBuilder()
-                            .setCustomId(
-                                'nom'
-                            )
-                            .setLabel(
-                                'Nom'
-                            )
-                            .setStyle(
-                                TextInputStyle.Short
-                            )
-                            .setRequired(true)
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-
-                        new TextInputBuilder()
-                            .setCustomId(
-                                'telephone'
-                            )
-                            .setLabel(
-                                'Téléphone'
-                            )
-                            .setStyle(
-                                TextInputStyle.Short
-                            )
-                            .setRequired(true)
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-
-                        new TextInputBuilder()
-                            .setCustomId(
-                                'motivations'
-                            )
-                            .setLabel(
-                                'Expériences & Motivations'
-                            )
-                            .setStyle(
-                                TextInputStyle.Paragraph
-                            )
-                            .setRequired(true)
-                    )
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('motivations')
+                        .setLabel('Expériences & Motivations')
+                        .setStyle(TextInputStyle.Paragraph)
+                        .setRequired(true)
+                )
             );
 
-            return await interaction.showModal(
-                modal
-            );
+            return await interaction.showModal(modal);
         }
 
-        // ====================================================
+        // ----------------------------------------------------
         // SERVICE
-        // ====================================================
+        // ----------------------------------------------------
 
         if (
-            id ===
-            'menu_ticket_postop_service'
+            id === 'menu_ticket_postop_service'
         ) {
 
             const srvNames = {
@@ -1390,114 +925,69 @@ async function handlePostOpInteraction(interaction) {
                     )
                     .setTitle(
                         `Service — ${
-                            srvNames[val] ||
-                            'Support'
+                            srvNames[val] || 'Support'
                         }`
                     );
 
             modal.addComponents(
 
-                new ActionRowBuilder()
-                    .addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('prenom')
+                        .setLabel('Prénom')
+                        .setStyle(TextInputStyle.Short)
+                        .setRequired(true)
+                ),
 
-                        new TextInputBuilder()
-                            .setCustomId(
-                                'prenom'
-                            )
-                            .setLabel(
-                                'Prénom'
-                            )
-                            .setStyle(
-                                TextInputStyle.Short
-                            )
-                            .setRequired(true)
-                    ),
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('nom')
+                        .setLabel('Nom')
+                        .setStyle(TextInputStyle.Short)
+                        .setRequired(true)
+                ),
 
-                new ActionRowBuilder()
-                    .addComponents(
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('telephone')
+                        .setLabel('Téléphone')
+                        .setStyle(TextInputStyle.Short)
+                        .setRequired(true)
+                ),
 
-                        new TextInputBuilder()
-                            .setCustomId(
-                                'nom'
-                            )
-                            .setLabel(
-                                'Nom'
-                            )
-                            .setStyle(
-                                TextInputStyle.Short
-                            )
-                            .setRequired(true)
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-
-                        new TextInputBuilder()
-                            .setCustomId(
-                                'telephone'
-                            )
-                            .setLabel(
-                                'Téléphone'
-                            )
-                            .setStyle(
-                                TextInputStyle.Short
-                            )
-                            .setRequired(true)
-                    ),
-
-                new ActionRowBuilder()
-                    .addComponents(
-
-                        new TextInputBuilder()
-                            .setCustomId(
-                                'requete'
-                            )
-                            .setLabel(
-                                'Objet de votre demande'
-                            )
-                            .setStyle(
-                                TextInputStyle.Paragraph
-                            )
-                            .setRequired(true)
-                    )
+                new ActionRowBuilder().addComponents(
+                    new TextInputBuilder()
+                        .setCustomId('requete')
+                        .setLabel('Objet de votre demande')
+                        .setStyle(TextInputStyle.Paragraph)
+                        .setRequired(true)
+                )
             );
 
-            return await interaction.showModal(
-                modal
-            );
+            return await interaction.showModal(modal);
         }
 
-        // ====================================================
+        // ----------------------------------------------------
         // ACTIONS STAFF
-        // ====================================================
+        // ----------------------------------------------------
 
         if (
-            id.startsWith(
-                'menu_staff_postop_'
-            )
+            id.startsWith('menu_staff_postop_')
         ) {
 
-            const member =
-                interaction.member;
+            const member = interaction.member;
 
             const hasStaffRole =
-                member.roles.cache.some(
-                    role =>
-                        CONFIG_POSTOP.staffRoles.includes(
-                            role.id
-                        )
+                member.roles.cache.some(role =>
+                    CONFIG_POSTOP.staffRoles.includes(role.id)
                 );
 
             if (!hasStaffRole) {
 
                 return await interaction.reply({
-
                     content:
                         'Accès restreint aux membres habilités.',
-
-                    flags: [
-                        MessageFlags.Ephemeral
-                    ]
+                    flags: [MessageFlags.Ephemeral]
                 });
             }
 
@@ -1516,14 +1006,11 @@ async function handlePostOpInteraction(interaction) {
             const oldEmbed =
                 message.embeds[0];
 
-            // ------------------------------------------------
+            // ----------------------------------------------
             // CLAIM
-            // ------------------------------------------------
+            // ----------------------------------------------
 
-            if (
-                actionVal ===
-                'claim'
-            ) {
+            if (actionVal === 'claim') {
 
                 if (
                     oldEmbed.description?.includes(
@@ -1532,24 +1019,17 @@ async function handlePostOpInteraction(interaction) {
                 ) {
 
                     return await interaction.reply({
-
                         content:
                             'Ce dossier a déjà été pris en charge.',
-
-                        flags: [
-                            MessageFlags.Ephemeral
-                        ]
+                        flags: [MessageFlags.Ephemeral]
                     });
                 }
 
                 const embed =
-                    EmbedBuilder.from(
-                        oldEmbed
-                    );
+                    EmbedBuilder.from(oldEmbed);
 
                 embed.setDescription(
                     oldEmbed.description.replace(
-
                         '*Statut : En attente d\'instruction.*',
 
                         `*Statut : Dossier pris en charge par **${member.user.tag}***`
@@ -1558,29 +1038,21 @@ async function handlePostOpInteraction(interaction) {
 
                 await message.edit({
                     embeds: [embed],
-                    components:
-                        message.components
+                    components: message.components
                 });
 
                 return await interaction.reply({
-
                     content:
                         'Dossier assigné à votre profil avec succès.',
-
-                    flags: [
-                        MessageFlags.Ephemeral
-                    ]
+                    flags: [MessageFlags.Ephemeral]
                 });
             }
 
-            // ------------------------------------------------
+            // ----------------------------------------------
             // MODIFY
-            // ------------------------------------------------
+            // ----------------------------------------------
 
-            if (
-                actionVal ===
-                'modify'
-            ) {
+            if (actionVal === 'modify') {
 
                 const modal =
                     new ModalBuilder()
@@ -1592,22 +1064,19 @@ async function handlePostOpInteraction(interaction) {
                         );
 
                 modal.addComponents(
-
-                    new ActionRowBuilder()
-                        .addComponents(
-
-                            new TextInputBuilder()
-                                .setCustomId(
-                                    'nouveau_contenu'
-                                )
-                                .setLabel(
-                                    'Informations complémentaires / Consignes'
-                                )
-                                .setStyle(
-                                    TextInputStyle.Paragraph
-                                )
-                                .setRequired(true)
-                        )
+                    new ActionRowBuilder().addComponents(
+                        new TextInputBuilder()
+                            .setCustomId(
+                                'nouveau_contenu'
+                            )
+                            .setLabel(
+                                'Informations complémentaires / Consignes'
+                            )
+                            .setStyle(
+                                TextInputStyle.Paragraph
+                            )
+                            .setRequired(true)
+                    )
                 );
 
                 return await interaction.showModal(
@@ -1615,115 +1084,87 @@ async function handlePostOpInteraction(interaction) {
                 );
             }
 
-            // ------------------------------------------------
+            // ----------------------------------------------
             // CLOSE
-            // ------------------------------------------------
+            // ----------------------------------------------
 
-            if (
-                actionVal ===
-                'close'
-            ) {
+            if (actionVal === 'close') {
 
                 await interaction.reply({
-
                     content:
                         'Clôture administrative du dossier en cours...',
-
-                    flags: [
-                        MessageFlags.Ephemeral
-                    ]
+                    flags: [MessageFlags.Ephemeral]
                 });
 
-                setTimeout(
-                    async () => {
+                setTimeout(async () => {
 
-                        try {
+                    try {
 
-                            const channel =
-                                interaction.channel;
+                        const channel =
+                            interaction.channel;
 
-                            const closedCategory =
-                                channel.guild.channels.cache.find(
-                                    c =>
-                                        c.type ===
-                                            ChannelType.GuildCategory &&
-                                        (
-                                            c.name
-                                                .toLowerCase()
-                                                .includes(
-                                                    'dossier traité'
-                                                ) ||
+                        const closedCategory =
+                            channel.guild.channels.cache.find(
+                                c =>
+                                    c.type === ChannelType.GuildCategory &&
+                                    (
+                                        c.name
+                                            .toLowerCase()
+                                            .includes('dossier traité') ||
 
-                                            c.name
-                                                .toLowerCase()
-                                                .includes(
-                                                    'archives'
-                                                )
-                                        )
-                                );
-
-                            if (
-                                closedCategory
-                            ) {
-
-                                await channel.setParent(
-                                    closedCategory.id
-                                );
-
-                                await channel.permissionOverwrites.set([
-
-                                    {
-                                        id:
-                                            channel.guild.id,
-
-                                        deny: [
-                                            PermissionFlagsBits.ViewChannel
-                                        ]
-                                    },
-
-                                    ...CONFIG_POSTOP.staffRoles.map(
-                                        roleId => ({
-
-                                            id:
-                                                roleId,
-
-                                            allow: [
-
-                                                PermissionFlagsBits.ViewChannel,
-
-                                                PermissionFlagsBits.ReadMessageHistory
-                                            ]
-                                        })
+                                        c.name
+                                            .toLowerCase()
+                                            .includes('archives')
                                     )
-                                ]);
+                            );
 
-                                await channel.setName(
+                        if (closedCategory) {
 
-                                    `archive-${channel.name}`
-                                        .substring(
-                                            0,
-                                            100
-                                        )
-                                );
+                            await channel.setParent(
+                                closedCategory.id
+                            );
 
-                            } else {
+                            await channel.permissionOverwrites.set([
 
-                                await channel.delete(
-                                    'Dossier clôturé.'
-                                );
-                            }
+                                {
+                                    id: channel.guild.id,
+                                    deny: [
+                                        PermissionFlagsBits.ViewChannel
+                                    ]
+                                },
 
-                        } catch (err) {
+                                ...CONFIG_POSTOP.staffRoles.map(
+                                    roleId => ({
+                                        id: roleId,
+                                        allow: [
+                                            PermissionFlagsBits.ViewChannel,
+                                            PermissionFlagsBits.ReadMessageHistory
+                                        ]
+                                    })
+                                )
+                            ]);
 
-                            console.error(
-                                '[KHATCH & VALLEY] Erreur clôture :',
-                                err
+                            await channel.setName(
+                                `archive-${channel.name}`
+                                    .substring(0, 100)
+                            );
+
+                        } else {
+
+                            await channel.delete(
+                                'Dossier clôturé.'
                             );
                         }
 
-                    },
-                    5000
-                );
+                    } catch (err) {
+
+                        console.error(
+                            '[KHATCH & VALLEY] Erreur clôture :',
+                            err
+                        );
+                    }
+
+                }, 5000);
 
                 return;
             }
@@ -1734,15 +1175,13 @@ async function handlePostOpInteraction(interaction) {
     // MODALES
     // ========================================================
 
-    if (
-        interaction.isModalSubmit()
-    ) {
+    if (interaction.isModalSubmit()) {
 
         const modId =
             interaction.customId;
 
         // ====================================================
-        // QUANTITÉ D'UN PRODUIT
+        // QUANTITÉ PRODUIT
         // ====================================================
 
         if (
@@ -1759,20 +1198,15 @@ async function handlePostOpInteraction(interaction) {
 
             const product =
                 CATALOGUE_PRODUITS.find(
-                    p =>
-                        p.id === productId
+                    p => p.id === productId
                 );
 
             if (!product) {
 
                 return await interaction.reply({
-
                     content:
                         'Produit introuvable.',
-
-                    flags: [
-                        MessageFlags.Ephemeral
-                    ]
+                    flags: [MessageFlags.Ephemeral]
                 });
             }
 
@@ -1788,89 +1222,39 @@ async function handlePostOpInteraction(interaction) {
                 );
 
             if (
-                !Number.isInteger(
-                    quantity
-                ) ||
+                !Number.isInteger(quantity) ||
                 quantity < 0
             ) {
 
                 return await interaction.reply({
-
                     content:
                         'Veuillez indiquer une quantité entière supérieure ou égale à 0.',
-
-                    flags: [
-                        MessageFlags.Ephemeral
-                    ]
+                    flags: [MessageFlags.Ephemeral]
                 });
             }
 
-            // =================================================
-            // 0 = SUPPRESSION
-            // =================================================
-
-            if (
-                quantity === 0
-            ) {
+            // 0 = suppression du produit
+            if (quantity === 0) {
 
                 delete session.items[
                     product.id
                 ];
 
-                if (
-                    interaction.isFromMessage()
-                ) {
-
-                    return await interaction.update(
-                        buildProductView(
-                            userId,
-                            product.id
-                        )
-                    );
-                }
-
                 return await interaction.reply({
-
                     content:
                         `**${product.nom}** a été retiré de votre devis.`,
-
-                    flags: [
-                        MessageFlags.Ephemeral
-                    ]
+                    flags: [MessageFlags.Ephemeral]
                 });
             }
-
-            // =================================================
-            // AJOUT / MODIFICATION
-            // =================================================
 
             session.items[
                 product.id
             ] = quantity;
 
-            session.selectedProduct =
-                product.id;
-
-            if (
-                interaction.isFromMessage()
-            ) {
-
-                return await interaction.update(
-                    buildProductView(
-                        userId,
-                        product.id
-                    )
-                );
-            }
-
             return await interaction.reply({
-
                 content:
-                    `**${product.nom}** → **${quantity} unité${quantity > 1 ? 's' : ''}** dans votre devis.`,
-
-                flags: [
-                    MessageFlags.Ephemeral
-                ]
+                    `**${product.nom}** → **${quantity} unité${quantity > 1 ? 's' : ''}** ajoutée${quantity > 1 ? 's' : ''} à votre devis.`,
+                flags: [MessageFlags.Ephemeral]
             });
         }
 
@@ -1914,14 +1298,10 @@ async function handlePostOpInteraction(interaction) {
                             m =>
                                 m.embeds.length > 0 &&
                                 m.embeds[0].title
-                                    ?.includes(
-                                        'DOSSIER'
-                                    )
+                                    ?.includes('DOSSIER')
                         );
 
-                    if (
-                        targetMsg
-                    ) {
+                    if (targetMsg) {
 
                         const oldEmbed =
                             targetMsg.embeds[0];
@@ -1932,13 +1312,11 @@ async function handlePostOpInteraction(interaction) {
                             );
 
                         let desc =
-                            oldEmbed.description ||
-                            '';
+                            oldEmbed.description || '';
 
                         desc =
                             desc.replace(
-
-                                /(📄 \*\*DÉTAILS DE LA REQUÊTE\*\*|📋 \*\*DÉTAILS DE LA COMMANDE\*\*)\n[\s\S]*?(?=\n\n🏢|$)/,
+                                /(📄 \*\*DÉTAILS DE LA REQUÊTE\*\*|📋 \*\*DETAILS DE LA COMMANDE\*\*)\n[\s\S]*?(?=\n\n🏢|$)/,
 
                                 `$1\n${nouveauContenu}\n`
                             );
@@ -1962,29 +1340,21 @@ async function handlePostOpInteraction(interaction) {
             }
 
             return await interaction.reply({
-
                 content:
                     'Les éléments du dossier ont été actualisés avec succès.',
-
-                flags: [
-                    MessageFlags.Ephemeral
-                ]
+                flags: [MessageFlags.Ephemeral]
             });
         }
 
         // ====================================================
-        // CHECKOUT / RECRUTEMENT / SERVICE
+        // CHECKOUT CATALOGUE / RECRUTEMENT / SERVICE
         // ====================================================
 
         if (
-
-            modId ===
-                'mod_catalog_checkout' ||
-
+            modId === 'mod_catalog_checkout' ||
             modId.startsWith(
                 'mod_postop_recrutement_'
             ) ||
-
             modId.startsWith(
                 'mod_postop_service_'
             )
@@ -1997,9 +1367,7 @@ async function handlePostOpInteraction(interaction) {
                 interaction.user;
 
             await interaction.deferReply({
-                flags: [
-                    MessageFlags.Ephemeral
-                ]
+                flags: [MessageFlags.Ephemeral]
             });
 
             let typeLabel = '';
@@ -2028,34 +1396,23 @@ async function handlePostOpInteraction(interaction) {
             // =================================================
 
             if (
-                modId ===
-                'mod_catalog_checkout'
+                modId === 'mod_catalog_checkout'
             ) {
 
-                typeLabel =
-                    'commandes';
-
-                subType =
-                    'Catalogue KHATCH & VALLEY';
+                typeLabel = 'commandes';
+                subType = 'Catalogue KHATCH & VALLEY';
 
                 const entries =
-                    Object.entries(
-                        session.items
-                    );
+                    Object.entries(session.items);
 
                 for (
-                    const [
-                        prodId,
-                        qty
-                    ]
+                    const [prodId, qty]
                     of entries
                 ) {
 
                     const product =
                         CATALOGUE_PRODUITS.find(
-                            p =>
-                                p.id ===
-                                prodId
+                            p => p.id === prodId
                         );
 
                     if (
@@ -2064,17 +1421,13 @@ async function handlePostOpInteraction(interaction) {
                     ) {
 
                         const subtotal =
-                            product.prix *
-                            qty;
+                            product.prix * qty;
 
-                        total +=
-                            subtotal;
+                        total += subtotal;
 
                         recapItems +=
-
-                            `${product.emoji} ` +
-                            `**${product.nom}** ×${qty} ` +
-                            `— **$${subtotal}**\n`;
+                            `${getProductEmoji(product.id)} ` +
+                            `**${product.nom}** ×${qty} — **$${subtotal}**\n`;
                     }
                 }
 
@@ -2084,8 +1437,8 @@ async function handlePostOpInteraction(interaction) {
                     ) ||
                     'Aucune instruction particulière.';
 
+                // Nettoyage du panier après validation
                 session.items = {};
-                session.selectedProduct = null;
             }
 
             // =================================================
@@ -2098,8 +1451,7 @@ async function handlePostOpInteraction(interaction) {
                 )
             ) {
 
-                typeLabel =
-                    'recrutement';
+                typeLabel = 'recrutement';
 
                 subType =
                     modId.replace(
@@ -2147,7 +1499,6 @@ async function handlePostOpInteraction(interaction) {
                     c =>
                         c.type ===
                             ChannelType.GuildCategory &&
-
                         c.name
                             .toLowerCase()
                             .includes(
@@ -2155,18 +1506,12 @@ async function handlePostOpInteraction(interaction) {
                             )
                 );
 
-            if (
-                !dossierCategory
-            ) {
+            if (!dossierCategory) {
 
                 dossierCategory =
                     await guild.channels.create({
-
-                        name:
-                            'DOSSIER EN COURS',
-
-                        type:
-                            ChannelType.GuildCategory
+                        name: 'DOSSIER EN COURS',
+                        type: ChannelType.GuildCategory
                     });
             }
 
@@ -2177,24 +1522,17 @@ async function handlePostOpInteraction(interaction) {
             const permissionOverwrites = [
 
                 {
-                    id:
-                        guild.id,
-
+                    id: guild.id,
                     deny: [
                         PermissionFlagsBits.ViewChannel
                     ]
                 },
 
                 {
-                    id:
-                        user.id,
-
+                    id: user.id,
                     allow: [
-
                         PermissionFlagsBits.ViewChannel,
-
                         PermissionFlagsBits.SendMessages,
-
                         PermissionFlagsBits.ReadMessageHistory
                     ]
                 }
@@ -2207,54 +1545,34 @@ async function handlePostOpInteraction(interaction) {
 
                 permissionOverwrites.push({
 
-                    id:
-                        roleId,
+                    id: roleId,
 
                     allow: [
-
                         PermissionFlagsBits.ViewChannel,
-
                         PermissionFlagsBits.SendMessages,
-
                         PermissionFlagsBits.ReadMessageHistory
                     ]
                 });
             }
 
             // =================================================
-            // NOM DU SALON
+            // NOM DU TICKET
             // =================================================
 
             const prefixMap = {
 
-                commandes:
-                    'cmd',
+                commandes: 'cmd',
 
-                recrutement:
-                    'rec',
+                recrutement: 'rec',
 
-                'support & services':
-                    'srv'
+                'support & services': 'srv'
             };
 
             const cleanChannelName =
-
-                `${
-                    prefixMap[typeLabel] ||
-                    'ticket'
-                }-${user.username}`
-
+                `${prefixMap[typeLabel] || 'ticket'}-${user.username}`
                     .toLowerCase()
-
-                    .replace(
-                        /[^a-z0-9]/g,
-                        '-'
-                    )
-
-                    .substring(
-                        0,
-                        90
-                    );
+                    .replace(/[^a-z0-9]/g, '-')
+                    .substring(0, 90);
 
             // =================================================
             // CRÉATION DU SALON
@@ -2263,11 +1581,9 @@ async function handlePostOpInteraction(interaction) {
             const ticketChannel =
                 await guild.channels.create({
 
-                    name:
-                        cleanChannelName,
+                    name: cleanChannelName,
 
-                    type:
-                        ChannelType.GuildText,
+                    type: ChannelType.GuildText,
 
                     parent:
                         dossierCategory.id,
@@ -2277,14 +1593,13 @@ async function handlePostOpInteraction(interaction) {
                 });
 
             // =================================================
-            // EMBED DOSSIER
+            // EMBED DU DOSSIER
             // =================================================
 
             let embedDescription = '';
 
             if (
-                modId ===
-                'mod_catalog_checkout'
+                modId === 'mod_catalog_checkout'
             ) {
 
                 embedDescription =
@@ -2292,13 +1607,10 @@ async function handlePostOpInteraction(interaction) {
                     `**RÉFÉRENCE :** ${typeLabel.toUpperCase()} (${subType})\n\n` +
 
                     `🏢 **IDENTIFICATION DU CLIENT**\n` +
-
                     `• **Titulaire :** ${prenom} ${nom}\n` +
-
                     `• **Ligne directe :** ${telephone}\n\n` +
 
                     `📋 **DÉTAILS DE LA COMMANDE**\n` +
-
                     `${recapItems}\n` +
 
                     `━━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -2306,11 +1618,9 @@ async function handlePostOpInteraction(interaction) {
                     `💵 **MONTANT TOTAL : $${total}**\n\n` +
 
                     `📝 **INSTRUCTIONS / ÉTABLISSEMENT**\n` +
-
                     `${champPrincipal}\n\n` +
 
                     `📋 **STATUT DU DOSSIER**\n` +
-
                     `*Statut : En attente d'instruction.*`;
 
             } else {
@@ -2320,40 +1630,29 @@ async function handlePostOpInteraction(interaction) {
                     `**RÉFÉRENCE :** ${typeLabel.toUpperCase()} (${subType})\n\n` +
 
                     `🏢 **IDENTIFICATION DU DEMANDEUR**\n` +
-
                     `• **Titulaire :** ${prenom} ${nom}\n` +
-
                     `• **Ligne directe :** ${telephone}\n\n` +
 
                     `📄 **DÉTAILS DE LA REQUÊTE**\n` +
-
                     `${champPrincipal}\n\n` +
 
                     `📋 **STATUT DU DOSSIER**\n` +
-
                     `*Statut : En attente d'instruction.*`;
             }
 
             const embedTicket =
                 new EmbedBuilder()
-
                     .setTitle(
                         `KHATCH & VALLEY — DOSSIER #${ticketChannel.name.toUpperCase()}`
                     )
-
                     .setDescription(
                         embedDescription
                     )
-
-                    .setColor(
-                        0x8B0000
-                    )
-
+                    .setColor(0x8B0000)
                     .setFooter({
                         text:
                             'KHATCH & VALLEY • Département Opérationnel'
                     })
-
                     .setTimestamp();
 
             // =================================================
@@ -2362,15 +1661,12 @@ async function handlePostOpInteraction(interaction) {
 
             const staffSelectMenu =
                 new StringSelectMenuBuilder()
-
                     .setCustomId(
                         `menu_staff_postop_${ticketChannel.id}`
                     )
-
                     .setPlaceholder(
                         'Gestion administrative du dossier...'
                     )
-
                     .addOptions([
 
                         {
@@ -2414,9 +1710,7 @@ async function handlePostOpInteraction(interaction) {
             await ticketChannel.send({
 
                 content:
-
                     `<@${user.id}> ` +
-
                     CONFIG_POSTOP.staffRoles
                         .map(
                             roleId =>
@@ -2429,7 +1723,6 @@ async function handlePostOpInteraction(interaction) {
                 ],
 
                 components: [
-
                     new ActionRowBuilder()
                         .addComponents(
                             staffSelectMenu
