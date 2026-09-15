@@ -20,8 +20,8 @@ const CONFIG_POSTOP = {
 
     channels: {
         commandes: '1547194706671308860',
-        recrutement: '1547194709049479178',
-        service: '1547194707799703563'
+        'recrutement-interne': '1547194709049479178',
+        services: '1547194707799703563'
     }
 };
 
@@ -680,12 +680,12 @@ async function initPostOpPanels(guild) {
 
     const recChan =
         guild.channels.cache.get(
-            CONFIG_POSTOP.channels.recrutement
+            CONFIG_POSTOP.channels['recrutement-interne']
         );
 
     const srvChan =
         guild.channels.cache.get(
-            CONFIG_POSTOP.channels.service
+            CONFIG_POSTOP.channels.services
         );
 
     // ========================================================
