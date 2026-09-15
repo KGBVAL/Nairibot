@@ -964,8 +964,6 @@ async function handlePostOpInteraction(interaction) {
             });
         }
 
-        // On affiche maintenant
-        // UNIQUEMENT la fiche du produit choisi.
         return await interaction.update(
             buildProductView(
                 userId,
@@ -1819,9 +1817,6 @@ async function handlePostOpInteraction(interaction) {
                     product.id
                 ];
 
-                // Si le modal provient
-                // d'une fiche produit,
-                // on remet à jour la fiche.
                 if (
                     interaction.isFromMessage()
                 ) {
@@ -1853,13 +1848,9 @@ async function handlePostOpInteraction(interaction) {
                 product.id
             ] = quantity;
 
-            // On conserve le produit sélectionné.
             session.selectedProduct =
                 product.id;
 
-            // Si Discord fournit le message
-            // d'origine de la modale,
-            // on actualise directement la fiche.
             if (
                 interaction.isFromMessage()
             ) {
@@ -2093,7 +2084,6 @@ async function handlePostOpInteraction(interaction) {
                     ) ||
                     'Aucune instruction particulière.';
 
-                // Nettoyage du devis
                 session.items = {};
                 session.selectedProduct = null;
             }
