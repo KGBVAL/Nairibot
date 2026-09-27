@@ -3,15 +3,14 @@ const fs = require('fs');
 const path = require('path');
 const http = require('http');
 
-// Importation des gestionnaires
+// Importation des gestionnaires restants
 const { initAllPanels, handleManagersInteraction } = require('./utils/Manager');
 const { initPostOpPanels, handlePostOpInteraction } = require('./utils/postop');
-const { initAssociationPanels, handleAssociationInteraction } = require('./utils/association');
 
 // Serveur Web pour Render
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Little Armenia, Post Op & Association Bot est en ligne !\n');
+    res.end('Khatch & Valley Bot est en ligne !\n');
 });
 
 const PORT = process.env.PORT || 3000;
@@ -44,10 +43,10 @@ if (fs.existsSync(commandsPath)) {
     }
 }
 
-// Fonction de création de l'arborescence complète et propre
+// Fonction de vérification et configuration propre (Sans recréation en boucle)
 async function setupCommunityStructure(guild) {
     try {
-        console.log(`[LITTLE ARMENIA] Vérification de la structure pour : ${guild.name}`);
+        console.log(`[KHATCH & VALLEY] Vérification de la structure pour : ${guild.name}`);
 
         const structure = [
             {
@@ -56,25 +55,6 @@ async function setupCommunityStructure(guild) {
                     { name: 'annonces', type: ChannelType.GuildText },
                     { name: 'calendrier-2026', type: ChannelType.GuildText },
                     { name: 'presse-et-medias', type: ChannelType.GuildText }
-                ]
-            },
-            {
-                categoryName: '🏛️ ┆ L\'ASSOCIATION',
-                channels: [
-                    { name: 'discussions', type: ChannelType.GuildText },
-                    { name: 'propositions-citoyennes', type: ChannelType.GuildText },
-                    { name: 'commerces-et-partenariats', type: ChannelType.GuildText },
-                    { name: 'recrutement', type: ChannelType.GuildText }
-                ]
-            },
-            {
-                categoryName: '📦 ┆ POST OP LOGISTICS',
-                channels: [
-                    { name: 'annonces-post-op', type: ChannelType.GuildText },
-                    { name: 'commandes', type: ChannelType.GuildText },
-                    { name: 'services', type: ChannelType.GuildText },
-                    { name: 'recrutement-interne', type: ChannelType.GuildText },
-                    { name: 'salle-de-pause', type: ChannelType.GuildText }
                 ]
             },
             {
@@ -111,33 +91,35 @@ async function setupCommunityStructure(guild) {
                         parent: category.id,
                     });
                     console.log(`[SETUP] Salon créé : #${chanData.name}`);
+                } else {
+                    // Le salon existe déjà, on ne le recrée pas par-dessus
+                    console.log(`[SETUP] Salon existant détecté : #${chanData.name}`);
                 }
             }
         }
 
-        // Synchronisation forcée du cache des salons et initialisation des panneaux
+        // Synchronisation du cache et initialisation des panneaux existants sans doublons
         await guild.channels.fetch();
 
         setTimeout(async () => {
             await initAllPanels(guild);
             await initPostOpPanels(guild);
-            await initAssociationPanels(guild);
-            console.log(`[LITTLE ARMENIA, POST OP & ASSOCIATION] Panneaux initialisés avec succès pour ${guild.name}`);
+            console.log(`[KHATCH & VALLEY] Panneaux initialisés avec succès pour ${guild.name}`);
         }, 4000);
 
     } catch (error) {
-        console.error(`[LITTLE ARMENIA] Erreur lors de la configuration de la structure :`, error);
+        console.error(`[KHATCH & VALLEY] Erreur lors de la configuration de la structure :`, error);
     }
 }
 
 client.once(Events.ClientReady, async () => {
-    console.log(`[LITTLE ARMENIA BOT] Connecté en tant que ${client.user.tag}`);
+    console.log(`[BOT] Connecté en tant que ${client.user.tag}`);
 
     for (const [id, guild] of client.guilds.cache) {
         try {
             await setupCommunityStructure(guild);
         } catch (error) {
-            console.error(`[LITTLE ARMENIA BOT] Erreur init structure pour ${guild.name}:`, error);
+            console.error(`[BOT] Erreur init structure pour ${guild.name}:`, error);
         }
     }
 
@@ -145,68 +127,51 @@ client.once(Events.ClientReady, async () => {
         const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
         try {
             await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
-            console.log('[LITTLE ARMENIA BOT] Commandes slash enregistrées.');
+            console.log('[BOT] Commandes slash enregistrées.');
         } catch (error) {
-            console.error('[LITTLE ARMENIA BOT] Erreur enregistrement commandes :', error);
+            console.error('[BOT] Erreur enregistrement commandes :', error);
         }
     }
 });
 
-// Routeur central des interactions
+// Routeur central des interactions (Nettoyé des modules supprimés)
 client.on(Events.InteractionCreate, async (interaction) => {
     try {
-        // Routeur Manager mis à jour pour intercepter menu_assoc, menu_postop, menu_acc_ et les modals associés
         if (
             interaction.customId && 
             (
-                interaction.customId === 'menu_assoc' ||
                 interaction.customId === 'menu_postop' ||
                 interaction.customId.startsWith('menu_acc_') ||
                 interaction.customId.startsWith('ctrl_') || 
                 interaction.customId.startsWith('acc_') || 
                 interaction.customId.startsWith('mod_')
-            ) &&
-            !interaction.customId.startsWith('mod_assoc_') &&
-            !interaction.customId.startsWith('mod_prop_')
+            )
         ) {
             await handleManagersInteraction(interaction);
             return;
         }
 
-        // Routeur Post Op Logistics (`postop.js`)
         if (
             interaction.customId &&
             (
-                interaction.customId === 'menu_ticket_commande' ||
-                interaction.customId === 'menu_ticket_recrutement' ||
-                interaction.customId.startsWith('mod_ticket_') ||
-                interaction.customId.startsWith('btn_claim_') ||
-                interaction.customId.startsWith('btn_close_')
+                interaction.customId === 'catalog_open_session' ||
+                interaction.customId === 'catalog_select_product' ||
+                interaction.customId === 'cat_view_cart' ||
+                interaction.customId === 'cat_back_catalog' ||
+                interaction.customId === 'cart_validate' ||
+                interaction.customId.startsWith('catalog_set_quantity_') ||
+                interaction.customId.startsWith('catalog_remove_product_') ||
+                interaction.customId === 'menu_ticket_postop_recrutement' ||
+                interaction.customId === 'menu_ticket_postop_service' ||
+                interaction.customId.startsWith('mod_postop_') ||
+                interaction.customId.startsWith('mod_catalog_') ||
+                interaction.customId.startsWith('menu_staff_postop_')
             )
         ) {
             await handlePostOpInteraction(interaction);
             return;
         }
 
-        // Routeur Association (`association.js`)
-        if (
-            interaction.customId &&
-            (
-                interaction.customId === 'menu_ticket_proposition' ||
-                interaction.customId === 'menu_ticket_benevolat' ||
-                interaction.customId.startsWith('mod_assoc_') ||
-                interaction.customId.startsWith('btn_assoc_claim_') ||
-                interaction.customId.startsWith('btn_assoc_close_') ||
-                interaction.customId.startsWith('btn_prop_validate_') ||
-                interaction.customId.startsWith('btn_prop_modify_') ||
-                interaction.customId.startsWith('mod_prop_edit_')
-            )
-        ) {
-            await handleAssociationInteraction(interaction);
-            return;
-        }
-
-        // Commandes Slash
         if (interaction.isChatInputCommand()) {
             const command = client.commands.get(interaction.commandName);
             if (command) await command.execute(interaction);
@@ -217,7 +182,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-console.log("[DEBUG] Tentative de connexion avec le token...");
 client.login(process.env.DISCORD_TOKEN).catch(error => {
-    console.error("[LITTLE ARMENIA BOT] Erreur fatale lors de la connexion à Discord :", error);
+    console.error("[BOT] Erreur fatale lors de la connexion à Discord :", error);
 });
