@@ -30,7 +30,7 @@ const CONFIG_POSTOP = {
 };
 
 // ============================================================
-// CATALOGUE KHATCH & VALLEY (AMÉLIORÉ & SUBLIMÉ)
+// CATALOGUE KHATCH & VALLEY (PREMIUM & LOS SANTOS)
 // ============================================================
 
 const CATALOGUE_PRODUITS = [
@@ -40,7 +40,7 @@ const CATALOGUE_PRODUITS = [
         nom: 'KHATCH LAGER',
         type: 'Bière Blonde Premium',
         prix: 45,
-        desc: 'Lager blonde légère, sèche et d’une pureté absolue. Idéale pour les chaudes journées à Los Angeles.',
+        desc: 'Lager blonde d’une limpidité absolue, fraîche, sèche et ciselée. L’essence même de la détente sous le soleil de Los Santos.',
         image: 'https://www.upload.ee/image/19756742/biere.png',
         emoji: '🍺'
     },
@@ -50,7 +50,7 @@ const CATALOGUE_PRODUITS = [
         nom: 'KHATCH VALLEY WHISKY',
         type: 'American Whisky',
         prix: 180,
-        desc: 'Whisky d’exception avec maturation en fûts de chêne arménien sélectionnés avec soin.',
+        desc: 'Whisky d’exception vieilli en fûts de chêne arménien. Des notes boisées intenses, ambrées et d’une longueur en bouche mémorable.',
         image: 'https://www.upload.ee/image/19756745/Whisky.png',
         emoji: '🥃'
     },
@@ -60,7 +60,7 @@ const CATALOGUE_PRODUITS = [
         nom: 'KHATCH VODKA',
         type: 'Vodka Ultra-Pure',
         prix: 120,
-        desc: 'Vodka distillée à partir de blé de premier choix, offrant une texture soyeuse et une finale délicate.',
+        desc: 'Vodka distillée avec un soin obsessionnel à partir de blé pur. Une pureté cristalline pour une texture d’une douceur absolue.',
         image: 'https://www.upload.ee/image/19756746/vodka.png',
         emoji: '🍸'
     },
@@ -70,7 +70,7 @@ const CATALOGUE_PRODUITS = [
         nom: 'KHATCH BOTANICAL GIN',
         type: 'Gin Artisanal',
         prix: 150,
-        desc: 'Gin complexe aux botaniques arméniennes : baies de genièvre, abricot séché, coriandre et herbes sauvages.',
+        desc: 'Alchimie parfaite entre genièvre traditionnel, abricot séché et herbes sauvages d’inspiration arménienne.',
         image: 'https://www.upload.ee/image/19756748/GIN-Photoroom.png',
         emoji: '🌿'
     },
@@ -80,7 +80,7 @@ const CATALOGUE_PRODUITS = [
         nom: 'VALLEY RUM',
         type: 'Rhum Ambré',
         prix: 165,
-        desc: 'Rhum de caractère aux notes profondes de vanille bourbon, de caramel chaud et de fruits mûrs.',
+        desc: 'Rhum ambré aux accents chaleureux de vanille bourbon, de canne dorée et de fruits confits.',
         image: 'https://www.upload.ee/image/19756811/rum-Photoroom.png',
         emoji: '🥥'
     },
@@ -90,7 +90,7 @@ const CATALOGUE_PRODUITS = [
         nom: 'KHATCH BLANCO',
         type: 'Tequila Premium',
         prix: 190,
-        desc: 'Tequila blanco pure, au profil minimaliste, vif et parfaitement équilibré.',
+        desc: 'Tequila blanco pure, au profil minimaliste, incisif et parfaitement équilibré.',
         image: 'https://www.upload.ee/image/19756751/tequila-Photoroom.png',
         emoji: '🌵'
     },
@@ -100,7 +100,7 @@ const CATALOGUE_PRODUITS = [
         nom: 'KHATCH ARMENIAN BRANDY',
         type: 'Brandy d’Exception',
         prix: 240,
-        desc: 'Brandy de raisin vieilli, hommage vibrant au savoir-faire et à la tradition arménienne.',
+        desc: 'Brandy de raisin vieilli selon la plus pure tradition séculaire. Une complexité aromatique incomparable.',
         image: 'https://www.upload.ee/image/19756754/brandy-Photoroom.png',
         emoji: '🥃'
     },
@@ -110,7 +110,7 @@ const CATALOGUE_PRODUITS = [
         nom: 'TSIRAN',
         type: 'Liqueur d’Abricot',
         prix: 135,
-        desc: 'Liqueur artisanale à l’abricot arménien, douce, fruitée et intensément parfumée.',
+        desc: 'Liqueur rare à l’abricot arménien. Notes suaves, veloutées et intensément fruitées.',
         image: 'https://www.upload.ee/image/19756755/liqueur-Photoroom.png',
         emoji: '🍑'
     }
@@ -138,18 +138,17 @@ function getSession(userId) {
 
 function getCommandesEmbed() {
     return new EmbedBuilder()
-        .setTitle('KHATCH & VALLEY • CATALOGUE OFFICIEL')
+        .setTitle('◆ KHATCH & VALLEY • MAISON DE DISTILLATION ◆')
         .setDescription(
-            '🏰 **DISTILLERIE ARMÉNIENNE — LOS ANGELES**\n\n' +
-            'Bienvenue dans l’espace de commande officiel de *Khatch & Valley*. ' +
-            'Découvrez notre collection exclusive de bières artisanales et de spiritueux haut de gamme.\n\n' +
-            '__**COMMENT COMMANDER ?**__\n' +
-            'Cliquez sur le bouton ci-dessous pour ouvrir votre **catalogue interactif privé**, parcourir les fiches descriptives, composer votre panier en toute liberté et valider votre devis en quelques clics.\n\n' +
-            '━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+            '🌟 **DISTILLERIE ARMÉNIENNE • LOS SANTOS**\n\n' +
+            'Bienvenue au cœur de notre établissement. *Khatch & Valley* redéfinit l’art de la distillation à Los Santos en fusionnant héritage ancestral et raffinement moderne.\n\n' +
+            '✦ **EXPÉRÉNCE COMMERCIALE PRIVÉE**\n' +
+            'Accédez à notre catalogue interactif sécurisé pour découvrir l’ensemble de nos cuvées, consulter les visuels officiels et composer votre devis sur-mesure.\n\n' +
+            '────────────────────────────────────────'
         )
-        .setColor(0x8B0000)
+        .setColor(0x660000)
         .setImage('https://www.upload.ee/image/19756745/Whisky.png')
-        .setFooter({ text: 'KHATCH & VALLEY • Excellence & Tradition • Los Angeles' })
+        .setFooter({ text: 'KHATCH & VALLEY • Excellence, Prestigieux & Exclusif • Los Santos' })
         .setTimestamp();
 }
 
@@ -157,7 +156,7 @@ function getCommandesComponents() {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId('catalog_open_session')
-            .setLabel('✨ Ouvrir le catalogue interactif')
+            .setLabel('💎 Ouvrir le Catalogue des Spiritueux')
             .setStyle(ButtonStyle.Primary)
     );
 }
@@ -174,28 +173,27 @@ function buildCatalogListView(userId) {
     let totalPanier = 0;
 
     if (selectedEntries.length > 0) {
-        devisText = '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📦 **VOTRE DEVIS EN COURS**\n';
+        devisText = '\n────────────────────────────────────────\n🛒 **RÉCAPITULATIF DE VOTRE PANIER ACTUEL**\n';
         for (const [productId, quantity] of selectedEntries) {
             const product = CATALOGUE_PRODUITS.find(p => p.id === productId);
             if (!product) continue;
             const subtotal = product.prix * quantity;
             totalPanier += subtotal;
-            devisText += `• ${product.emoji} **${product.nom}** × ${quantity} (*$${subtotal}*)\n`;
+            devisText += `• ${product.emoji} **${product.nom}** × ${quantity} — \`$${subtotal}\`\n`;
         }
-        devisText += `\n💰 **Total estimé :** \`$${totalPanier}\``;
+        devisText += `\n💰 **Estimation Totale :** \`$${totalPanier} USD\``;
     }
 
     const embed = new EmbedBuilder()
-        .setTitle('KHATCH & VALLEY • SÉLECTION DES SPIRITUEUX')
+        .setTitle('◆ CATALOGUE OFFICIEL DES CUVÉES ◆')
         .setDescription(
-            'Parcourez notre gamme complète ci-dessous via le menu déroulant. ' +
-            'Chaque sélection vous affichera la fiche détaillée, les notes de dégustation et le visuel de la bouteille.\n\n' +
-            '📋 **Nos Références :**\n' +
-            CATALOGUE_PRODUITS.map(p => `${p.emoji} **${p.nom}** — *${p.type}* (\`$${p.prix}\`)`).join('\n') +
+            'Sélectionnez une référence dans le menu déroulant ci-dessous pour inspecter sa fiche descriptive détaillée, ses notes aromatiques et son visuel exclusif.\n\n' +
+            '**COLLECTION DISPONIBLE :**\n' +
+            CATALOGUE_PRODUITS.map(p => `• ${p.emoji} **${p.nom}** — *${p.type}* (\`$${p.prix}\`)`).join('\n') +
             devisText
         )
-        .setColor(0x8B0000)
-        .setFooter({ text: 'Sélectionnez un produit dans le menu pour afficher sa fiche détaillée.' });
+        .setColor(0x660000)
+        .setFooter({ text: 'Sélectionnez un produit ci-dessous pour afficher sa fiche interactive.' });
 
     const productOptions = CATALOGUE_PRODUITS.map(product => {
         const quantity = session.items[product.id] || 0;
@@ -203,19 +201,19 @@ function buildCatalogListView(userId) {
             label: product.nom,
             value: product.id,
             emoji: product.emoji,
-            description: quantity > 0 ? `[${quantity} dans le devis] — $${product.prix}` : `Prix unitaire : $${product.prix}`
+            description: quantity > 0 ? `[${quantity} dans votre devis] — $${product.prix}` : `Prix unitaire : $${product.prix}`
         };
     });
 
     const productMenu = new StringSelectMenuBuilder()
         .setCustomId('catalog_select_product')
-        .setPlaceholder('🔍 Sélectionner un produit à consulter...')
+        .setPlaceholder('🔍 Choisir une cuvée à inspecter...')
         .addOptions(productOptions);
 
     const actionRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId('cat_view_cart')
-            .setLabel('🛒 Consulter mon devis')
+            .setLabel('📋 Consulter mon devis')
             .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
             .setCustomId('cart_validate')
@@ -245,16 +243,16 @@ function buildProductView(userId, productId) {
     const productEmbed = new EmbedBuilder()
         .setTitle(`${product.emoji} ${product.nom}`)
         .setDescription(
-            `### 🏷️ Catégorie : ${product.type}\n\n` +
-            `📜 **Notes & Description :**\n${product.desc}\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `💵 **Prix unitaire :** \`$${product.prix}\`\n` +
-            `📊 **Quantité actuelle dans votre devis :** \`${quantity}\`\n\n` +
-            (quantity > 0 ? `✅ *Vous avez actuellement ${quantity} unité(s) de ce produit dans votre panier.*` : `*Aucune quantité sélectionnée pour l'instant.*`)
+            `### ✦ Catégorie : ${product.type}\n\n` +
+            `📜 **Notes de dégustation :**\n> *${product.desc}*\n\n` +
+            `────────────────────────────────────────\n` +
+            `💵 **Tarif unitaire :** \`$${product.prix} USD\`\n` +
+            `📊 **Quantité dans votre devis :** \`${quantity}\`\n\n` +
+            (quantity > 0 ? `✅ **Statut :** ${quantity} unité(s) actuellement réservée(s) dans votre panier.` : `🔹 *Aucune quantité attribuée pour le moment.*`)
         )
-        .setColor(0x8B0000)
+        .setColor(0x660000)
         .setImage(product.image)
-        .setFooter({ text: `KHATCH & VALLEY • Référence Produit [Réf. ${product.code}]` });
+        .setFooter({ text: `KHATCH & VALLEY • Collection Privée [Réf. ${product.code}] • Los Santos` });
 
     const productOptions = CATALOGUE_PRODUITS.map(p => {
         const currentQty = session.items[p.id] || 0;
@@ -263,13 +261,13 @@ function buildProductView(userId, productId) {
             value: p.id,
             emoji: p.emoji,
             default: p.id === product.id,
-            description: currentQty > 0 ? `[${currentQty} dans devis] — $${p.prix}` : `$${p.prix} / unité`
+            description: currentQty > 0 ? `[${currentQty} dans le devis] — $${p.prix}` : `$${p.prix} / unité`
         };
     });
 
     const productMenu = new StringSelectMenuBuilder()
         .setCustomId('catalog_select_product')
-        .setPlaceholder('🔄 Changer de produit rapidement...')
+        .setPlaceholder('🔄 Changer de référence instantanément...')
         .addOptions(productOptions);
 
     const actionRow1 = new ActionRowBuilder().addComponents(
@@ -279,7 +277,7 @@ function buildProductView(userId, productId) {
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
             .setCustomId(`catalog_remove_product_${product.id}`)
-            .setLabel('🗑️ Retirer du devis')
+            .setLabel('🗑️ Retirer')
             .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
             .setCustomId('cat_back_catalog')
@@ -305,24 +303,24 @@ function buildCartView(userId) {
     let descriptionText = '';
 
     if (entries.length === 0) {
-        descriptionText = '🛒 **Votre devis est actuellement vide.**\n\nRetournez au catalogue pour sélectionner vos articles et composer votre commande.';
+        descriptionText = '🛒 **Votre devis est actuellement vide.**\n\nExplorez notre catalogue de spiritueux pour y ajouter vos premières bouteilles.';
     } else {
-        descriptionText = '📋 **RÉCAPITULATIF DÉTAILLÉ DE VOTRE COMMANDE**\n\n';
+        descriptionText = '📋 **VOTRE SÉLECTION COMMERCIALE EN COURS**\n\n';
         for (const [productId, quantity] of entries) {
             const product = CATALOGUE_PRODUITS.find(p => p.id === productId);
             if (!product) continue;
             const subtotal = product.prix * quantity;
             total += subtotal;
-            descriptionText += `${product.emoji} **${product.nom}**\n↳ \`${quantity}\` unité(s) × $${product.prix} = **$${subtotal}**\n\n`;
+            descriptionText += `${product.emoji} **${product.nom}**\n↳ \`${quantity}\` unité(s) × $${product.prix} = **$${subtotal} USD**\n\n`;
         }
-        descriptionText += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' + `### 💰 MONTANT TOTAL DU DEVIS : **$${total} USD**`;
+        descriptionText += '────────────────────────────────────────\n' + `### 💎 MONTANT TOTAL GLOBAL : **$${total} USD**`;
     }
 
     const embed = new EmbedBuilder()
-        .setTitle('KHATCH & VALLEY • VOTRE PANIER & DEVIS')
+        .setTitle('◆ RÉCAPITULATIF DU DEVIS • KHATCH & VALLEY ◆')
         .setDescription(descriptionText)
-        .setColor(0x8B0000)
-        .setFooter({ text: 'KHATCH & VALLEY • Validation et transmission au service commercial' });
+        .setColor(0x660000)
+        .setFooter({ text: 'KHATCH & VALLEY • Transmission sécurisée au département commercial' });
 
     const actionRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -347,14 +345,14 @@ function buildCartView(userId) {
 
 function getRecrutementEmbed() {
     return new EmbedBuilder()
-        .setTitle('KHATCH & VALLEY • RECRUTEMENT')
+        .setTitle('◆ KHATCH & VALLEY • CARRIÈRES & RECRUTEMENT ◆')
         .setDescription(
-            'Rejoignez les équipes de la distillerie **KHATCH & VALLEY** à Los Angeles.\n\n' +
-            'Nous recherchons des profils rigoureux, motivés et investis pour participer à notre développement.\n\n' +
-            '📌 *Sélectionnez le poste souhaité via le menu ci-dessous.*'
+            'Intégrez les rangs de la distillerie **KHATCH & VALLEY** à Los Santos[cite: 11].\n\n' +
+            'Nous valorisons l’excellence, la discrétion et le savoir-faire professionnel. Choisissez votre voie ci-dessous.\n\n' +
+            '📌 *Sélectionnez votre poste de prédilection via le menu interactif.*'
         )
-        .setColor(0x8B0000)
-        .setFooter({ text: 'KHATCH & VALLEY • Ressources Humaines' })
+        .setColor(0x660000)
+        .setFooter({ text: 'KHATCH & VALLEY • Département des Ressources Humaines' })
         .setTimestamp();
 }
 
@@ -364,22 +362,22 @@ function getRecrutementComponents() {
             .setCustomId('menu_ticket_postop_recrutement')
             .setPlaceholder('👔 Sélectionner un poste à pourvoir...')
             .addOptions([
-                { label: 'Maître Distillateur / Assistant', value: 'rec_distillateur', description: 'Fabrication, distillation et gestion des fûts' },
-                { label: 'Chauffeur / Livreur Terrain', value: 'rec_chauffeur', description: 'Transport et acheminement des cargaisons' },
-                { label: 'Agent de Sécurité & Escorte', value: 'rec_securite', description: 'Protection des convois et sécurisation des sites' }
+                { label: 'Maître Distillateur / Assistant', value: 'rec_distillateur', description: 'Conduite des cuves, distillation et assemblage' },
+                { label: 'Chauffeur / Livreur Terrain', value: 'rec_chauffeur', description: 'Acheminement sécurisé des caisses et fret' },
+                { label: 'Agent de Sécurité & Escorte', value: 'rec_securite', description: 'Protection rapprochée des convois et de la distillerie' }
             ])
     );
 }
 
 function getServiceEmbed() {
     return new EmbedBuilder()
-        .setTitle('KHATCH & VALLEY • SUPPORT & SERVICES')
+        .setTitle('◆ KHATCH & VALLEY • SUPPORT & PARTENARIATS ◆')
         .setDescription(
-            'Un renseignement, une question ou une proposition de partenariat commercial ?\n\n' +
-            'Ouvrez un dossier auprès de notre permanence pour être mis en relation avec la direction.'
+            'Une question sur nos cuvées, un litige à régler ou une proposition d’alliance commerciale ?\n\n' +
+            'Ouvrez un dossier auprès de notre secrétariat pour un traitement prioritaire par la direction.'
         )
-        .setColor(0x8B0000)
-        .setFooter({ text: 'KHATCH & VALLEY • Support & Relations Partenaires' })
+        .setColor(0x660000)
+        .setFooter({ text: 'KHATCH & VALLEY • Service Client & Relations Extérieures' })
         .setTimestamp();
 }
 
@@ -387,16 +385,16 @@ function getServiceComponents() {
     return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
             .setCustomId('menu_ticket_postop_service')
-            .setPlaceholder('🤝 Sélectionner un type de demande...')
+            .setPlaceholder('🤝 Sélectionner l’objet de votre requête...')
             .addOptions([
-                { label: 'Assistance & Support Client', value: 'srv_support', description: 'Questions sur une commande ou un suivi' },
+                { label: 'Assistance & Support Client', value: 'srv_support', description: 'Suivi de commande ou réclamation' },
                 { label: 'Partenariat / Autre Demande', value: 'srv_autre', description: 'Propositions de collaboration ou contrats pros' }
             ])
     );
 }
 
 // ============================================================
-// INITIALISATION DES PANNEAUX (AVEC MISE À JOUR SANS DOUBLON)
+// INITIALISATION DES PANNEAUX
 // ============================================================
 
 async function initPostOpPanels(guild) {
@@ -424,11 +422,10 @@ async function initPostOpPanels(guild) {
     const recChan = guild.channels.cache.get(CONFIG_POSTOP.channels.recrutement);
     const srvChan = guild.channels.cache.get(CONFIG_POSTOP.channels.service);
 
-    // Commandes
     if (cmdChan) {
         try {
             const msgs = await cmdChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CATALOGUE OFFICIEL'));
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('MAISON DE DISTILLATION'));
             if (!botMsg) {
                 await cmdChan.send({ embeds: [getCommandesEmbed()], components: [getCommandesComponents()] });
             } else {
@@ -439,11 +436,10 @@ async function initPostOpPanels(guild) {
         }
     }
 
-    // Recrutement
     if (recChan) {
         try {
             const msgs = await recChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('RECRUTEMENT'));
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('CARRIÈRES'));
             if (!botMsg) {
                 await recChan.send({ embeds: [getRecrutementEmbed()], components: [getRecrutementComponents()] });
             } else {
@@ -454,11 +450,10 @@ async function initPostOpPanels(guild) {
         }
     }
 
-    // Services
     if (srvChan) {
         try {
             const msgs = await srvChan.messages.fetch({ limit: 10 });
-            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('SUPPORT & SERVICES'));
+            const botMsg = msgs.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('SUPPORT'));
             if (!botMsg) {
                 await srvChan.send({ embeds: [getServiceEmbed()], components: [getServiceComponents()] });
             } else {
@@ -555,7 +550,7 @@ async function handlePostOpInteraction(interaction) {
             return await interaction.reply({ content: 'Votre devis est vide. Sélectionnez au moins un produit.', flags: [MessageFlags.Ephemeral] });
         }
 
-        const modal = new ModalBuilder().setCustomId('mod_catalog_checkout').setTitle('Validation du devis');
+        const modal = new ModalBuilder().setCustomId('mod_catalog_checkout').setTitle('Validation du Devis');
         modal.addComponents(
             new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('prenom').setLabel('Prénom').setStyle(TextInputStyle.Short).setRequired(true)),
             new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('nom').setLabel('Nom').setStyle(TextInputStyle.Short).setRequired(true)),
@@ -597,14 +592,13 @@ async function handlePostOpInteraction(interaction) {
             const hasStaffRole = member.roles.cache.some(r => CONFIG_POSTOP.staffRoles.includes(r.id));
             if (!hasStaffRole) return await interaction.reply({ content: 'Accès restreint aux membres habilités.', flags: [MessageFlags.Ephemeral] });
 
-            const ticketId = id.replace('menu_staff_postop_', '');
             const actionVal = interaction.values[0];
             const message = interaction.message;
             const oldEmbed = message.embeds[0];
 
             if (actionVal === 'claim') {
                 const embed = EmbedBuilder.from(oldEmbed);
-                embed.setDescription(oldEmbed.description.replace('*Statut : En attente d’instruction.*', `*Statut : Dossier pris en charge par **${member.user.tag}***`));
+                embed.setDescription(oldEmbed.description.replace('📌 *Statut : En attente d’instruction.*', `📌 *Statut : Dossier pris en charge par **${member.user.tag}***`));
                 await message.edit({ embeds: [embed], components: message.components });
                 return await interaction.reply({ content: 'Dossier pris en charge avec succès.', flags: [MessageFlags.Ephemeral] });
             }
@@ -665,7 +659,7 @@ async function handlePostOpInteraction(interaction) {
                     if (prod && qty > 0) {
                         const sub = prod.prix * qty;
                         total += sub;
-                        recapItems += `${prod.emoji} **${prod.nom}** ×${qty} — **$${sub}**\n`;
+                        recapItems += `${prod.emoji} **${prod.nom}** ×${qty} — **$${sub} USD**\n`;
                     }
                 }
                 champPrincipal = interaction.fields.getTextInputValue('notes') || 'Aucune consigne particulière.';
@@ -694,23 +688,23 @@ async function handlePostOpInteraction(interaction) {
             });
 
             const embedTicket = new EmbedBuilder()
-                .setTitle(`KHATCH & VALLEY • DOSSIER #${ticketChannel.name.toUpperCase()}`)
+                .setTitle(`◆ DOSSIER OFFICIEL • #${ticketChannel.name.toUpperCase()} ◆`)
                 .setDescription(
-                    `🏢 **CLIENT / DEMANDEUR**\n` +
-                    `• **Titulaire :** ${prenom} ${nom}\n` +
-                    `• **Téléphone :** ${telephone}\n\n` +
-                    (modId === 'mod_catalog_checkout' ? `📋 **PRODUITS COMMANDÉS**\n${recapItems}\n💰 **TOTAL : $${total}**\n\n📝 **Notes :** ${champPrincipal}\n\n` : `📄 **REQUÊTE**\n${champPrincipal}\n\n`) +
+                    `👤 **TITULAIRE DU DOSSIER**\n` +
+                    `• **Nom :** ${prenom} ${nom}\n` +
+                    `• **Ligne directe :** ${telephone}\n\n` +
+                    (modId === 'mod_catalog_checkout' ? `📋 **DÉTAILS DES PRODUITS COMMANDÉS**\n${recapItems}\n💎 **MONTANT TOTAL : $${total} USD**\n\n📝 **Instructions :** ${champPrincipal}\n\n` : `📄 **OBJET DE LA REQUÊTE**\n${champPrincipal}\n\n`) +
                     `📌 *Statut : En attente d’instruction.*`
                 )
-                .setColor(0x8B0000)
+                .setColor(0x660000)
                 .setTimestamp();
 
             const staffMenu = new StringSelectMenuBuilder()
                 .setCustomId(`menu_staff_postop_${ticketChannel.id}`)
-                .setPlaceholder('⚙️ Gestion administrative...')
+                .setPlaceholder('⚙️ Gestion administrative du dossier...')
                 .addOptions([
-                    { label: 'Prendre en charge', value: 'claim', description: 'Assumer la gestion du dossier' },
-                    { label: 'Clôturer le dossier', value: 'close', description: 'Fermer et archiver le dossier' }
+                    { label: 'Prendre en charge', value: 'claim', description: 'Assumer la gestion opérationnelle' },
+                    { label: 'Clôturer le dossier', value: 'close', description: 'Fermer et archiver la procédure' }
                 ]);
 
             await ticketChannel.send({
